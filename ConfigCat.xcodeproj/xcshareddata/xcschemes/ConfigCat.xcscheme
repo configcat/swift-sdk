@@ -113,6 +113,36 @@
       codeCoverageEnabled = "YES"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3F880A31207BE8F000087A6B"
+               BuildableName = "ConfigCat iOSTests.xctest"
+               BlueprintName = "ConfigCat iOSTests"
+               ReferencedContainer = "container:ConfigCat.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3F880A50207BECB100087A6B"
+               BuildableName = "ConfigCat macOSTests.xctest"
+               BlueprintName = "ConfigCat macOSTests"
+               ReferencedContainer = "container:ConfigCat.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3F880A7B207BEEEB00087A6B"
+               BuildableName = "ConfigCat tvOSTests.xctest"
+               BlueprintName = "ConfigCat tvOSTests"
+               ReferencedContainer = "container:ConfigCat.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
       <MacroExpansion>
          <BuildableReference
