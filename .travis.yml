@@ -5,9 +5,9 @@ osx_image: xcode9.3
 script:
   - set -o pipefail
   - xcodebuild clean -project ConfigCat.xcodeproj -scheme ConfigCat
-  - xcodebuild test -sdk iphonesimulator11.3 -target "ConfigCat iOSTests" -configuration Release -project ConfigCat.xcodeproj -scheme ConfigCat -destination 'platform=iOS Simulator,name=iPhone 8,OS=11.3' CODE_SIGNING_REQUIRED=NO
-  - xcodebuild test -sdk macosx10.13 -target "ConfigCat macOSTests" -configuration Release -project ConfigCat.xcodeproj -scheme ConfigCat
-  - xcodebuild test -sdk appletvsimulator11.3 -target "ConfigCat tvOSTests" -configuration Release -project ConfigCat.xcodeproj -scheme ConfigCat -destination 'platform=tvOS Simulator,name=Apple TV 1080p,OS=11.3' CODE_SIGNING_REQUIRED=NO
+  - xcodebuild test -sdk iphonesimulator11.3 -target "ConfigCat iOSTests" -configuration Release -project ConfigCat.xcodeproj -destination 'platform=iOS Simulator,name=iPhone 8,OS=11.3' CODE_SIGNING_REQUIRED=NO
+  - xcodebuild test -sdk macosx10.13 -target "ConfigCat macOSTests" -configuration Release -project ConfigCat.xcodeproj
+  - xcodebuild test -sdk appletvsimulator11.3 -target "ConfigCat tvOSTests" -configuration Release -project ConfigCat.xcodeproj -destination 'platform=tvOS Simulator,name=Apple TV 1080p,OS=11.3' CODE_SIGNING_REQUIRED=NO
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
