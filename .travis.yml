@@ -1,12 +1,13 @@
 language: objective-c
 
 osx_image: xcode9.3
-xcode_project: ConfigCat.xcodeproj
-xcode_scheme: ConfigCat
-xcode_sdk:
-- macosx10.13
-- iphonesimulator11.3
-- appletvsimulator11.3
+
+script:
+  - set -o pipefail
+  - xcodebuild clean -project ConfigCat.xcodeproj -scheme ConfigCat
+  - xcodebuild test -sdk iphonesimulator11.3 -project ConfigCat.xcodeproj -scheme ConfigCat CODE_SIGNING_REQUIRED=NO
+  - xcodebuild test -sdk macosx10.13 -project ConfigCat.xcodeproj -scheme ConfigCat
+  - xcodebuild test -sdk appletvsimulator11.3 -project ConfigCat.xcodeproj -scheme ConfigCat
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
