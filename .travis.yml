@@ -11,9 +11,9 @@ env:
   - TVOS_SCHEME="ConfigCat tvOS"
   - TVOS_SDK=appletvsimulator11.3
   matrix:
-    - DESTINATION="OS=11.3,name=iPhone 8"        SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"
-    - DESTINATION="arch=x86_64"                  SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"
-    - DESTINATION="OS=11.3,name=Apple TV 1080p"  SCHEME="$TVOS_SCHEME"    SDK="$TVOS_SDK"
+    - DESTINATION="OS=11.3,name=iPhone 8"                SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"
+    - DESTINATION="arch=x86_64"                          SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"
+    - DESTINATION="OS=11.3,name=Apple TV 4K (at 1080p)"  SCHEME="$TVOS_SCHEME"    SDK="$TVOS_SDK"
 
 script:
   - set -o pipefail
