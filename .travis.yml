@@ -17,7 +17,7 @@ env:
 
 script:
   - set -o pipefail
-  - xcodebuild clean test -sdk "$SDK" -configuration Release -project ConfigCat.xcodeproj -scheme "$SCHEME" -destination "$DESTINATION" CODE_SIGNING_REQUIRED=NO
+  - xcodebuild clean test -sdk "$SDK" -project ConfigCat.xcodeproj -scheme "$SCHEME" -destination "$DESTINATION" CODE_SIGNING_REQUIRED=NO
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)
