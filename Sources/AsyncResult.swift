@@ -43,7 +43,7 @@ public class Async {
     }
     
     public func wait(timeout: Int) throws {
-        self.semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(timeout))
+        _ = self.semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(timeout))
         if(self.state.isPending()) {
             throw AsyncError.timedOut
         }
