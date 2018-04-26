@@ -27,6 +27,7 @@ open class ConfigCache {
     
     open func read() throws -> String {
         assert(false, "read() method must be overidden")
+        return ""
     }
     
     open func write(value: String) throws {

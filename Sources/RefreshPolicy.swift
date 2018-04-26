@@ -13,6 +13,7 @@ open class RefreshPolicy {
     
     open func getConfiguration() -> AsyncResult<String> {
         assert(false, "Method must be overidden!")
+        return AsyncResult(result: "")
     }
     
     public final func refresh() -> Async {
