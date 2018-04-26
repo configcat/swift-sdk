@@ -2,22 +2,24 @@ language: objective-c
 
 osx_image: xcode9.3
 
-env:
-  global:
-  - IOS_SCHEME="ConfigCat iOS"
-  - IOS_SDK=iphonesimulator11.3
-  - OSX_SCHEME="ConfigCat macOS"
-  - OSX_SDK=macosx10.13
-  - TVOS_SCHEME="ConfigCat tvOS"
-  - TVOS_SDK=appletvsimulator11.3
-  matrix:
-    - DESTINATION="OS=11.3,name=iPhone 8"                SCHEME="$IOS_SCHEME"     SDK="$IOS_SDK"
-    - DESTINATION="arch=x86_64"                          SCHEME="$OSX_SCHEME"     SDK="$OSX_SDK"
-    - DESTINATION="OS=11.3,name=Apple TV 4K (at 1080p)"  SCHEME="$TVOS_SCHEME"    SDK="$TVOS_SDK"
+stages:
+  - test
+  - coverage
+  - pods
 
-script:
-  - set -o pipefail
-  - xcodebuild clean test -sdk "$SDK" -project ConfigCat.xcodeproj -scheme "$SCHEME" -destination "$DESTINATION" CODE_SIGNING_REQUIRED=NO
-
-after_success:
-- bash <(curl -s https://codecov.io/bash)
+jobs:
+  include:
+  - stage: test
+    script:
+    - set -o pipefail
+    - xcodebuild clean test -sdk iphonesimulator11.3 -project ConfigCat.xcodeproj -scheme "ConfigCat iOS" -destination "OS=11.3,name=iPhone 8" CODE_SIGNING_REQUIRED=NO
+    - xcodebuild clean test -sdk appletvsimulator11.3 -project ConfigCat.xcodeproj -scheme "ConfigCat tvOS" -destination "OS=11.3,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO
+    - xcodebuild clean test -sdk macosx10.13 -project ConfigCat.xcodeproj -scheme "ConfigCat macOS" -destination "arch=x86_64"
+  - stage: coverage
+    script:
+    - set -o pipefail
+    - xcodebuild clean test -sdk macosx10.13 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64"
+    - bash <(curl -s https://codecov.io/bash)
+  - stage: pods
+    script:
+    - pod lib lint

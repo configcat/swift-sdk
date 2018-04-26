@@ -14,9 +14,23 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F880A73207BEEEB00087A6B"
+               BlueprintIdentifier = "3F880A48207BECB100087A6B"
                BuildableName = "ConfigCat.framework"
-               BlueprintName = "ConfigCat tvOS"
+               BlueprintName = "ConfigCat macOS"
+               ReferencedContainer = "container:ConfigCat.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "3F880A50207BECB100087A6B"
+               BuildableName = "ConfigCat macOSTests.xctest"
+               BlueprintName = "ConfigCat macOSTests"
                ReferencedContainer = "container:ConfigCat.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -26,15 +40,16 @@
       buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      codeCoverageEnabled = "YES"
       shouldUseLaunchSchemeArgsEnv = "YES">
       <Testables>
          <TestableReference
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F880A7B207BEEEB00087A6B"
-               BuildableName = "ConfigCat tvOSTests.xctest"
-               BlueprintName = "ConfigCat tvOSTests"
+               BlueprintIdentifier = "3F880A50207BECB100087A6B"
+               BuildableName = "ConfigCat macOSTests.xctest"
+               BlueprintName = "ConfigCat macOSTests"
                ReferencedContainer = "container:ConfigCat.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -42,9 +57,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A73207BEEEB00087A6B"
+            BlueprintIdentifier = "3F880A48207BECB100087A6B"
             BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat tvOS"
+            BlueprintName = "ConfigCat macOS"
             ReferencedContainer = "container:ConfigCat.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -64,9 +79,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A73207BEEEB00087A6B"
+            BlueprintIdentifier = "3F880A48207BECB100087A6B"
             BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat tvOS"
+            BlueprintName = "ConfigCat macOS"
             ReferencedContainer = "container:ConfigCat.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -82,9 +97,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A73207BEEEB00087A6B"
+            BlueprintIdentifier = "3F880A48207BECB100087A6B"
             BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat tvOS"
+            BlueprintName = "ConfigCat macOS"
             ReferencedContainer = "container:ConfigCat.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
