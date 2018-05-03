@@ -125,9 +125,9 @@ class ConfigCatClientTests: XCTestCase {
     func testForceRefresh() {
         mockSession.enqueueResponse(response: Response(body: "{ \"fakeKey\":\"test\" }", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "{ \"fakeKey\":\"test2\" }", statusCode: 200))
-        let fetcher = ConfigFetcher(session: self.mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
         let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: false)
-        let client = ConfigCatClient(projectSecret: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
+        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
             policy
         })
         
@@ -139,9 +139,9 @@ class ConfigCatClientTests: XCTestCase {
     }
     
     private func createClient() -> ConfigCatClient {
-        let fetcher = ConfigFetcher(session: self.mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        return ConfigCatClient(projectSecret: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
+        return ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
             policy
         })
     }

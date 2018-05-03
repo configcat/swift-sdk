@@ -8,7 +8,7 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
         
         sleep(1)
@@ -25,7 +25,7 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
         
         sleep(1)
@@ -42,7 +42,7 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = AutoPollingPolicy(cache: FailingCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
         
         sleep(1)
@@ -60,7 +60,7 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
         var newConfig = ""
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2,
         onConfigChanged: { (config, parser) in
             newConfig = config

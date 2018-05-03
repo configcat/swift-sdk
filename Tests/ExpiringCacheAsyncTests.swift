@@ -8,7 +8,7 @@ class ExpiringCacheAsyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -32,7 +32,7 @@ class ExpiringCacheAsyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())

@@ -8,7 +8,7 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -20,7 +20,7 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -32,7 +32,7 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, projectSecret: "")
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: FailingCache(), fetcher: fetcher)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
