@@ -1,8 +1,17 @@
 import os.log
 import Foundation
 
+/// A cache API used to make custom cache implementations for `ConfigCatClient`.
 open class ConfigCache {
+    /**
+     Through this getter, the in-memory representation of the cached value can be accessed.
+     When the underlying cache implementations is not able to load or store its value,
+     this will represent the latest cached configuration.
+     
+     - Returns: the cached value in memory.
+     */
     var inMemoryValue: String = ""
+    
     let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCache.self).bundleIdentifier!, category: "Config Cache")
     
     public init() { }
@@ -25,16 +34,31 @@ open class ConfigCache {
         }
     }
     
+    /**
+     Child classes has to implement this method, the `ConfigCatClient`
+     uses it to get the actual value from the cache.
+     
+     - Returns: the cached configuration.
+     - Throws: Exception if unable to read the cache.
+     */
     open func read() throws -> String {
         assert(false, "read() method must be overidden")
         return ""
     }
     
+    /**
+     Child classes has to implement this method, the `ConfigCatClient`
+     uses it to set the actual cached value.
+     
+     - Parameter value: the new value to cache.
+     - Throws: Exception if unable to save the value.
+     */
     open func write(value: String) throws {
         assert(false, "write() method must be overidden")
     }
 }
 
+/// An in-memory cache implementation used to store the fetched configurations.
 public final class InMemoryConfigCache : ConfigCache {
     open override func read() throws -> String {
         return super.inMemoryValue

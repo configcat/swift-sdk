@@ -1,6 +1,14 @@
 import Foundation
 
-public final class ManualPollingPolicy : RefreshPolicy {    
+/// Describes a `RefreshPolicy` which fetches the latest configuration over HTTP every time when a get is called on the `ConfigCatClient`.
+public final class ManualPollingPolicy : RefreshPolicy {
+    /**
+     Initializes a new `ManualPollingPolicy`.
+     
+     - Parameter cache: the internal cache instance.
+     - Parameter fetcher: the internal config fetcher instance.
+     - Returns: A new `ManualPollingPolicy`.
+     */
     public required init(cache: ConfigCache, fetcher: ConfigFetcher) {
         fetcher.mode = "manual"
         super.init(cache: cache, fetcher: fetcher)

@@ -1,6 +1,7 @@
 import Foundation
 import os.log
 
+/// Describes a `RefreshPolicy` which polls the latest configuration over HTTP and updates the local cache repeatedly.
 public final class AutoPollingPolicy : RefreshPolicy {
     public typealias ConfigChangedHandler = (String, ConfigParser) -> ()
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: AutoPollingPolicy.self).bundleIdentifier!, category: "Auto Polling Policy")
@@ -11,10 +12,26 @@ public final class AutoPollingPolicy : RefreshPolicy {
     fileprivate let timer = DispatchSource.makeTimerSource()
     fileprivate let onConfigChanged: ConfigChangedHandler?
     
+    /**
+     Initializes a new `AutoPollingPolicy`.
+     
+     - Parameter cache: the internal cache instance.
+     - Parameter fetcher: the internal config fetcher instance.
+     - Returns: A new `AutoPollingPolicy`.
+     */
     public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher) {
         self.init(cache: cache, fetcher: fetcher, autoPollIntervalInSeconds: 120)
     }
     
+    /**
+     Initializes a new `AutoPollingPolicy`.
+     
+     - Parameter cache: the internal cache instance.
+     - Parameter fetcher: the internal config fetcher instance.
+     - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
+     - Parameter onConfigChanged: the configuration changed event handler.
+     - Returns: A new `AutoPollingPolicy`.
+     */
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
                 autoPollIntervalInSeconds: Double = 120,
@@ -47,6 +64,7 @@ public final class AutoPollingPolicy : RefreshPolicy {
         timer.resume()
     }
     
+    /// Deinitalizes the AutoPollingPolicy instance.
     deinit {
         self.timer.cancel()
     }

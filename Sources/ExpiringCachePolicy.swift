@@ -2,6 +2,7 @@ import Foundation
 import Dispatch
 import os.log
 
+/// Describes a `RefreshPolicy` which uses an expiring cache to maintain the internally stored configuration.
 public final class ExpiringCachePolicy : RefreshPolicy {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ExpiringCachePolicy.self).bundleIdentifier!, category: "Expiring Cache Policy")
     fileprivate let cacheRefreshIntervalInSeconds: Double
@@ -11,10 +12,26 @@ public final class ExpiringCachePolicy : RefreshPolicy {
     fileprivate let isFetching = Synced<Bool>(initValue: false)
     fileprivate var fetching = AsyncResult<String>()
     
+    /**
+     Initializes a new `ExpiringCachePolicy`.
+     
+     - Parameter cache: the internal cache instance.
+     - Parameter fetcher: the internal config fetcher instance.
+     - Returns: A new `ExpiringCachePolicy`.
+     */
     public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher) {
         self.init(cache: cache, fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: true)
     }
     
+    /**
+     Initializes a new `ExpiringCachePolicy`.
+     
+     - Parameter cache: the internal cache instance.
+     - Parameter fetcher: the internal config fetcher instance.
+     - Parameter cacheRefreshIntervalInSeconds: sets how long the cache will store its value before fetching the latest from the network again.
+     - Parameter useAsyncRefresh: sets whether the cache should refresh itself asynchronously or synchronously. If it's set to `true` reading from the policy will not wait for the refresh to be finished, instead it returns immediately with the previous stored value. If it's set to `false` the policy will wait until the expired value is being refreshed with the latest configuration.
+     - Returns: A new `ExpiringCachePolicy`.
+     */
     public init(cache: ConfigCache, fetcher: ConfigFetcher, cacheRefreshIntervalInSeconds: Double, useAsyncRefresh: Bool) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = useAsyncRefresh

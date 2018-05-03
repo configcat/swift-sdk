@@ -1,17 +1,27 @@
 import Foundation
 import os.log
 
+/// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : ConfigCatClientProtocol {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
     fileprivate static let parser = ConfigParser()
     fileprivate let refreshPolicy: RefreshPolicy
     fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
     
-    init(projectSecret: String,
+    /**
+     Initializes a new `ConfigCatClient`.
+     
+     - Parameter apiKey: the api key for to communicate with the ConfigCat services.
+     - Parameter policyFactory: a function used to create the a `RefreshPolicy` implementation with the given `ConfigFetcher` and `ConfigCache`.
+     - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
+     - Parameter sessionConfiguration: the url session configuration.
+     - Returns: A new `ConfigCatClient`.
+     */
+    init(apiKey: String,
          policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
          maxWaitTimeForSyncCallsInSeconds: Int = 0,
          sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default) {
-        if projectSecret.isEmpty {
+        if apiKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
         
@@ -20,7 +30,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         }
         
         let cache = InMemoryConfigCache()
-        let fetcher = ConfigFetcher(config: sessionConfiguration, projectSecret: projectSecret)
+        let fetcher = ConfigFetcher(config: sessionConfiguration, apiKey: apiKey)
         
         self.refreshPolicy = policyFactory?(cache, fetcher) ?? AutoPollingPolicy(cache: cache, fetcher: fetcher)
         
