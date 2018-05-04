@@ -1,0 +1,16 @@
+PODS:
+  - ConfigCat (1.0.2)
+
+DEPENDENCIES:
+  - ConfigCat
+
+SPEC REPOS:
+  https://github.com/CocoaPods/Specs.git:
+    - ConfigCat
+
+SPEC CHECKSUMS:
+  ConfigCat: 9fa09d6df64522b0fb1dcd887d42e4c21efc8925
+
+PODFILE CHECKSUM: f973cf063a0fb1a92badd7da8356662b0d7a3f64
+
+COCOAPODS: 1.5.0

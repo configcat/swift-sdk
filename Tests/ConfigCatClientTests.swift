@@ -20,8 +20,12 @@ class ConfigCatClientTests: XCTestCase {
     func testGetConfiguration() throws {
         let encoder = JSONEncoder()
         let sample = Sample()
-        let body = String(describing: try encoder.encode(sample))
-        mockSession.enqueueResponse(response: Response(body: body, statusCode: 200))
+        sample.StringProp = "test2"
+        sample.BoolProp = false
+        sample.DoubleProp = 32.12
+        sample.IntProp = 123123
+        let body = String(data: try encoder.encode(sample), encoding: .utf8)
+        mockSession.enqueueResponse(response: Response(body: body!, statusCode: 200))
         let client = self.createClient()
         let config = client.getConfiguration(defaultValue: Sample.Empty)
         
@@ -149,10 +153,10 @@ class ConfigCatClientTests: XCTestCase {
 
 class Sample : Encodable, Decodable, Equatable {
     static let Empty = Sample()
-    let StringProp = "test"
-    let DoubleProp = 2.4
-    let IntProp = 3
-    let BoolProp = true
+    var StringProp = "test"
+    var DoubleProp = 2.4
+    var IntProp = 3
+    var BoolProp = true
     
     static func ==(lhs: Sample, rhs: Sample) -> Bool {
         return lhs === rhs

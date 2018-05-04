@@ -97,12 +97,12 @@ public class ConfigFetcher {
                 result.complete(result: FetchResponse(status: .failure, body: ""))
             } else {
                 let response = resp as! HTTPURLResponse
-                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                if response.statusCode >= 200 && response.statusCode < 300 {
                     os_log("Fetch was successful: new config fetched", log: ConfigFetcher.log, type: .debug)
                     if let etag = response.allHeaderFields["Etag"] as? String {
                         self.etag = etag
                     }
-                    result.complete(result: FetchResponse(status: .fetched, body: String(data: data, encoding: .utf8)!))
+                    result.complete(result: FetchResponse(status: .fetched, body: String(data: data!, encoding: .utf8)!))
                 } else if response.statusCode == 304 {
                     os_log("Fetch was successful: not modified", log: ConfigFetcher.log, type: .debug)
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
