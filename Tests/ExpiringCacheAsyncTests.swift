@@ -1,5 +1,5 @@
 import XCTest
-@testable import ConfigCat
+import ConfigCat
 
 class ExpiringCacheAsyncTests: XCTestCase {
     

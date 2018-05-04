@@ -17,10 +17,11 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
      - Parameter sessionConfiguration: the url session configuration.
      - Returns: A new `ConfigCatClient`.
      */
-    init(apiKey: String,
-         policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
-         maxWaitTimeForSyncCallsInSeconds: Int = 0,
-         sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default) {
+    public init(apiKey: String,
+                configCache: ConfigCache? = nil,
+                policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
+                maxWaitTimeForSyncCallsInSeconds: Int = 0,
+                sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default) {
         if apiKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
@@ -29,7 +30,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
             assert(false, "maxWaitTimeForSyncCallsInSeconds cannot be less than 2")
         }
         
-        let cache = InMemoryConfigCache()
+        let cache = configCache ?? InMemoryConfigCache()
         let fetcher = ConfigFetcher(config: sessionConfiguration, apiKey: apiKey)
         
         self.refreshPolicy = policyFactory?(cache, fetcher) ?? AutoPollingPolicy(cache: cache, fetcher: fetcher)

@@ -17,7 +17,7 @@ public struct FetchResponse {
      
      - Returns: the fetched config.
      */
-    let body: String
+    public let body: String
     
     /**
      Gets whether a new configuration value was fetched or not.
@@ -64,7 +64,7 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    convenience init(config: URLSessionConfiguration, apiKey: String) {
+    public convenience init(config: URLSessionConfiguration, apiKey: String) {
         self.init(session: URLSession(configuration: config), apiKey: apiKey)
     }
     
@@ -75,7 +75,7 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    init(session: URLSession, apiKey: String) {
+    public init(session: URLSession, apiKey: String) {
         self.session = session
         self.url = "https://cdn.betterconfig.com/configuration-files/" + apiKey + "/config.json"
         self.etag = ""
