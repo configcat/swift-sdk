@@ -11,7 +11,7 @@ and other programs, so you can configure them through [this](https://configcat.c
 
 **1. Add the package to your project**
 
-*CocoaPods:*
+**CocoaPods:**
 
 Add the following to your `Podfile`:
 ```ruby
@@ -24,7 +24,7 @@ Then, run the following command to install your dependencies:
 pod install
 ```
 
-*Carthage:*
+**Carthage:**
 
 Add the following to your `Cartfile`:
 ```
