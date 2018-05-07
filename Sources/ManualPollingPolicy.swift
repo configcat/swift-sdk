@@ -10,7 +10,7 @@ public final class ManualPollingPolicy : RefreshPolicy {
      - Returns: A new `ManualPollingPolicy`.
      */
     public required init(cache: ConfigCache, fetcher: ConfigFetcher) {
-        fetcher.mode = "manual"
+        fetcher.mode = "m"
         super.init(cache: cache, fetcher: fetcher)
     }
     

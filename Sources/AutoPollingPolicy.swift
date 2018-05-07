@@ -38,7 +38,7 @@ public final class AutoPollingPolicy : RefreshPolicy {
                 onConfigChanged: ConfigChangedHandler? = nil) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds
         self.onConfigChanged = onConfigChanged
-        fetcher.mode = "autopoll"
+        fetcher.mode = "a"
         super.init(cache: cache, fetcher: fetcher)
         
         timer.schedule(deadline: DispatchTime.now(), repeating: autoPollIntervalInSeconds)
