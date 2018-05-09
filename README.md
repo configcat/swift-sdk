@@ -72,7 +72,7 @@ let factory = { (cache: ConfigCache, fetcher: ConfigFetcher) -> RefreshPolicy in
     AutoPollingPolicy(cache: cache,
                       fetcher: fetcher,
                       autoPollIntervalInSeconds: 30,
-                      onConfigChanged: { (configString, parser) in
+                      onConfigChanged: { (config, parser) in
                           let isMyAwesomeFeatureEnabled: String = try! parser.parseValue(for: "key-of-my-awesome-feature", json: configString)
                           if(isMyAwesomeFeatureEnabled) {
                               //show your awesome feature to the world!
