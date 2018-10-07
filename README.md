@@ -5,7 +5,7 @@ and other programs, so you can configure them through [this](https://configcat.c
 [![Build Status](https://travis-ci.org/configcat/swift-sdk.svg?branch=master)](https://travis-ci.org/configcat/swift-sdk)
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
-[![Supported Platforms](https://img.shields.io/cocoapods/p/ConfigCat.svg?style=flat)](https://configcat.com/Docs#client-libs-ios)
+[![Supported Platforms](https://img.shields.io/cocoapods/p/ConfigCat.svg?style=flat)](https://docs.configcat.com/docs/sdk-reference/ios)
 
 ## Getting started
 
