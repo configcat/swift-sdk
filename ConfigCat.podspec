@@ -1,9 +1,9 @@
 Pod::Spec.new do |spec|
 
   spec.name          = "ConfigCat"
-  spec.version       = "1.0.3"
+  spec.version       = "2.0.0"
   spec.summary       = "ConfigCat Swift SDK"
-  spec.swift_version = "4.0"
+  spec.swift_version = "4.2"
 
   spec.description  = "ConfigCat is a cloud based configuration as a service. It integrates with your apps, backends, websites, and other programs, so you can configure them through this website even after they are deployed."
   spec.homepage     = "https://github.com/configcat/swift-sdk"
@@ -19,6 +19,6 @@ Pod::Spec.new do |spec|
   spec.source_files      = "Sources/*.swift"
   spec.requires_arc      = true
   spec.module_name       = "ConfigCat"
-  spec.documentation_url = "https://configcat.com/Docs#client-libs-ios"
+  spec.documentation_url = "https://docs.configcat.com/docs/sdk-reference/ios"
 
 end

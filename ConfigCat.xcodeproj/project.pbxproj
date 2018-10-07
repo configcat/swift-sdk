@@ -6,20 +6,6 @@
 	objectVersion = 48;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = F15F9B06216960FE00F490CD /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */;
-			buildPhases = (
-				F15F9B092169611F00F490CD /* ShellScript */,
-			);
-			dependencies = (
-			);
-			name = CommonCryptoModuleMap;
-			productName = CommonCryptoModuleMap;
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		3F36F5392083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
 		3F36F53A2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
@@ -130,34 +116,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3F880A73207BEEEB00087A6B;
 			remoteInfo = "ConfigCat tvOS";
-		};
-		F15F9B0A2169628F00F490CD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F15F9B05216960FD00F490CD;
-			remoteInfo = CommonCryptoModuleMap;
-		};
-		F15F9B0C2169629800F490CD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F15F9B05216960FD00F490CD;
-			remoteInfo = CommonCryptoModuleMap;
-		};
-		F15F9B0E216962A000F490CD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F15F9B05216960FD00F490CD;
-			remoteInfo = CommonCryptoModuleMap;
-		};
-		F15F9B10216962A800F490CD /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = F15F9B05216960FD00F490CD;
-			remoteInfo = CommonCryptoModuleMap;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -382,7 +340,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				F15F9B11216962A800F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat iOS";
 			productName = "ConfigCat iOS";
@@ -419,7 +376,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				F15F9B0F216962A000F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat macOS";
 			productName = "ConfigCat macOS";
@@ -456,7 +412,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				F15F9B0D2169629800F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat tvOS";
 			productName = "ConfigCat tvOS";
@@ -493,7 +448,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				F15F9B0B2169628F00F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat watchOS";
 			productName = "ConfigCat watchOS";
@@ -520,10 +474,12 @@
 					};
 					3F880A48207BECB100087A6B = {
 						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Automatic;
 					};
 					3F880A50207BECB100087A6B = {
 						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 1000;
 						ProvisioningStyle = Automatic;
 					};
 					3F880A73207BEEEB00087A6B = {
@@ -536,10 +492,6 @@
 					};
 					3F880A91207BF05400087A6B = {
 						CreatedOnToolsVersion = 9.2;
-						ProvisioningStyle = Automatic;
-					};
-					F15F9B05216960FD00F490CD = {
-						CreatedOnToolsVersion = 10.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -563,7 +515,6 @@
 				3F880A73207BEEEB00087A6B /* ConfigCat tvOS */,
 				3F880A7B207BEEEB00087A6B /* ConfigCat tvOSTests */,
 				3F880A91207BF05400087A6B /* ConfigCat watchOS */,
-				F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */,
 			);
 		};
 /* End PBXProject section */
@@ -622,26 +573,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		F15F9B092169611F00F490CD /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-			);
-			outputFileListPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "COMMON_CRYPTO_DIR=\"${SDKROOT}/usr/include/CommonCrypto\"\nif [ -f \"${COMMON_CRYPTO_DIR}/module.modulemap\" ]\n    then\n    echo \"CommonCrypto already exists, skipping\"\nelse\n\nif [ -d \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\" ]; then\necho \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap directory already exists, so skipping the rest of the script.\"\nexit 0\nfi\n\nmkdir -p \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\"\ncat <<EOF > \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap/module.modulemap\"\nmodule CommonCrypto [system] {\nheader \"${SDKROOT}/usr/include/CommonCrypto/CommonCrypto.h\"\nexport *\n}\nEOF\nfi\n";
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		3F880A25207BE8F000087A6B /* Sources */ = {
@@ -787,26 +718,6 @@
 			target = 3F880A73207BEEEB00087A6B /* ConfigCat tvOS */;
 			targetProxy = 3F880A7E207BEEEB00087A6B /* PBXContainerItemProxy */;
 		};
-		F15F9B0B2169628F00F490CD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
-			targetProxy = F15F9B0A2169628F00F490CD /* PBXContainerItemProxy */;
-		};
-		F15F9B0D2169629800F490CD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
-			targetProxy = F15F9B0C2169629800F490CD /* PBXContainerItemProxy */;
-		};
-		F15F9B0F216962A000F490CD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
-			targetProxy = F15F9B0E216962A000F490CD /* PBXContainerItemProxy */;
-		};
-		F15F9B11216962A800F490CD /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
-			targetProxy = F15F9B10216962A800F490CD /* PBXContainerItemProxy */;
-		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -939,9 +850,9 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1005,9 +916,9 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1075,7 +986,7 @@
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1132,7 +1043,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1205,10 +1116,10 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1273,10 +1184,10 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 			};
@@ -1343,7 +1254,7 @@
 				SDKROOT = macosx;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Debug;
 		};
@@ -1400,7 +1311,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 			};
 			name = Release;
 		};
@@ -1468,9 +1379,9 @@
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 10.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1534,9 +1445,9 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 10.0;
 				VALIDATE_PRODUCT = YES;
@@ -1603,7 +1514,7 @@
 				SDKROOT = appletvos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 11.2;
 			};
@@ -1659,7 +1570,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 3;
 				TVOS_DEPLOYMENT_TARGET = 11.2;
 				VALIDATE_PRODUCT = YES;
@@ -1731,9 +1642,9 @@
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 4;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
@@ -1798,32 +1709,14 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
-				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
-				SWIFT_VERSION = 4.0;
+				SWIFT_VERSION = 4.2;
 				TARGETED_DEVICE_FAMILY = 4;
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				WATCHOS_DEPLOYMENT_TARGET = 3.0;
-			};
-			name = Release;
-		};
-		F15F9B07216960FE00F490CD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos watchsimulator watchos macosx";
-			};
-			name = Debug;
-		};
-		F15F9B08216960FE00F490CD /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				CODE_SIGN_STYLE = Automatic;
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos watchsimulator watchos macosx";
 			};
 			name = Release;
 		};
@@ -1898,15 +1791,6 @@
 			buildConfigurations = (
 				3F880A98207BF05400087A6B /* Debug */,
 				3F880A99207BF05400087A6B /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		F15F9B06216960FE00F490CD /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				F15F9B07216960FE00F490CD /* Debug */,
-				F15F9B08216960FE00F490CD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
