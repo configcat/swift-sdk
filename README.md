@@ -39,14 +39,17 @@ Then, run the `carthage update` command and then follow the [Carthage integratio
 ```swift
 import ConfigCat
 ```
-
 **4. Create a ConfigCatClient instance**
 ```swift
 let client = ConfigCatClient(apiKey: "<PLACE-YOUR-API-KEY-HERE>")
 ```
-**5. Get your config value**
+**5. (Optional) Prepare a User object for rollout calculation**
 ```swift
-let isMyAwesomeFeatureEnabled = client.getValue(for: "key-of-my-awesome-feature", defaultValue: false)
+let user = User(identifier: "<PLACE-YOUR-USER-IDENTIFIER-HERE>")
+```
+**6. Get your config value**
+```swift
+let isMyAwesomeFeatureEnabled = client.getValue(for: "key-of-my-awesome-feature", defaultValue: false, user: user)
 if(isMyAwesomeFeatureEnabled) {
     //show your awesome feature to the world!
 }
@@ -59,7 +62,19 @@ client.getValueAsync(for: "key-of-my-awesome-feature", defaultValue: false, comp
         }
     })
 ```
-
+## User object
+Percentage and targeted rollouts are calculated by the user object you can optionally pass to the configuration requests.
+The user object must be created with a **mandatory** identifier parameter which should uniquely identify each user:
+```swift
+let user = User(identifier: "<PLACE-YOUR-USER-IDENTIFIER-HERE>" /* mandatory */)
+```
+But you can also set other custom attributes if you'd like to calculate the rollout based on them:
+```swift
+let user = User(identifier: "<PLACE-YOUR-USER-IDENTIFIER-HERE>", // mandatory
+    email: "simple@but.awesome.com", 
+    country: "Awesomnia", 
+    custom: ["Subscription":"Free", "Role":"Knight of Awesomnia"]])
+```
 ## Configuration
 ### Refresh policies
 The internal caching control and the communication between the client and ConfigCat are managed through a refresh policy. There are 3 predefined implementations built in the library.

@@ -38,69 +38,41 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }
     
-    public func getConfigurationJsonString() -> String {
-        do {
-            return self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-        } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
-            return self.refreshPolicy.lastCachedConfiguration
+    public func getValue<Value>(for key: String, defaultValue: Value, user: User?) -> Value {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
         }
-    }
-    
-    public func getConfigurationJsonStringAsync(completion: @escaping (String) -> ()) {
-        self.refreshPolicy.getConfiguration().accept(completion: completion)
-    }
-    
-    public func getConfiguration<Value>(defaultValue: Value) -> Value where Value : Decodable {
+        
         do {
             let config = self.maxWaitTimeForSyncCallsInSeconds == 0
                 ? try self.refreshPolicy.getConfiguration().get()
                 : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             
-            return self.deserializeJson(json: config, defaultValue: defaultValue)
+            return self.deserializeJson(for: key, json: config, defaultValue: defaultValue, user: user)
         } catch {
             os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
-            return self.getDefaultConfig(defaultValue: defaultValue)
+            return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
         }
-    }
-    
-    public func getConfigurationAsync<Value>(defaultValue: Value, completion: @escaping (Value) -> ()) where Value : Decodable {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                let result = self.deserializeJson(json: config, defaultValue: defaultValue)
-                completion(result)
-            }
     }
     
     public func getValue<Value>(for key: String, defaultValue: Value) -> Value {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-        
-        do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            
-            return self.deserializeJson(for: key, json: config, defaultValue: defaultValue)
-        } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
-            return self.getDefaultConfig(for: key, defaultValue: defaultValue)
-        }
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
     }
     
-    public func getValueAsync<Value>(for key: String, defaultValue: Value, completion: @escaping (Value) -> ()) {
+    public func getValueAsync<Value>(for key: String, defaultValue: Value, user: User?, completion: @escaping (Value) -> ()) {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
         
         self.refreshPolicy.getConfiguration()
             .apply { config in
-                let result = self.deserializeJson(for: key, json: config, defaultValue: defaultValue)
+                let result = self.deserializeJson(for: key, json: config, defaultValue: defaultValue, user: user)
                 completion(result)
             }
+    }
+    
+    public func getValueAsync<Value>(for key: String, defaultValue: Value, completion: @escaping (Value) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: nil, completion: completion)
     }
     
     public func refresh() {
@@ -118,29 +90,15 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
     public func refreshAsync(completion: @escaping () -> ()) {
         self.refreshPolicy.refresh().accept(completion: completion)
     }
-    
-    private func getDefaultConfig<Value>(defaultValue: Value) -> Value where Value : Decodable {
+
+    private func getDefaultConfig<Value>(for key: String, defaultValue: Value, user: User?) -> Value {
         let latest = self.refreshPolicy.lastCachedConfiguration
-        return latest.isEmpty ? defaultValue : self.deserializeJson(json: latest, defaultValue: defaultValue)
+        return latest.isEmpty ? defaultValue : self.deserializeJson(for: key, json: latest, defaultValue: defaultValue, user: user)
     }
     
-    private func getDefaultConfig<Value>(for key: String, defaultValue: Value) -> Value {
-        let latest = self.refreshPolicy.lastCachedConfiguration
-        return latest.isEmpty ? defaultValue : self.deserializeJson(for: key, json: latest, defaultValue: defaultValue)
-    }
-    
-    private func deserializeJson<Value>(json: String, defaultValue: Value) -> Value where Value : Decodable {
+    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: User?) -> Value {
         do {
-            return try ConfigCatClient.parser.parse(json: json)
-        } catch {
-            os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
-            return defaultValue
-        }
-    }
-    
-    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value) -> Value {
-        do {
-            return try ConfigCatClient.parser.parseValue(for: key, json: json)
+            return try ConfigCatClient.parser.parseValue(for: key, json: json,user: user)
         } catch {
             os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
             return defaultValue

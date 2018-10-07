@@ -6,6 +6,20 @@
 	objectVersion = 48;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = F15F9B06216960FE00F490CD /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */;
+			buildPhases = (
+				F15F9B092169611F00F490CD /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = CommonCryptoModuleMap;
+			productName = CommonCryptoModuleMap;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		3F36F5392083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
 		3F36F53A2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
@@ -79,6 +93,20 @@
 		3F8EDFA02084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
 		3F8EDFA12084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
 		3F8EDFA22084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
+		F15F9AF72169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		F15F9AF82169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		F15F9AF92169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		F15F9AFA2169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		F15F9AFC216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
+		F15F9AFD216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
+		F15F9AFE216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
+		F15F9AFF216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
+		F15F9B132169738100F490CD /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
+		F15F9B142169738100F490CD /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
+		F15F9B152169738100F490CD /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
+		F15F9B17216973B000F490CD /* RolloutIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */; };
+		F15F9B18216973B000F490CD /* RolloutIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */; };
+		F15F9B19216973B000F490CD /* RolloutIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -102,6 +130,34 @@
 			proxyType = 1;
 			remoteGlobalIDString = 3F880A73207BEEEB00087A6B;
 			remoteInfo = "ConfigCat tvOS";
+		};
+		F15F9B0A2169628F00F490CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F15F9B05216960FD00F490CD;
+			remoteInfo = CommonCryptoModuleMap;
+		};
+		F15F9B0C2169629800F490CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F15F9B05216960FD00F490CD;
+			remoteInfo = CommonCryptoModuleMap;
+		};
+		F15F9B0E216962A000F490CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F15F9B05216960FD00F490CD;
+			remoteInfo = CommonCryptoModuleMap;
+		};
+		F15F9B10216962A800F490CD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F15F9B05216960FD00F490CD;
+			remoteInfo = CommonCryptoModuleMap;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -139,6 +195,10 @@
 		3F8EDF9720840FE900906339 /* ManualPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
+		F15F9AF62169176A00F490CD /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
+		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix.csv; sourceTree = "<group>"; };
+		F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -247,6 +307,8 @@
 				3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */,
 				3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */,
 				3F880ACD207C072400087A6B /* ConfigCatClient.swift */,
+				F15F9AF62169176A00F490CD /* User.swift */,
+				F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */,
 			);
 			path = Sources;
 			sourceTree = "<group>";
@@ -254,6 +316,7 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F15F9B122169738100F490CD /* testmatrix.csv */,
 				3F880A83207BEEEB00087A6B /* Info-tvOS.plist */,
 				3F880A58207BECB100087A6B /* Info-macOS.plist */,
 				3F880A39207BE8F000087A6B /* Info-iOS.plist */,
@@ -264,6 +327,7 @@
 				3F8EDF9720840FE900906339 /* ManualPollingTests.swift */,
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
+				F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -318,6 +382,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				F15F9B11216962A800F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat iOS";
 			productName = "ConfigCat iOS";
@@ -354,6 +419,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				F15F9B0F216962A000F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat macOS";
 			productName = "ConfigCat macOS";
@@ -390,6 +456,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				F15F9B0D2169629800F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat tvOS";
 			productName = "ConfigCat tvOS";
@@ -426,6 +493,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				F15F9B0B2169628F00F490CD /* PBXTargetDependency */,
 			);
 			name = "ConfigCat watchOS";
 			productName = "ConfigCat watchOS";
@@ -470,6 +538,10 @@
 						CreatedOnToolsVersion = 9.2;
 						ProvisioningStyle = Automatic;
 					};
+					F15F9B05216960FD00F490CD = {
+						CreatedOnToolsVersion = 10.0;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = 3F8809CF207BE3F100087A6B /* Build configuration list for PBXProject "ConfigCat" */;
@@ -491,6 +563,7 @@
 				3F880A73207BEEEB00087A6B /* ConfigCat tvOS */,
 				3F880A7B207BEEEB00087A6B /* ConfigCat tvOSTests */,
 				3F880A91207BF05400087A6B /* ConfigCat watchOS */,
+				F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */,
 			);
 		};
 /* End PBXProject section */
@@ -507,6 +580,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B132169738100F490CD /* testmatrix.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -521,6 +595,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B142169738100F490CD /* testmatrix.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -535,6 +610,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B152169738100F490CD /* testmatrix.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -547,6 +623,26 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		F15F9B092169611F00F490CD /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/bash;
+			shellScript = "COMMON_CRYPTO_DIR=\"${SDKROOT}/usr/include/CommonCrypto\"\nif [ -f \"${COMMON_CRYPTO_DIR}/module.modulemap\" ]\n    then\n    echo \"CommonCrypto already exists, skipping\"\nelse\n\nif [ -d \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\" ]; then\necho \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap directory already exists, so skipping the rest of the script.\"\nexit 0\nfi\n\nmkdir -p \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap\"\ncat <<EOF > \"${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap/module.modulemap\"\nmodule CommonCrypto [system] {\nheader \"${SDKROOT}/usr/include/CommonCrypto/CommonCrypto.h\"\nexport *\n}\nEOF\nfi\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		3F880A25207BE8F000087A6B /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -555,11 +651,13 @@
 				3F880ACE207C072400087A6B /* ConfigCatClient.swift in Sources */,
 				3F880AA7207BF1B100087A6B /* ConfigFetcher.swift in Sources */,
 				3F880AA4207BF1B100087A6B /* ExpiringCachePolicy.swift in Sources */,
+				F15F9AFC216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AA8207BF1B100087A6B /* AutoPollingPolicy.swift in Sources */,
 				3F880AA6207BF1B100087A6B /* AsyncResult.swift in Sources */,
 				3F880AA5207BF1B100087A6B /* RefreshPolicy.swift in Sources */,
 				3F880AAA207BF1B100087A6B /* Synced.swift in Sources */,
 				3F880AC4207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
+				F15F9AF72169176A00F490CD /* User.swift in Sources */,
 				3F880AC9207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AA3207BF1B100087A6B /* ConfigParser.swift in Sources */,
 				3F880AA9207BF1B100087A6B /* ConfigCache.swift in Sources */,
@@ -570,6 +668,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B17216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C5207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
 				3F36F5392083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
 				3F8EDFA02084194700906339 /* ConfigCatClientTests.swift in Sources */,
@@ -587,11 +686,13 @@
 				3F880ACF207C072400087A6B /* ConfigCatClient.swift in Sources */,
 				3F880AB0207BF2A100087A6B /* ExpiringCachePolicy.swift in Sources */,
 				3F880AB1207BF2A100087A6B /* RefreshPolicy.swift in Sources */,
+				F15F9AFD216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AAC207BF2A100087A6B /* AutoPollingPolicy.swift in Sources */,
 				3F880AAE207BF2A100087A6B /* ConfigFetcher.swift in Sources */,
 				3F880AAD207BF2A100087A6B /* ConfigCache.swift in Sources */,
 				3F880AB2207BF2A100087A6B /* Synced.swift in Sources */,
 				3F880AC5207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
+				F15F9AF82169176A00F490CD /* User.swift in Sources */,
 				3F880ACA207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AAB207BF2A100087A6B /* AsyncResult.swift in Sources */,
 				3F880AAF207BF2A100087A6B /* ConfigParser.swift in Sources */,
@@ -602,6 +703,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B18216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C6207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
 				3F36F53A2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
 				3F8EDFA12084194700906339 /* ConfigCatClientTests.swift in Sources */,
@@ -619,11 +721,13 @@
 				3F880AD0207C072400087A6B /* ConfigCatClient.swift in Sources */,
 				3F880AB8207BF2A200087A6B /* ExpiringCachePolicy.swift in Sources */,
 				3F880AB9207BF2A200087A6B /* RefreshPolicy.swift in Sources */,
+				F15F9AFE216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AB4207BF2A200087A6B /* AutoPollingPolicy.swift in Sources */,
 				3F880AB6207BF2A200087A6B /* ConfigFetcher.swift in Sources */,
 				3F880AB5207BF2A200087A6B /* ConfigCache.swift in Sources */,
 				3F880ABA207BF2A200087A6B /* Synced.swift in Sources */,
 				3F880AC6207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
+				F15F9AF92169176A00F490CD /* User.swift in Sources */,
 				3F880ACB207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AB3207BF2A200087A6B /* AsyncResult.swift in Sources */,
 				3F880AB7207BF2A200087A6B /* ConfigParser.swift in Sources */,
@@ -634,6 +738,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F15F9B19216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C7207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
 				3F36F53B2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
 				3F8EDFA22084194700906339 /* ConfigCatClientTests.swift in Sources */,
@@ -651,11 +756,13 @@
 				3F880AD1207C072400087A6B /* ConfigCatClient.swift in Sources */,
 				3F880AC0207BF2A300087A6B /* ExpiringCachePolicy.swift in Sources */,
 				3F880AC1207BF2A300087A6B /* RefreshPolicy.swift in Sources */,
+				F15F9AFF216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880ABC207BF2A300087A6B /* AutoPollingPolicy.swift in Sources */,
 				3F880ABE207BF2A300087A6B /* ConfigFetcher.swift in Sources */,
 				3F880ABD207BF2A300087A6B /* ConfigCache.swift in Sources */,
 				3F880AC2207BF2A300087A6B /* Synced.swift in Sources */,
 				3F880AC7207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
+				F15F9AFA2169176A00F490CD /* User.swift in Sources */,
 				3F880ACC207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880ABB207BF2A300087A6B /* AsyncResult.swift in Sources */,
 				3F880ABF207BF2A300087A6B /* ConfigParser.swift in Sources */,
@@ -679,6 +786,26 @@
 			isa = PBXTargetDependency;
 			target = 3F880A73207BEEEB00087A6B /* ConfigCat tvOS */;
 			targetProxy = 3F880A7E207BEEEB00087A6B /* PBXContainerItemProxy */;
+		};
+		F15F9B0B2169628F00F490CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
+			targetProxy = F15F9B0A2169628F00F490CD /* PBXContainerItemProxy */;
+		};
+		F15F9B0D2169629800F490CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
+			targetProxy = F15F9B0C2169629800F490CD /* PBXContainerItemProxy */;
+		};
+		F15F9B0F216962A000F490CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
+			targetProxy = F15F9B0E216962A000F490CD /* PBXContainerItemProxy */;
+		};
+		F15F9B11216962A800F490CD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F15F9B05216960FD00F490CD /* CommonCryptoModuleMap */;
+			targetProxy = F15F9B10216962A800F490CD /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -812,6 +939,7 @@
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -877,6 +1005,7 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1076,6 +1205,8 @@
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1142,6 +1273,8 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
+				SWIFT_OBJC_BRIDGING_HEADER = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -1335,6 +1468,7 @@
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -1400,6 +1534,7 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = appletvos;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 3;
@@ -1596,6 +1731,7 @@
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -1662,6 +1798,7 @@
 				PRODUCT_NAME = ConfigCat;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
+				SWIFT_INCLUDE_PATHS = "${BUILT_PRODUCTS_DIR}/CommonCryptoModuleMap";
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
 				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = 4;
@@ -1669,6 +1806,24 @@
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
 				WATCHOS_DEPLOYMENT_TARGET = 3.0;
+			};
+			name = Release;
+		};
+		F15F9B07216960FE00F490CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos watchsimulator watchos macosx";
+			};
+			name = Debug;
+		};
+		F15F9B08216960FE00F490CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos watchsimulator watchos macosx";
 			};
 			name = Release;
 		};
@@ -1743,6 +1898,15 @@
 			buildConfigurations = (
 				3F880A98207BF05400087A6B /* Debug */,
 				3F880A99207BF05400087A6B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		F15F9B06216960FE00F490CD /* Build configuration list for PBXAggregateTarget "CommonCryptoModuleMap" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F15F9B07216960FE00F490CD /* Debug */,
+				F15F9B08216960FE00F490CD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

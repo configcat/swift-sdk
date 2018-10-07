@@ -33,7 +33,7 @@ class MockURLSession: URLSession {
         return MockURLSessionDataTask {
             self.queue.async {
                 if response.delay > 0 {
-                    semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(response.delay))
+                    let _ = semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(response.delay))
                 }
                 completionHandler(response.data, response.httpResponse, response.error)
             }
