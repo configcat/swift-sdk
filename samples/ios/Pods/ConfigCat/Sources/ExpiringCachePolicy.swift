@@ -35,7 +35,7 @@ public final class ExpiringCachePolicy : RefreshPolicy {
     public init(cache: ConfigCache, fetcher: ConfigFetcher, cacheRefreshIntervalInSeconds: Double, useAsyncRefresh: Bool) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = useAsyncRefresh
-        fetcher.mode = "ecache"
+        fetcher.mode = "l"
         super.init(cache: cache, fetcher: fetcher)
     }
     

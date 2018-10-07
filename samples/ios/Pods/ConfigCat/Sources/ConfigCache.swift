@@ -60,11 +60,11 @@ open class ConfigCache {
 
 /// An in-memory cache implementation used to store the fetched configurations.
 public final class InMemoryConfigCache : ConfigCache {
-    open override func read() throws -> String {
+    public override func read() throws -> String {
         return super.inMemoryValue
     }
     
-    open override func write(value: String) throws {
+    public override func write(value: String) throws {
         // no action
     }
 }

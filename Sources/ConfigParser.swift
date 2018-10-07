@@ -21,7 +21,7 @@ public final class ConfigParser {
      - Throws: `ParserError.invalidRequestedType` when the `Value` type is not supported.
      - Throws: `ParserError.parseFailure` when the parsing failed.
      */
-    public func parseValue<Value>(for key: String, json: String, user: User?) throws -> Value {
+    public func parseValue<Value>(for key: String, json: String, user: User? = nil) throws -> Value {
         if Value.self != String.self &&
             Value.self != String?.self &&
             Value.self != Int.self &&

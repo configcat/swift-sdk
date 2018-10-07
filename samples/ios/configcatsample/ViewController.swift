@@ -14,14 +14,15 @@ class ViewController: UIViewController {
                               fetcher: fetcher,
                               autoPollIntervalInSeconds: 5,
                               onConfigChanged: { (config, parser) in
-                                let sample: String = try! parser.parseValue(for: "keyString", json: config)
+                                let user = User(identifier: "key")
+                                let sample: String = try! parser.parseValue(for: "string25Cat25Dog25Falcon25Horse", json: config, user: user)
                                 DispatchQueue.main.sync {
                                     self.label.text = sample
                                 }
                               })
         }
         
-        self.client = ConfigCatClient(apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/PaDVCFk9EpmD6sLpGLltTA", policyFactory: factory)
+        self.client = ConfigCatClient(apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", policyFactory: factory)
         
     }
 
