@@ -7,6 +7,9 @@ stages:
   - coverage
   - pods
 
+before_install:
+  - gem install cocoapods --pre
+
 jobs:
   include:
   - stage: test
