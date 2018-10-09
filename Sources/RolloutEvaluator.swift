@@ -54,7 +54,7 @@ class RolloutEvaluator {
                 let hashCandidate = key + user.identifier
                 if let hash = hashCandidate.sha1hex?.prefix(15) {
                     let hashString = String(hash)
-                    if let num = Int(String(hashString), radix: 16) {
+                    if let num = Int(hashString, radix: 16) {
                         let scaled = num % 100
                         
                         var bucket = 0
