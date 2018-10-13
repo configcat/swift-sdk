@@ -26,6 +26,14 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual(10, config)
     }
     
+    func testGetIntValueFailedInvalidJson() {
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 200))
+        let client = self.createClient()
+        let config = client.getValue(for: "fakeKey", defaultValue: 10)
+        
+        XCTAssertEqual(10, config)
+    }
+    
     func testGetStringValue() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"fake\""), statusCode: 200))
         let client = self.createClient()
@@ -80,6 +88,35 @@ class ConfigCatClientTests: XCTestCase {
         let config = client.getValue(for: "fakeKey", defaultValue: Float(55))
         
         XCTAssertEqual(Float(55), config)
+    }
+    
+    func testGetLatestOnFail() {
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "55"), statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = self.createClient()
+        var config = client.getValue(for: "fakeKey", defaultValue: 0)
+        XCTAssertEqual(55, config)
+        config = client.getValue(for: "fakeKey", defaultValue: 0)
+        XCTAssertEqual(55, config)
+    }
+    
+    func testGetLatestOnFailAsync() {
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "55"), statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = self.createClient()
+        let config = AsyncResult<Int>()
+        client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
+            config.complete(result: result)
+        }
+        
+        XCTAssertEqual(55, try config.get())
+        
+        let config2 = AsyncResult<Int>()
+        client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
+            config2.complete(result: result)
+        }
+        
+        XCTAssertEqual(55, try config2.get())
     }
     
     func testForceRefresh() {

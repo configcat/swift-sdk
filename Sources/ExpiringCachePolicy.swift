@@ -11,6 +11,7 @@ public final class ExpiringCachePolicy : RefreshPolicy {
     fileprivate let initialized = Synced<Bool>(initValue: false)
     fileprivate let isFetching = Synced<Bool>(initValue: false)
     fileprivate var fetching = AsyncResult<String>()
+    fileprivate let initAsync = Async()
     
     /**
      Initializes a new `ExpiringCachePolicy`.
@@ -41,37 +42,57 @@ public final class ExpiringCachePolicy : RefreshPolicy {
     
     public override func getConfiguration() -> AsyncResult<String> {
         if self.lastRefreshTime.timeIntervalSinceNow < -self.cacheRefreshIntervalInSeconds {
-            if !self.isFetching.testAndSet(expect: false, new: true) {
+            let initialized = self.initAsync.completed
+            if initialized && !self.isFetching.testAndSet(expect: false, new: true) {
                 return self.useAsyncRefresh
                     ? self.readCache()
                     : self.fetching
             }
             
             os_log("Cache expired, refreshing", log: ExpiringCachePolicy.log, type: .debug)
-            self.fetching = self.fetcher.getConfigurationJson()
-                .apply(completion: { response in
-                    let cached = super.cache.get()
-                    if response.isFetched() && response.body != cached {
-                        super.cache.set(value: response.body)
-                        self.isFetching.set(new: false)
-                        self.initialized.set(new: true)
-                    }
-                    
-                    if !response.isFailed() {
-                        self.lastRefreshTime = Date()
-                    }
-                    
-                    return response.isFetched()
-                        ? response.body
-                        : cached
+            if(initialized) {
+                self.fetching = self.fetch()
+                if(self.useAsyncRefresh) {
+                    return self.readCache()
+                }
+                return self.fetching
+            } else {
+                if(self.isFetching.testAndSet(expect: false, new: true)) {
+                    self.fetching = self.fetch()
+                }
+                return self.initAsync.apply(completion: {
+                    return self.cache.get()
                 })
-            
-            return self.useAsyncRefresh && self.initialized.get()
-                ? self.readCache()
-                : self.fetching;
+            }
         }
         
         return self.readCache()
+    }
+    
+    private func fetch() -> AsyncResult<String> {
+        return self.fetcher.getConfigurationJson()
+            .apply(completion: { response in
+                let cached = super.cache.get()
+                if response.isFetched() && response.body != cached {
+                    super.cache.set(value: response.body)
+                }
+                
+                if !response.isFailed() {
+                    self.lastRefreshTime = Date()
+                }
+                
+                if(self.initialized.testAndSet(expect: false, new: true)) {
+                    self.initAsync.complete()
+                }
+                
+                if(response.isFetched()) {
+                    self.isFetching.set(new: false)
+                }
+                
+                return response.isFetched()
+                    ? response.body
+                    : cached
+            })
     }
     
     private func readCache() -> AsyncResult<String> {

@@ -48,7 +48,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
                 ? try self.refreshPolicy.getConfiguration().get()
                 : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             
-            return self.deserializeJson(for: key, json: config, defaultValue: defaultValue, user: user)
+            return try ConfigCatClient.parser.parseValue(for: key, json: config,user: user)
         } catch {
             os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
             return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
@@ -66,8 +66,14 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         
         self.refreshPolicy.getConfiguration()
             .apply { config in
-                let result = self.deserializeJson(for: key, json: config, defaultValue: defaultValue, user: user)
-                completion(result)
+                do {
+                    let result: Value = try ConfigCatClient.parser.parseValue(for: key, json: config, user: user)
+                    completion(result)
+                } catch {
+                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    let result = self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
+                    completion(result)
+                }
             }
     }
     
