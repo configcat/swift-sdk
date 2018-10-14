@@ -175,7 +175,7 @@ let client = ConfigCatClient(apiKey: "<PLACE-YOUR-API-KEY-HERE>", configCache: M
 ```
 
 ### Maximum wait time for synchronous calls
-You have the option to set a timeout value for the synchronous methods of the library (`getConfigurationJsonString()`, `getConfiguration()`, `getValue()` etc.) which means
+You have the option to set a timeout value for the synchronous methods of the library (`getValue()`, `forceRefresh()`) which means
 when a sync call takes longer than the timeout value, it'll return with the default.
 ```swift      
 let client = ConfigCatClient(apiKey: "<PLACE-YOUR-API-KEY-HERE>", maxWaitTimeForSyncCallsInSeconds: 5)
