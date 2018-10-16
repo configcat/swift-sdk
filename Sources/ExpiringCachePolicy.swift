@@ -85,9 +85,7 @@ public final class ExpiringCachePolicy : RefreshPolicy {
                     self.initAsync.complete()
                 }
                 
-                if(response.isFetched()) {
-                    self.isFetching.set(new: false)
-                }
+                self.isFetching.set(new: false)
                 
                 return response.isFetched()
                     ? response.body

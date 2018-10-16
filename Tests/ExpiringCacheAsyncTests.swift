@@ -30,7 +30,7 @@ class ExpiringCacheAsyncTests: XCTestCase {
     func testGetFailedRefresh() {
         let mockSession = MockURLSession()
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
+        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500, delay: 2))
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)

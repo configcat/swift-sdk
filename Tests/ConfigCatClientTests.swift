@@ -135,6 +135,28 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual("test2", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
     
+    func testFailingAutoPoll() {
+        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
+        let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
+        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
+            policy
+        })
+        
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
+        XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
+    }
+    
+    func testFailingExpiringCache() {
+        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
+        let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
+        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
+            policy
+        })
+        
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
+        XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
+    }
+    
     private func createClient() -> ConfigCatClient {
         let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
