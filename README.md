@@ -37,7 +37,7 @@ github "configcat/swift-sdk"
 ```
 Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
-### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*:
+### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*
 ![API-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme01.png  "API-KEY")
 
 ### 3. Import the *ConfigCat* module to your application
@@ -45,12 +45,12 @@ Then, run the `carthage update` command and then follow the [Carthage integratio
 import ConfigCat
 ```
 
-### 4. Create a *ConfigCat* client instance:
+### 4. Create a *ConfigCat* client instance
 ```swift
 let client = ConfigCatClient(apiKey: "#YOUR-API-KEY#")
 ```
 
-### 5. Get your setting value:
+### 5. Get your setting value
 ```swift
 let isMyAwesomeFeatureEnabled = client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false)
 if(isMyAwesomeFeatureEnabled) {
