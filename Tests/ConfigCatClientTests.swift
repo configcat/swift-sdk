@@ -123,7 +123,7 @@ class ConfigCatClientTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test\""), statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test2\""), statusCode: 200))
         let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: false)
+        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: false)
         let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
             policy
         })
@@ -149,7 +149,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingExpiringCache() {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
         let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
+        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
         let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
             policy
         })

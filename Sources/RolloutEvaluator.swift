@@ -18,6 +18,10 @@ class RolloutEvaluator {
                     let comparator = rule["Comparator"] as? Int,
                     let userValue = user.getAttribute(for: comparisonAttribute) {
                     
+                    if comparisonValue.isEmpty || userValue.isEmpty {
+                        continue
+                    }
+                    
                     switch comparator {
                     case 0:
                         let splitted = comparisonValue.components(separatedBy: ",")
@@ -52,7 +56,7 @@ class RolloutEvaluator {
             
             if(rules.count > 0){
                 let hashCandidate = key + user.identifier
-                if let hash = hashCandidate.sha1hex?.prefix(15) {
+                if let hash = hashCandidate.sha1hex?.prefix(7) {
                     let hashString = String(hash)
                     if let num = Int(hashString, radix: 16) {
                         let scaled = num % 100

@@ -1,57 +1,53 @@
 import XCTest
 import ConfigCat
 
-class ExpiringCacheSyncTests: XCTestCase {
-
+class LazyLoadingAsyncTests: XCTestCase {
+    
     func testGet() {
         let mockSession = MockURLSession()
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
+        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
         //wait for cache invalidation
+        sleep(6)
+        
+        //previous value returned until the new is not fetched
+        XCTAssertEqual("test", try policy.getConfiguration().get())
+        
+        //wait for refresh response
         sleep(3)
         
-        //next call will block until the new value is fetched
+        //new value is present
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
     
     func testGetFailedRefresh() {
         let mockSession = MockURLSession()
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
+        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500, delay: 2))
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ExpiringCachePolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
+        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
         //wait for cache invalidation
-        sleep(3)
+        sleep(6)
         
-        //next call will block until the new value is fetched
-        XCTAssertEqual("test", try policy.getConfiguration().get())
-    }
-    
-    func testCacheFails() {
-        let mockSession = MockURLSession()
-        mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
-        
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ExpiringCachePolicy(cache: FailingCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
-        
+        //previous value returned until the new is not fetched
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        //wait for cache invalidation
-        sleep(3)
+        //wait for refresh response
+        sleep(1)
         
-        XCTAssertEqual("test2", try policy.getConfiguration().get())
+        //new value is present
+        XCTAssertEqual("test", try policy.getConfiguration().get())
     }
 }

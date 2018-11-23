@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		3F36F5392083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
-		3F36F53A2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
-		3F36F53B2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */; };
-		3F36F53D2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* ExpiringCacheAsyncTests.swift */; };
-		3F36F53E2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* ExpiringCacheAsyncTests.swift */; };
-		3F36F53F2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* ExpiringCacheAsyncTests.swift */; };
+		3F36F5392083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
+		3F36F53A2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
+		3F36F53B2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
+		3F36F53D2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */; };
+		3F36F53E2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */; };
+		3F36F53F2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */; };
 		3F4D40C5207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */; };
 		3F4D40C6207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */; };
 		3F4D40C7207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */; };
@@ -27,7 +27,7 @@
 		3F880A8C207BEF7300087A6B /* ConfigCat.h in Headers */ = {isa = PBXBuildFile; fileRef = 3F880A2C207BE8F000087A6B /* ConfigCat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3F880A9A207BF09400087A6B /* ConfigCat.h in Headers */ = {isa = PBXBuildFile; fileRef = 3F880A2C207BE8F000087A6B /* ConfigCat.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3F880AA3207BF1B100087A6B /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
-		3F880AA4207BF1B100087A6B /* ExpiringCachePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */; };
+		3F880AA4207BF1B100087A6B /* LazyLoadingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */; };
 		3F880AA5207BF1B100087A6B /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F880AA6207BF1B100087A6B /* AsyncResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9E207BF1B100087A6B /* AsyncResult.swift */; };
 		3F880AA7207BF1B100087A6B /* ConfigFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */; };
@@ -39,7 +39,7 @@
 		3F880AAD207BF2A100087A6B /* ConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA1207BF1B100087A6B /* ConfigCache.swift */; };
 		3F880AAE207BF2A100087A6B /* ConfigFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */; };
 		3F880AAF207BF2A100087A6B /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
-		3F880AB0207BF2A100087A6B /* ExpiringCachePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */; };
+		3F880AB0207BF2A100087A6B /* LazyLoadingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */; };
 		3F880AB1207BF2A100087A6B /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F880AB2207BF2A100087A6B /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F880AB3207BF2A200087A6B /* AsyncResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9E207BF1B100087A6B /* AsyncResult.swift */; };
@@ -47,7 +47,7 @@
 		3F880AB5207BF2A200087A6B /* ConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA1207BF1B100087A6B /* ConfigCache.swift */; };
 		3F880AB6207BF2A200087A6B /* ConfigFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */; };
 		3F880AB7207BF2A200087A6B /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
-		3F880AB8207BF2A200087A6B /* ExpiringCachePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */; };
+		3F880AB8207BF2A200087A6B /* LazyLoadingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */; };
 		3F880AB9207BF2A200087A6B /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F880ABA207BF2A200087A6B /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F880ABB207BF2A300087A6B /* AsyncResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9E207BF1B100087A6B /* AsyncResult.swift */; };
@@ -55,7 +55,7 @@
 		3F880ABD207BF2A300087A6B /* ConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA1207BF1B100087A6B /* ConfigCache.swift */; };
 		3F880ABE207BF2A300087A6B /* ConfigFetcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */; };
 		3F880ABF207BF2A300087A6B /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
-		3F880AC0207BF2A300087A6B /* ExpiringCachePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */; };
+		3F880AC0207BF2A300087A6B /* LazyLoadingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */; };
 		3F880AC1207BF2A300087A6B /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F880AC2207BF2A300087A6B /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F880AC4207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */; };
@@ -121,8 +121,8 @@
 
 /* Begin PBXFileReference section */
 		3F029E89207EB3BD0019942F /* Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mock.swift; sourceTree = "<group>"; };
-		3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiringCacheSyncTests.swift; sourceTree = "<group>"; };
-		3F36F53C2083DA3600949B8F /* ExpiringCacheAsyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpiringCacheAsyncTests.swift; sourceTree = "<group>"; };
+		3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyLoadingSyncTests.swift; sourceTree = "<group>"; };
+		3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LazyLoadingAsyncTests.swift; sourceTree = "<group>"; };
 		3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigFetcherTests.swift; sourceTree = "<group>"; };
 		3F880A2A207BE8F000087A6B /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F880A2C207BE8F000087A6B /* ConfigCat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConfigCat.h; sourceTree = "<group>"; };
@@ -140,7 +140,7 @@
 		3F880A92207BF05400087A6B /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F880A95207BF05400087A6B /* Info-watchOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-watchOS.plist"; sourceTree = "<group>"; };
 		3F880A9B207BF1B100087A6B /* ConfigParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigParser.swift; sourceTree = "<group>"; };
-		3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ExpiringCachePolicy.swift; sourceTree = "<group>"; };
+		3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LazyLoadingPolicy.swift; sourceTree = "<group>"; };
 		3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RefreshPolicy.swift; sourceTree = "<group>"; };
 		3F880A9E207BF1B100087A6B /* AsyncResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncResult.swift; sourceTree = "<group>"; };
 		3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigFetcher.swift; sourceTree = "<group>"; };
@@ -259,7 +259,7 @@
 				3F880AA1207BF1B100087A6B /* ConfigCache.swift */,
 				3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */,
 				3F880A9B207BF1B100087A6B /* ConfigParser.swift */,
-				3F880A9C207BF1B100087A6B /* ExpiringCachePolicy.swift */,
+				3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */,
 				3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */,
 				3F880AA2207BF1B100087A6B /* Synced.swift */,
 				3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */,
@@ -280,8 +280,8 @@
 				3F880A39207BE8F000087A6B /* Info-iOS.plist */,
 				3F029E89207EB3BD0019942F /* Mock.swift */,
 				3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */,
-				3F36F5382083D5C400949B8F /* ExpiringCacheSyncTests.swift */,
-				3F36F53C2083DA3600949B8F /* ExpiringCacheAsyncTests.swift */,
+				3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */,
+				3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */,
 				3F8EDF9720840FE900906339 /* ManualPollingTests.swift */,
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
@@ -581,7 +581,7 @@
 			files = (
 				3F880ACE207C072400087A6B /* ConfigCatClient.swift in Sources */,
 				3F880AA7207BF1B100087A6B /* ConfigFetcher.swift in Sources */,
-				3F880AA4207BF1B100087A6B /* ExpiringCachePolicy.swift in Sources */,
+				3F880AA4207BF1B100087A6B /* LazyLoadingPolicy.swift in Sources */,
 				F15F9AFC216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AA8207BF1B100087A6B /* AutoPollingPolicy.swift in Sources */,
 				3F880AA6207BF1B100087A6B /* AsyncResult.swift in Sources */,
@@ -601,11 +601,11 @@
 			files = (
 				F15F9B17216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C5207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
-				3F36F5392083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
+				3F36F5392083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F8EDFA02084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F8EDF9C208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F4D40CA207EC20500BBAEC6 /* Mock.swift in Sources */,
-				3F36F53D2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */,
+				3F36F53D2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9820840FE900906339 /* ManualPollingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -615,7 +615,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F880ACF207C072400087A6B /* ConfigCatClient.swift in Sources */,
-				3F880AB0207BF2A100087A6B /* ExpiringCachePolicy.swift in Sources */,
+				3F880AB0207BF2A100087A6B /* LazyLoadingPolicy.swift in Sources */,
 				3F880AB1207BF2A100087A6B /* RefreshPolicy.swift in Sources */,
 				F15F9AFD216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AAC207BF2A100087A6B /* AutoPollingPolicy.swift in Sources */,
@@ -636,11 +636,11 @@
 			files = (
 				F15F9B18216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C6207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
-				3F36F53A2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
+				3F36F53A2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F8EDFA12084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F8EDF9D208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F4D40C9207EC20500BBAEC6 /* Mock.swift in Sources */,
-				3F36F53E2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */,
+				3F36F53E2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9920840FE900906339 /* ManualPollingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -650,7 +650,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F880AD0207C072400087A6B /* ConfigCatClient.swift in Sources */,
-				3F880AB8207BF2A200087A6B /* ExpiringCachePolicy.swift in Sources */,
+				3F880AB8207BF2A200087A6B /* LazyLoadingPolicy.swift in Sources */,
 				3F880AB9207BF2A200087A6B /* RefreshPolicy.swift in Sources */,
 				F15F9AFE216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AB4207BF2A200087A6B /* AutoPollingPolicy.swift in Sources */,
@@ -671,11 +671,11 @@
 			files = (
 				F15F9B19216973B000F490CD /* RolloutIntegrationTests.swift in Sources */,
 				3F4D40C7207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
-				3F36F53B2083D5C400949B8F /* ExpiringCacheSyncTests.swift in Sources */,
+				3F36F53B2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F8EDFA22084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F8EDF9E208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F4D40C8207EC20400BBAEC6 /* Mock.swift in Sources */,
-				3F36F53F2083DA3600949B8F /* ExpiringCacheAsyncTests.swift in Sources */,
+				3F36F53F2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9A20840FE900906339 /* ManualPollingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -685,7 +685,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				3F880AD1207C072400087A6B /* ConfigCatClient.swift in Sources */,
-				3F880AC0207BF2A300087A6B /* ExpiringCachePolicy.swift in Sources */,
+				3F880AC0207BF2A300087A6B /* LazyLoadingPolicy.swift in Sources */,
 				3F880AC1207BF2A300087A6B /* RefreshPolicy.swift in Sources */,
 				F15F9AFF216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880ABC207BF2A300087A6B /* AutoPollingPolicy.swift in Sources */,

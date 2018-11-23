@@ -36,13 +36,27 @@ class RolloutIntegrationTests: XCTestCase {
             }
             
             var user: User? = nil
-            if !testObjects[0].isEmpty && testObjects[0] != "##nouserobject##" {
+            if !testObjects[0].isEmpty && testObjects[0] != "##null##" {
+                
+                var email = ""
+                var country = ""
+                
+                let identifier = testObjects[0]
+                
+                if !testObjects[1].isEmpty && testObjects[1] != "##null##" {
+                    email = testObjects[1]
+                }
+                
+                if !testObjects[2].isEmpty && testObjects[2] != "##null##" {
+                    country = testObjects[2]
+                }
+                
                 var custom: [String: String] = [:]
-                if !testObjects[3].isEmpty {
+                if !testObjects[3].isEmpty && testObjects[3] != "##null##" {
                     custom["Custom1"] = testObjects[3]
                 }
                 
-                user = User(identifier: testObjects[0], email: testObjects[1], country: testObjects[2], custom: custom)
+                user = User(identifier: identifier, email: email, country: country, custom: custom)
             }
             
             var i: Int = 0
