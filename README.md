@@ -5,7 +5,7 @@ ConfigCat SDK for Swift provides easy integration between ConfigCat service and 
 ConfigCat is a feature flag, feature toggle, and configuration management service. That lets you launch new features and change your software configuration remotely without actually (re)deploying code. ConfigCat even helps you do controlled roll-outs like canary releases and blue-green deployments.
 https://configcat.com  
 
-[![Build Status](https://travis-ci.org/configcat/swift-sdk.svg?branch=master)](https://travis-ci.org/configcat/swift-sdk)
+[![Build Status](https://travis-ci.com/configcat/swift-sdk.svg?branch=master)](https://travis-ci.com/configcat/swift-sdk)
 [![Coverage Status](https://img.shields.io/codecov/c/github/ConfigCat/swift-sdk.svg)](https://codecov.io/gh/ConfigCat/swift-sdk)
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
