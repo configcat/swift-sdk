@@ -77,7 +77,7 @@ public class ConfigFetcher {
      */
     public init(session: URLSession, apiKey: String) {
         self.session = session
-        self.url = "https://cdn.betterconfig.com/configuration-files/" + apiKey + "/config_v2.json"
+        self.url = "https://cdn.configcat.com/configuration-files/" + apiKey + "/config_v2.json"
         self.etag = ""
         self.mode = ""
     }
