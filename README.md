@@ -1,11 +1,11 @@
 # ConfigCat SDK for Swift
+https://configcat.com
 
-ConfigCat SDK for Swift provides easy integration between ConfigCat service and applications using Swift.
+ConfigCat SDK for Swift provides easy integration for your application to ConfigCat.
 
-ConfigCat is a feature flag, feature toggle, and configuration management service. That lets you launch new features and change your software configuration remotely without actually (re)deploying code. ConfigCat even helps you do controlled roll-outs like canary releases and blue-green deployments.
-https://configcat.com  
+ConfigCat is a feature flag and configuration management service that lets you separate releases from deployments. You can turn your features ON/OFF using <a href="http://app.configcat.com" target="_blank">ConfigCat Management Console</a> even after they are deployed. ConfigCat lets you target specific groups of users based on region, email or any other custom user attribute.
 
-[![Build Status](https://travis-ci.org/configcat/swift-sdk.svg?branch=master)](https://travis-ci.org/configcat/swift-sdk)
+[![Build Status](https://travis-ci.com/configcat/swift-sdk.svg?branch=master)](https://travis-ci.com/configcat/swift-sdk)
 [![Coverage Status](https://img.shields.io/codecov/c/github/ConfigCat/swift-sdk.svg)](https://codecov.io/gh/ConfigCat/swift-sdk)
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
@@ -37,7 +37,7 @@ github "configcat/swift-sdk"
 ```
 Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
-### 2. <a href="https://configcat.com/Account/Login" target="_blank">Log in to ConfigCat Management Console</a> and go to your *Project* to get your *API Key*
+### 2. Go to <a href="https://app.configcat.com/connect" target="_blank">Connect your application</a> tab to get your *API Key*:
 ![API-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme01.png  "API-KEY")
 
 ### 3. Import the *ConfigCat* module to your application
@@ -98,5 +98,6 @@ If you need help how to use this SDK feel free to to contact the ConfigCat Staff
 Contributions are welcome.
 
 ## About ConfigCat
+- [Official ConfigCat SDK's for other platforms](https://github.com/configcat)
 - [Documentation](https://docs.configcat.com)
 - [Blog](https://blog.configcat.com)
