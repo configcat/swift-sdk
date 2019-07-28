@@ -64,8 +64,8 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public convenience init(config: URLSessionConfiguration, apiKey: String) {
-        self.init(session: URLSession(configuration: config), apiKey: apiKey)
+    public convenience init(config: URLSessionConfiguration, apiKey: String, baseUrl: String = "") {
+        self.init(session: URLSession(configuration: config), apiKey: apiKey, baseUrl: baseUrl)
     }
     
     /**
@@ -75,9 +75,10 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public init(session: URLSession, apiKey: String) {
+    public init(session: URLSession, apiKey: String, baseUrl: String = "") {
+        let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = "https://cdn.configcat.com/configuration-files/" + apiKey + "/config_v2.json"
+        self.url = base + "/configuration-files/" + apiKey + "/config_v2.json"
         self.etag = ""
         self.mode = ""
     }

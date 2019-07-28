@@ -39,6 +39,12 @@ public protocol ConfigCatClientProtocol {
      */
     func getValueAsync<Value>(for key: String, defaultValue: Value, user: User?, completion: @escaping (Value) -> ())
     
+    /// Gets all the setting keys.
+    func getAllKeys() -> [String]
+    
+    /// Gets all the setting keys asynchronously.
+    func getAllKeysAsync(completion: @escaping ([String], Error?) -> ())
+    
     /// Initiates a force refresh synchronously on the cached configuration.
     func refresh()
     

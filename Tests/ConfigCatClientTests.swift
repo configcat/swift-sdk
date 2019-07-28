@@ -157,6 +157,12 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
     
+        let client = ConfigCatClient(apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let keys = client.getAllKeys()
+        XCTAssertEqual(16, keys.count)
+        XCTAssertTrue(keys.contains("stringDefaultCat"))
+    }
+    
     private func createClient() -> ConfigCatClient {
         let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)

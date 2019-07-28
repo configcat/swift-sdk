@@ -46,4 +46,21 @@ public final class ConfigParser {
         os_log("Parsing the json value for the key '%@' failed.", log: ConfigParser.log, type: .error, key)
         throw ParserError.parseFailure
     }
+    
+    /**
+     Gets all setting keys from the config json.
+     
+     - Parameter json: the json config.
+     - Throws: `ParserError.parseFailure` when the parsing failed.
+     */
+    public func getAllKeys(json: String) throws -> [String] {
+        if let data = json.data(using: .utf8) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                return [String](jsonObject.keys)
+            }
+        }
+        
+        os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
+        throw ParserError.parseFailure
+    }
 }

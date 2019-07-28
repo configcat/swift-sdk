@@ -21,7 +21,8 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
                 configCache: ConfigCache? = nil,
                 policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
-                sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default) {
+                sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
+                baseUrl: String = "") {
         if apiKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
@@ -31,7 +32,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         }
         
         let cache = configCache ?? InMemoryConfigCache()
-        let fetcher = ConfigFetcher(config: sessionConfiguration, apiKey: apiKey)
+        let fetcher = ConfigFetcher(config: sessionConfiguration, apiKey: apiKey, baseUrl: baseUrl)
         
         self.refreshPolicy = policyFactory?(cache, fetcher) ?? AutoPollingPolicy(cache: cache, fetcher: fetcher)
         
@@ -79,6 +80,32 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
     
     public func getValueAsync<Value>(for key: String, defaultValue: Value, completion: @escaping (Value) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: nil, completion: completion)
+    }
+    
+    public func getAllKeys() -> [String] {
+        do {
+            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
+                ? try self.refreshPolicy.getConfiguration().get()
+                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
+            
+            return try ConfigCatClient.parser.getAllKeys(json: config)
+        } catch {
+            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            return []
+        }
+    }
+    
+    public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
+        self.refreshPolicy.getConfiguration()
+            .apply { config in
+                do {
+                    let result = try ConfigCatClient.parser.getAllKeys(json: config)
+                    completion(result, nil)
+                } catch {
+                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    completion([], error)
+                }
+        }
     }
     
     public func refresh() {
