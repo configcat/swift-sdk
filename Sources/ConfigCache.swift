@@ -14,8 +14,6 @@ open class ConfigCache : NSObject {
     
     let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCache.self).bundleIdentifier!, category: "Config Cache")
     
-    public override init() { }
-    
     public final func set(value: String) {
         self.inMemoryValue = value
         do {
