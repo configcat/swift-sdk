@@ -2,7 +2,7 @@ import Foundation
 import os.log
 
 /// A client for handling configurations provided by ConfigCat.
-public final class ConfigCatClient : ConfigCatClientProtocol {
+public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
     fileprivate static let parser = ConfigParser()
     fileprivate let refreshPolicy: RefreshPolicy
@@ -17,7 +17,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
      - Parameter sessionConfiguration: the url session configuration.
      - Returns: A new `ConfigCatClient`.
      */
-    public init(apiKey: String,
+    @objc public init(apiKey: String,
                 configCache: ConfigCache? = nil,
                 policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
@@ -82,7 +82,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         return getValueAsync(for: key, defaultValue: defaultValue, user: nil, completion: completion)
     }
     
-    public func getAllKeys() -> [String] {
+    @objc public func getAllKeys() -> [String] {
         do {
             let config = self.maxWaitTimeForSyncCallsInSeconds == 0
                 ? try self.refreshPolicy.getConfiguration().get()
@@ -95,7 +95,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         }
     }
     
-    public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
+    @objc public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
@@ -108,7 +108,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         }
     }
     
-    public func refresh() {
+    @objc public func refresh() {
         do {
             if self.maxWaitTimeForSyncCallsInSeconds == 0 {
                 self.refreshPolicy.refresh().wait()
@@ -120,7 +120,7 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
         }
     }
     
-    public func refreshAsync(completion: @escaping () -> ()) {
+    @objc public func refreshAsync(completion: @escaping () -> ()) {
         self.refreshPolicy.refresh().accept(completion: completion)
     }
 
@@ -136,5 +136,72 @@ public final class ConfigCatClient : ConfigCatClientProtocol {
             os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
             return defaultValue
         }
+    }
+}
+
+// Objectiv-C interface
+extension ConfigCatClient {
+    @objc public func getStringValue(for key: String, defaultValue: String) -> String {
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
+    }
+    @objc public func getIntValue(for key: String, defaultValue: Int) -> Int {
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
+    }
+    @objc public func getDoubleValue(for key: String, defaultValue: Double) -> Double {
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
+    }
+    @objc public func getBoolValue(for key: String, defaultValue: Bool) -> Bool {
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
+    }
+    @objc public func getAnyValue(for key: String, defaultValue: Any) -> Any {
+        return getValue(for: key, defaultValue: defaultValue, user: nil)
+    }
+
+    @objc public func getStringValue(for key: String, defaultValue: String, user: User?) -> String {
+        return getValue(for: key, defaultValue: defaultValue, user: user)
+    }
+    @objc public func getIntValue(for key: String, defaultValue: Int, user: User?) -> Int {
+        return getValue(for: key, defaultValue: defaultValue, user: user)
+    }
+    @objc public func getDoubleValue(for key: String, defaultValue: Double, user: User?) -> Double {
+        return getValue(for: key, defaultValue: defaultValue, user: user)
+    }
+    @objc public func getBoolValue(for key: String, defaultValue: Bool, user: User?) -> Bool {
+        return getValue(for: key, defaultValue: defaultValue, user: user)
+    }
+    @objc public func getAnyValue(for key: String, defaultValue: Any, user: User?) -> Any {
+        return getValue(for: key, defaultValue: defaultValue, user: user)
+    }
+
+    @objc public func getStringValueAsync(for key: String, defaultValue: String, completion: @escaping (String) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
+    }
+    @objc public func getIntValueAsync(for key: String, defaultValue: Int, completion: @escaping (Int) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
+    }
+    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, completion: @escaping (Double) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
+    }
+    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, completion: @escaping (Bool) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
+    }
+    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, completion: @escaping (Any) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
+    }
+
+    @objc public func getStringValueAsync(for key: String, defaultValue: String, user: User?, completion: @escaping (String) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+    }
+    @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: User?, completion: @escaping (Int) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+    }
+    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: User?, completion: @escaping (Double) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+    }
+    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: User?, completion: @escaping (Bool) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+    }
+    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: User?, completion: @escaping (Any) -> ()) {
+        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
 }

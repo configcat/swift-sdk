@@ -2,7 +2,7 @@ import os.log
 import Foundation
 
 /// A cache API used to make custom cache implementations for `ConfigCatClient`.
-open class ConfigCache {
+open class ConfigCache : NSObject {
     /**
      Through this getter, the in-memory representation of the cached value can be accessed.
      When the underlying cache implementations is not able to load or store its value,
@@ -14,7 +14,7 @@ open class ConfigCache {
     
     let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCache.self).bundleIdentifier!, category: "Config Cache")
     
-    public init() { }
+    public override init() { }
     
     public final func set(value: String) {
         self.inMemoryValue = value

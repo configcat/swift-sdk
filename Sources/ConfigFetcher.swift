@@ -48,7 +48,7 @@ public struct FetchResponse {
 }
 
 /// This class is used to fetch the latest configuration.
-public class ConfigFetcher {
+public class ConfigFetcher : NSObject {
     fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigFetcher.self).bundleIdentifier!, category: "Config Fetcher")
     fileprivate let session: URLSession
