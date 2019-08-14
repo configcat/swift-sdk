@@ -139,7 +139,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 }
 
-// Objectiv-C interface
+/// Objectiv-C interface extension.
+/// Generic parameters are not available in Objectiv-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)
 extension ConfigCatClient {
     @objc public func getStringValue(for key: String, defaultValue: String) -> String {
         return getValue(for: key, defaultValue: defaultValue, user: nil)
