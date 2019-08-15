@@ -54,4 +54,27 @@ public protocol ConfigCatClientProtocol {
      - Parameter completion: the function which will be called when refresh completed successfully.
      */
     func refreshAsync(completion: @escaping () -> ())
+
+    /// Objectiv-C interface
+    /// Generic parameters are not available in Objectiv-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)
+    func getStringValue(for key: String, defaultValue: String) -> String
+    func getIntValue(for key: String, defaultValue: Int) -> Int
+    func getDoubleValue(for key: String, defaultValue: Double) -> Double
+    func getBoolValue(for key: String, defaultValue: Bool) -> Bool
+    func getAnyValue(for key: String, defaultValue: Any) -> Any
+    func getStringValue(for key: String, defaultValue: String, user: User?) -> String
+    func getIntValue(for key: String, defaultValue: Int, user: User?) -> Int
+    func getDoubleValue(for key: String, defaultValue: Double, user: User?) -> Double
+    func getBoolValue(for key: String, defaultValue: Bool, user: User?) -> Bool
+    func getAnyValue(for key: String, defaultValue: Any, user: User?) -> Any
+    func getStringValueAsync(for key: String, defaultValue: String, completion: @escaping (String) -> ())
+    func getIntValueAsync(for key: String, defaultValue: Int, completion: @escaping (Int) -> ())
+    func getDoubleValueAsync(for key: String, defaultValue: Double, completion: @escaping (Double) -> ())
+    func getBoolValueAsync(for key: String, defaultValue: Bool, completion: @escaping (Bool) -> ())
+    func getAnyValueAsync(for key: String, defaultValue: Any, completion: @escaping (Any) -> ())
+    func getStringValueAsync(for key: String, defaultValue: String, user: User?, completion: @escaping (String) -> ())
+    func getIntValueAsync(for key: String, defaultValue: Int, user: User?, completion: @escaping (Int) -> ())
+    func getDoubleValueAsync(for key: String, defaultValue: Double, user: User?, completion: @escaping (Double) -> ())
+    func getBoolValueAsync(for key: String, defaultValue: Bool, user: User?, completion: @escaping (Bool) -> ())
+    func getAnyValueAsync(for key: String, defaultValue: Any, user: User?, completion: @escaping (Any) -> ())
 }
