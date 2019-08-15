@@ -1,0 +1,4 @@
+use_frameworks!
+target 'configcatsample-objc' do
+    pod 'ConfigCat', :git => 'https://github.com/configcat/swift-sdk.git', :branch => 'objc-support'
+end

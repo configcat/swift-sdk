@@ -1,0 +1,22 @@
+PODS:
+  - ConfigCat (2.2.0)
+
+DEPENDENCIES:
+  - ConfigCat (from `https://github.com/configcat/swift-sdk.git`, branch `objc-support`)
+
+EXTERNAL SOURCES:
+  ConfigCat:
+    :branch: objc-support
+    :git: https://github.com/configcat/swift-sdk.git
+
+CHECKOUT OPTIONS:
+  ConfigCat:
+    :commit: 46a111b8083107b727d49f79329cb17916f86fa5
+    :git: https://github.com/configcat/swift-sdk.git
+
+SPEC CHECKSUMS:
+  ConfigCat: a801bd96d94a7ac38c2656dbbd2abdbe4b735af5
+
+PODFILE CHECKSUM: b366078b99da7ad81fda2404e440228fd531cdf4
+
+COCOAPODS: 1.7.4
