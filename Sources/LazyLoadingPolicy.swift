@@ -33,7 +33,7 @@ public final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter useAsyncRefresh: sets whether the cache should refresh itself asynchronously or synchronously. If it's set to `true` reading from the policy will not wait for the refresh to be finished, instead it returns immediately with the previous stored value. If it's set to `false` the policy will wait until the expired value is being refreshed with the latest configuration.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public init(cache: ConfigCache, fetcher: ConfigFetcher, cacheRefreshIntervalInSeconds: Double, useAsyncRefresh: Bool) {
+    public init(cache: ConfigCache, fetcher: ConfigFetcher, cacheRefreshIntervalInSeconds: Double, useAsyncRefresh: Bool = true) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = useAsyncRefresh
         fetcher.mode = "l"
