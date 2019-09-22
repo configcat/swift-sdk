@@ -7,7 +7,7 @@ stages:
   - coverage
   - lint
   - name: publish
-    if: tag =~ /^v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
+    if: tag =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
 
 before_install:
   - gem install cocoapods --pre
