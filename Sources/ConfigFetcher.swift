@@ -78,7 +78,7 @@ public class ConfigFetcher : NSObject {
     public init(session: URLSession, apiKey: String, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = base + "/configuration-files/" + apiKey + "/config_v2.json"
+        self.url = base + "/configuration-files/" + apiKey + "/config_v3.json"
         self.etag = ""
         self.mode = ""
     }

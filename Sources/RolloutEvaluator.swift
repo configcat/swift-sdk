@@ -8,14 +8,14 @@ class RolloutEvaluator {
         }
         
         guard let user = user else {
-            return json["Value"] as? Value
+            return json[Config.value] as? Value
         }
         
-        if let rules = json["RolloutRules"] as? [[String: Any]] {
+        if let rules = json[Config.rolloutRules] as? [[String: Any]] {
             for rule in rules {
-                if let comparisonAttribute = rule["ComparisonAttribute"] as? String,
-                    let comparisonValue = rule["ComparisonValue"] as? String,
-                    let comparator = rule["Comparator"] as? Int,
+                if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
+                    let comparisonValue = rule[Config.comparisonValue] as? String,
+                    let comparator = rule[Config.comparator] as? Int,
                     let userValue = user.getAttribute(for: comparisonAttribute) {
                     
                     if comparisonValue.isEmpty || userValue.isEmpty {
@@ -28,22 +28,22 @@ class RolloutEvaluator {
                             .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
                         
                         if splitted.contains(userValue) {
-                            return rule["Value"] as? Value
+                            return rule[Config.value] as? Value
                         }
                     case 1:
                         let splitted = comparisonValue.components(separatedBy: ",")
                             .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
                         
                         if !splitted.contains(userValue) {
-                            return rule["Value"] as? Value
+                            return rule[Config.value] as? Value
                         }
                     case 2:
                         if userValue.contains(comparisonValue) {
-                            return rule["Value"] as? Value
+                            return rule[Config.value] as? Value
                         }
                     case 3:
                         if !userValue.contains(comparisonValue) {
-                            return rule["Value"] as? Value
+                            return rule[Config.value] as? Value
                         }
                     default:
                         continue
@@ -52,7 +52,7 @@ class RolloutEvaluator {
             }
         }
         
-        if let rules = json["RolloutPercentageItems"] as? [[String: Any]] {
+        if let rules = json[Config.rolloutPercentageItems] as? [[String: Any]] {
             
             if(rules.count > 0){
                 let hashCandidate = key + user.identifier
@@ -63,10 +63,10 @@ class RolloutEvaluator {
                         
                         var bucket = 0
                         for rule in rules {
-                            if let percentage = rule["Percentage"] as? Int {
+                            if let percentage = rule[Config.percentage] as? Int {
                                 bucket += percentage
                                 if scaled < bucket {
-                                    return rule["Value"] as? Value
+                                    return rule[Config.value] as? Value
                                 }
                             }
                         }
@@ -75,7 +75,7 @@ class RolloutEvaluator {
             }
         }
         
-        return json["Value"] as? Value
+        return json[Config.value] as? Value
     }
 }
 
