@@ -9,18 +9,24 @@ class RolloutIntegrationTests: XCTestCase {
     func testRolloutMatrixText() throws {
         if let url = testBundle.url(forResource: "testmatrix", withExtension: "csv") {
             try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        } else {
+            XCTFail()
         }
     }
 
     func testRolloutMatrixSemantic() throws {
         if let url = testBundle.url(forResource: "testmatrix_semantic", withExtension: "csv") {
             try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
+        } else {
+            XCTFail()
         }
     }
 
     func testRolloutMatrixNumber() throws {
         if let url = testBundle.url(forResource: "testmatrix_number", withExtension: "csv") {
             try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
+        } else {
+            XCTFail()
         }
     }
 

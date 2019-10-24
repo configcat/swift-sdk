@@ -7,12 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1A75DB452360BAF00097FCDC /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB432360BAF00097FCDC /* testmatrix_number.csv */; };
-		1A75DB462360BAF00097FCDC /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB442360BAF00097FCDC /* testmatrix_semantic.csv */; };
 		1A75DB482360E73B0097FCDC /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A75DB472360E73B0097FCDC /* Config.swift */; };
 		1A75DB4A2360E73B0097FCDC /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A75DB472360E73B0097FCDC /* Config.swift */; };
 		1A75DB4C2360E73B0097FCDC /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A75DB472360E73B0097FCDC /* Config.swift */; };
 		1A75DB4E2360E73B0097FCDC /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A75DB472360E73B0097FCDC /* Config.swift */; };
+		1A75DB4F2361FAA80097FCDC /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB442360BAF00097FCDC /* testmatrix_semantic.csv */; };
+		1A75DB502361FAA90097FCDC /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB442360BAF00097FCDC /* testmatrix_semantic.csv */; };
+		1A75DB512361FAAA0097FCDC /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB442360BAF00097FCDC /* testmatrix_semantic.csv */; };
+		1A75DB522361FAAD0097FCDC /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB432360BAF00097FCDC /* testmatrix_number.csv */; };
+		1A75DB532361FAAE0097FCDC /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB432360BAF00097FCDC /* testmatrix_number.csv */; };
+		1A75DB542361FAAF0097FCDC /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1A75DB432360BAF00097FCDC /* testmatrix_number.csv */; };
 		3F36F5392083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
 		3F36F53A2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
 		3F36F53B2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F5382083D5C400949B8F /* LazyLoadingSyncTests.swift */; };
@@ -536,8 +540,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1A75DB452360BAF00097FCDC /* testmatrix_number.csv in Resources */,
-				1A75DB462360BAF00097FCDC /* testmatrix_semantic.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -546,6 +548,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F15F9B132169738100F490CD /* testmatrix.csv in Resources */,
+				1A75DB522361FAAD0097FCDC /* testmatrix_number.csv in Resources */,
+				1A75DB4F2361FAA80097FCDC /* testmatrix_semantic.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -561,6 +565,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F15F9B142169738100F490CD /* testmatrix.csv in Resources */,
+				1A75DB532361FAAE0097FCDC /* testmatrix_number.csv in Resources */,
+				1A75DB502361FAA90097FCDC /* testmatrix_semantic.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -576,6 +582,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				F15F9B152169738100F490CD /* testmatrix.csv in Resources */,
+				1A75DB542361FAAF0097FCDC /* testmatrix_number.csv in Resources */,
+				1A75DB512361FAAA0097FCDC /* testmatrix_semantic.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
