@@ -108,7 +108,9 @@ public class ConfigFetcher : NSObject {
                     os_log("Fetch was successful: not modified", log: ConfigFetcher.log, type: .debug)
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
                 } else {
-                    os_log("Non success status code: %@", log: ConfigFetcher.log, type: .error, String(response.statusCode))
+                    os_log("""
+                        Double-check your API KEY at https://app.configcat.com/apikey. Non success status code: %@
+                        """, log: ConfigFetcher.log, type: .error, String(response.statusCode))
                     result.complete(result: FetchResponse(status: .failure, body: ""))
                 }
             }
