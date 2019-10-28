@@ -1,80 +1,153 @@
 import Foundation
 import CommonCrypto
+import OSLog
+import Version
 
 class RolloutEvaluator {
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: RolloutEvaluator.self).bundleIdentifier!, category: "Rollout Evaluator")
+    
     func evaluate<Value>(json: Any?, key: String, user: User?) -> Value? {
         guard let json = json as? [String: Any] else {
             return nil
         }
+                
+        let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
+        let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
         
         guard let user = user else {
+            if rolloutRules.count > 0 || rolloutPercentageItems.count > 0 {
+                os_log(
+                    """
+                    Evaluating get_value(%@). UserObject missing!
+                    You should pass a UserObject to get_value(),
+                    in order to make targeting work properly.
+                    Read more: https://configcat.com/docs/advanced/user-object/
+                    """,
+                    log: .default, type: .default, key)
+            }
+            
             return json[Config.value] as? Value
         }
-        
-        if let rules = json[Config.rolloutRules] as? [[String: Any]] {
-            for rule in rules {
-                if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
-                    let comparisonValue = rule[Config.comparisonValue] as? String,
-                    let comparator = rule[Config.comparator] as? Int,
-                    let userValue = user.getAttribute(for: comparisonAttribute) {
+                
+        for rule in rolloutRules {
+            if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
+                let comparisonValue = rule[Config.comparisonValue] as? String,
+                let comparator = rule[Config.comparator] as? Int,
+                let userValue = user.getAttribute(for: comparisonAttribute) {
+                
+                if comparisonValue.isEmpty || userValue.isEmpty {
+                    continue
+                }
+                
+                switch comparator {
+                // IS ONE OF
+                case 0:
+                    let splitted = comparisonValue.components(separatedBy: ",")
+                        .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
                     
-                    if comparisonValue.isEmpty || userValue.isEmpty {
+                    if splitted.contains(userValue) {
+                        return rule[Config.value] as? Value
+                    }
+                // IS NOT ONE OF
+                case 1:
+                    let splitted = comparisonValue.components(separatedBy: ",")
+                        .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                    
+                    if !splitted.contains(userValue) {
+                        return rule[Config.value] as? Value
+                    }
+                // CONTAINS
+                case 2:
+                    if userValue.contains(comparisonValue) {
+                        return rule[Config.value] as? Value
+                    }
+                // DOES NOT CONTAIN
+                case 3:
+                    if !userValue.contains(comparisonValue) {
+                        return rule[Config.value] as? Value
+                    }
+                // IS ONE OF (Semantic version), IS NOT ONE OF (Semantic version)
+                case 4...5:
+                    let splitted = comparisonValue.components(separatedBy: ",")
+                        .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                        .filter {val -> Bool in return !val.isEmpty}
+                                        
+                    // The rule will be ignored if we found an invalid semantic version
+                    if (splitted.first {val -> Bool in !Version.valid(string: val)} != nil) {
                         continue
                     }
-                    
-                    switch comparator {
-                    case 0:
-                        let splitted = comparisonValue.components(separatedBy: ",")
-                            .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
-                        
-                        if splitted.contains(userValue) {
-                            return rule[Config.value] as? Value
-                        }
-                    case 1:
-                        let splitted = comparisonValue.components(separatedBy: ",")
-                            .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
-                        
-                        if !splitted.contains(userValue) {
-                            return rule[Config.value] as? Value
-                        }
-                    case 2:
-                        if userValue.contains(comparisonValue) {
-                            return rule[Config.value] as? Value
-                        }
-                    case 3:
-                        if !userValue.contains(comparisonValue) {
-                            return rule[Config.value] as? Value
-                        }
-                    default:
+                    if !Version.valid(string: userValue) {
                         continue
                     }
+                                        
+                    if comparator == 4 { // IS ONE OF
+                        if let userValueVersion = Version(userValue) {
+                            if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
+                               return rule[Config.value] as? Value
+                            }
+                        }
+                    } else { // IS NOT ONE OF
+                        if let userValueVersion = Version(userValue) {
+                            if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
+                               continue
+                            }
+
+                            return rule[Config.value] as? Value
+                        }
+                    }
+                // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
+                case 6...9:
+                    let comparison = comparisonValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                    if !Version.valid(string: comparison) || !Version.valid(string: userValue) {
+                        continue
+                    }
+                    if let userValueVersion = Version(userValue),
+                        let comparisonValueVersion = Version(comparison) {
+                        if (comparator == 6 && userValueVersion < comparisonValueVersion)
+                            || (comparator == 7 && userValueVersion <= comparisonValueVersion)
+                            || (comparator == 8 && userValueVersion > comparisonValueVersion)
+                            || (comparator == 9 && userValueVersion >= comparisonValueVersion) {
+                            return rule[Config.value] as? Value
+                        }
+                    }
+                case 10...15:
+                    if let userValueFloat = Float(userValue.replacingOccurrences(of: ",", with: ".")),
+                        let comparisonValueFloat = Float(comparisonValue.replacingOccurrences(of: ",", with: ".")) {
+                        if (comparator == 10 && userValueFloat == comparisonValueFloat)
+                            || (comparator == 11 && userValueFloat != comparisonValueFloat)
+                            || (comparator == 12 && userValueFloat < comparisonValueFloat)
+                            || (comparator == 13 && userValueFloat <= comparisonValueFloat)
+                            || (comparator == 14 && userValueFloat > comparisonValueFloat)
+                            || (comparator == 15 && userValueFloat >= comparisonValueFloat) {
+                            return rule[Config.value] as? Value
+                        }
+                    }
+                default:
+                    continue
                 }
             }
         }
-        
-        if let rules = json[Config.rolloutPercentageItems] as? [[String: Any]] {
-            
-            if(rules.count > 0){
-                let hashCandidate = key + user.identifier
-                if let hash = hashCandidate.sha1hex?.prefix(7) {
-                    let hashString = String(hash)
-                    if let num = Int(hashString, radix: 16) {
-                        let scaled = num % 100
-                        
-                        var bucket = 0
-                        for rule in rules {
-                            if let percentage = rule[Config.percentage] as? Int {
-                                bucket += percentage
-                                if scaled < bucket {
-                                    return rule[Config.value] as? Value
-                                }
+
+        if (rolloutPercentageItems.count > 0){
+            let hashCandidate = key + user.identifier
+            if let hash = hashCandidate.sha1hex?.prefix(7) {
+                let hashString = String(hash)
+                if let num = Int(hashString, radix: 16) {
+                    let scaled = num % 100
+                    
+                    var bucket = 0
+                    for rule in rolloutPercentageItems {
+                        if let percentage = rule[Config.percentage] as? Int {
+                            bucket += percentage
+                            if scaled < bucket {
+                                return rule[Config.value] as? Value
                             }
                         }
                     }
                 }
             }
         }
-        
+
         return json[Config.value] as? Value
     }
 }
