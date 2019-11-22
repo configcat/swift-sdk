@@ -21,6 +21,4 @@ Pod::Spec.new do |spec|
   spec.module_name       = "ConfigCat"
   spec.documentation_url = "https://docs.configcat.com/docs/sdk-reference/ios"
 
-  spec.dependency "Version", "~> 0.7.1"
-
 end
