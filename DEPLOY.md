@@ -6,6 +6,7 @@
    ```
 2. Run tests
 3. Increase the version in the ConfigCat.podspec file (`spec.version`).
+4. Use the **same version** in ConfigFetcher.swift file (`fileprivate static let version: String = bundleVersion ?? "[MAJOR].[MINOR].[PATCH]"`).
 ## Publish
 Use the **same version** for the git tag as in the podspec.
 - Via git tag

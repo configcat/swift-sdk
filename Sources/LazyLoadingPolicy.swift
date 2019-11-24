@@ -4,7 +4,7 @@ import os.log
 
 /// Describes a `RefreshPolicy` which uses an expiring cache to maintain the internally stored configuration.
 public final class LazyLoadingPolicy : RefreshPolicy {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: LazyLoadingPolicy.self).bundleIdentifier!, category: "Lazy Loading Policy")
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: LazyLoadingPolicy.self).bundleIdentifier ?? "", category: "Lazy Loading Policy")
     fileprivate let cacheRefreshIntervalInSeconds: Double
     fileprivate let useAsyncRefresh: Bool
     fileprivate var lastRefreshTime = Date.distantPast

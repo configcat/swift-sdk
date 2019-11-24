@@ -4,7 +4,7 @@ import os.log
 /// Describes a `RefreshPolicy` which polls the latest configuration over HTTP and updates the local cache repeatedly.
 public final class AutoPollingPolicy : RefreshPolicy {
     public typealias ConfigChangedHandler = (String, ConfigParser) -> ()
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: AutoPollingPolicy.self).bundleIdentifier!, category: "Auto Polling Policy")
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: AutoPollingPolicy.self).bundleIdentifier ?? "", category: "Auto Polling Policy")
     fileprivate static let parser = ConfigParser()
     fileprivate let autoPollIntervalInSeconds: Double
     fileprivate let initialized = Synced<Bool>(initValue: false)

@@ -8,7 +8,7 @@ enum ParserError: Error {
 
 /// A json parser which can be used to deserialize configuration json strings.
 public final class ConfigParser {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigParser.self).bundleIdentifier!, category: "Config Parser")
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigParser.self).bundleIdentifier ?? "", category: "Config Parser")
     fileprivate let evaluator = RolloutEvaluator()
 
     /**
