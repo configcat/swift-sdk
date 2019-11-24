@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   spec.osx.deployment_target     = '10.12'
 
   spec.source            = { :git => "https://github.com/configcat/swift-sdk.git", :tag => spec.version }
-  spec.source_files      = "Sources/*.swift", "Sources/Version/*.swift"
+  spec.source_files      = "Sources/*.swift"
   spec.requires_arc      = true
   spec.module_name       = "ConfigCat"
   spec.documentation_url = "https://docs.configcat.com/docs/sdk-reference/ios"
