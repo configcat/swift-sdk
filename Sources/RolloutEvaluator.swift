@@ -1,6 +1,6 @@
 import Foundation
 import CommonCrypto
-import OSLog
+import os.log
 
 class RolloutEvaluator {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: RolloutEvaluator.self).bundleIdentifier!, category: "Rollout Evaluator")
