@@ -12,7 +12,7 @@ open class ConfigCache : NSObject {
      */
     var inMemoryValue: String = ""
     
-    let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCache.self).bundleIdentifier ?? "", category: "Config Cache")
+    let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCache.self).bundleIdentifier!, category: "Config Cache")
     
     public final func set(value: String) {
         self.inMemoryValue = value

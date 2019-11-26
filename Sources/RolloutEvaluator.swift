@@ -4,7 +4,7 @@ import OSLog
 import Version
 
 class RolloutEvaluator {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: RolloutEvaluator.self).bundleIdentifier ?? "", category: "Rollout Evaluator")
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: RolloutEvaluator.self).bundleIdentifier!, category: "Rollout Evaluator")
     fileprivate static let comparatorTexts = [
         "IS ONE OF",
         "IS NOT ONE OF",

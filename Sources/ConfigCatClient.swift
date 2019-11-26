@@ -3,7 +3,7 @@ import os.log
 
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier ?? "", category: "ConfigCat Client")
+    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
     fileprivate static let parser = ConfigParser()
     fileprivate let refreshPolicy: RefreshPolicy
     fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
