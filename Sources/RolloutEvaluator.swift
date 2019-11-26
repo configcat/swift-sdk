@@ -1,6 +1,6 @@
 import Foundation
 import CommonCrypto
-import os.log
+import OSLog
 import Version
 
 class RolloutEvaluator {
