@@ -216,7 +216,7 @@ class RolloutEvaluator {
                         if let percentage = rule[Config.percentage] as? Int {
                             bucket += percentage
                             if scaled < bucket {
-                                os_log("Evaluating %% options. Returning ", log: .default, type: .info, rule[Config.value] as? String ?? "")
+                                os_log("Evaluating %% options. Returning %@", log: .default, type: .info, rule[Config.value] as? String ?? "")
                                 return rule[Config.value] as? Value
                             }
                         }
@@ -225,7 +225,7 @@ class RolloutEvaluator {
             }
         }
 
-        os_log("Returning ", log: .default, type: .info, json[Config.value] as? String ?? "")
+        os_log("Returning %@", log: .default, type: .info, json[Config.value] as? String ?? "")
         return json[Config.value] as? Value
     }
     
