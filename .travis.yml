@@ -11,7 +11,8 @@ stages:
 
 before_install:
   - gem install cocoapods --pre
-  - sudo log config --mode "level:off"
+  - echo "log_info:"
+  - sudo log config --status
 
 jobs:
   include:
