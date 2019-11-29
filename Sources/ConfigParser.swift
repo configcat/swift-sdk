@@ -37,13 +37,19 @@ public final class ConfigParser {
         }
         
         if let data = json.data(using: .utf8) {
-            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user) {
                     return value
+                } else {
+                    os_log("""
+                        Parsing the json value for the key '%@' failed.
+                        Returning defaultValue.
+                        Here are the available keys: %@
+                        """, log: ConfigParser.log, type: .error, key, [String](jsonObject.keys))
+                }
             }
         }
         
-        os_log("Parsing the json value for the key '%@' failed.", log: ConfigParser.log, type: .error, key)
         throw ParserError.parseFailure
     }
     

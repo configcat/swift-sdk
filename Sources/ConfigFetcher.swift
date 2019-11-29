@@ -78,7 +78,7 @@ public class ConfigFetcher : NSObject {
     public init(session: URLSession, apiKey: String, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = base + "/configuration-files/" + apiKey + "/config_v2.json"
+        self.url = base + "/configuration-files/" + apiKey + "/config_v3.json"
         self.etag = ""
         self.mode = ""
     }
@@ -108,7 +108,9 @@ public class ConfigFetcher : NSObject {
                     os_log("Fetch was successful: not modified", log: ConfigFetcher.log, type: .debug)
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
                 } else {
-                    os_log("Non success status code: %@", log: ConfigFetcher.log, type: .error, String(response.statusCode))
+                    os_log("""
+                        Double-check your API KEY at https://app.configcat.com/apikey. Non success status code: %@
+                        """, log: ConfigFetcher.log, type: .error, String(response.statusCode))
                     result.complete(result: FetchResponse(status: .failure, body: ""))
                 }
             }

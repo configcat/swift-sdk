@@ -3,7 +3,7 @@ import ConfigCat
 
 class ConfigCatClientTests: XCTestCase {
     var mockSession = MockURLSession()
-    let testJsonFormat = "{ \"fakeKey\": { \"Value\": %@, \"RolloutPercentageItems\": [] ,\"RolloutRules\": [] } }"
+    let testJsonFormat = "{ \"fakeKey\": { \"v\": %@, \"p\": [] ,\"r\": [] } }"
     
     override func setUp() {
         super.setUp()

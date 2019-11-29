@@ -2,19 +2,38 @@ import XCTest
 import ConfigCat
 
 class RolloutIntegrationTests: XCTestCase {
-    var matrixData: Data?
-    let client: ConfigCatClient = ConfigCatClient(apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+    lazy var testBundle: Bundle = {
+        return Bundle(for: type(of: self))
+    }()
     
-    override func setUp() {
-        super.setUp()
-        let testBundle = Bundle(for: type(of: self))
+    func testRolloutMatrixText() throws {
         if let url = testBundle.url(forResource: "testmatrix", withExtension: "csv") {
-            matrixData = try? Data(contentsOf: url)
+            try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        } else {
+            XCTFail()
         }
     }
-    
-    func testRolloutMatrix() throws {
-        guard let matrixData = matrixData, let content = String(bytes: matrixData, encoding: .utf8) else {
+
+    func testRolloutMatrixSemantic() throws {
+        if let url = testBundle.url(forResource: "testmatrix_semantic", withExtension: "csv") {
+            try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testRolloutMatrixNumber() throws {
+        if let url = testBundle.url(forResource: "testmatrix_number", withExtension: "csv") {
+            try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testRolloutMatrix(url: URL, apiKey: String) throws {
+        let client: ConfigCatClient = ConfigCatClient(apiKey: apiKey)
+        
+        guard let matrixData = try? Data(contentsOf: url), let content = String(bytes: matrixData, encoding: .utf8) else {
             XCTFail()
             return
         }
