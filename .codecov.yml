@@ -1,4 +1,3 @@
 ignore:
-  - "Version/**/*"
   - "Version/*.swift"
-  - "Tests/**/*"
+  - "Tests/*.swift"
