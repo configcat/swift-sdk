@@ -48,7 +48,7 @@ public struct FetchResponse {
 }
 
 /// This class is used to fetch the latest configuration.
-public class ConfigFetcher {
+public class ConfigFetcher : NSObject {
     fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigFetcher.self).bundleIdentifier!, category: "Config Fetcher")
     fileprivate let session: URLSession
@@ -64,8 +64,8 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public convenience init(config: URLSessionConfiguration, apiKey: String) {
-        self.init(session: URLSession(configuration: config), apiKey: apiKey)
+    public convenience init(config: URLSessionConfiguration, apiKey: String, baseUrl: String = "") {
+        self.init(session: URLSession(configuration: config), apiKey: apiKey, baseUrl: baseUrl)
     }
     
     /**
@@ -75,9 +75,10 @@ public class ConfigFetcher {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public init(session: URLSession, apiKey: String) {
+    public init(session: URLSession, apiKey: String, baseUrl: String = "") {
+        let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = "https://cdn.betterconfig.com/configuration-files/" + apiKey + "/config_v2.json"
+        self.url = base + "/configuration-files/" + apiKey + "/config_v3.json"
         self.etag = ""
         self.mode = ""
     }
@@ -107,7 +108,9 @@ public class ConfigFetcher {
                     os_log("Fetch was successful: not modified", log: ConfigFetcher.log, type: .debug)
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
                 } else {
-                    os_log("Non success status code: %@", log: ConfigFetcher.log, type: .error, String(response.statusCode))
+                    os_log("""
+                        Double-check your API KEY at https://app.configcat.com/apikey. Non success status code: %@
+                        """, log: ConfigFetcher.log, type: .error, String(response.statusCode))
                     result.complete(result: FetchResponse(status: .failure, body: ""))
                 }
             }

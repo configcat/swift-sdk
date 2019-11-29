@@ -1,22 +1,22 @@
 PODS:
-  - ConfigCat (2.0.0)
+  - ConfigCat (2.4.0)
 
 DEPENDENCIES:
-  - ConfigCat (from `https://github.com/configcat/swift-sdk.git`, branch `dev`)
+  - ConfigCat (from `https://github.com/configcat/swift-sdk.git`, branch `master`)
 
 EXTERNAL SOURCES:
   ConfigCat:
-    :branch: dev
+    :branch: master
     :git: https://github.com/configcat/swift-sdk.git
 
 CHECKOUT OPTIONS:
   ConfigCat:
-    :commit: a0b4bc6ef91bb0b12983e8fc97590cd6cc069a78
+    :commit: 40c532bc045f5db7dcfe30389d922051a84b3b2c
     :git: https://github.com/configcat/swift-sdk.git
 
 SPEC CHECKSUMS:
-  ConfigCat: 970d58dc298498de260431651dd85c4c6d6c7260
+  ConfigCat: d45ef6c01d324866e9dd1b21d3aa96c057b5c404
 
-PODFILE CHECKSUM: 44ff5914cf112e16dac51306be8069b6ee26e806
+PODFILE CHECKSUM: 9be1ab171ff7511f957624c62897daa13dae8e46
 
-COCOAPODS: 1.6.0.beta.1
+COCOAPODS: 1.8.4

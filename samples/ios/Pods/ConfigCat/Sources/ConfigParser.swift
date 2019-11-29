@@ -21,7 +21,7 @@ public final class ConfigParser {
      - Throws: `ParserError.invalidRequestedType` when the `Value` type is not supported.
      - Throws: `ParserError.parseFailure` when the parsing failed.
      */
-    public func parseValue<Value>(for key: String, json: String, user: User?) throws -> Value {
+    public func parseValue<Value>(for key: String, json: String, user: User? = nil) throws -> Value {
         if Value.self != String.self &&
             Value.self != String?.self &&
             Value.self != Int.self &&
@@ -37,13 +37,36 @@ public final class ConfigParser {
         }
         
         if let data = json.data(using: .utf8) {
-            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any],
-                let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user) {
                     return value
+                } else {
+                    os_log("""
+                        Parsing the json value for the key '%@' failed.
+                        Returning defaultValue.
+                        Here are the available keys: %@
+                        """, log: ConfigParser.log, type: .error, key, [String](jsonObject.keys))
+                }
             }
         }
         
-        os_log("Parsing the json value for the key '%@' failed.", log: ConfigParser.log, type: .error, key)
+        throw ParserError.parseFailure
+    }
+    
+    /**
+     Gets all setting keys from the config json.
+     
+     - Parameter json: the json config.
+     - Throws: `ParserError.parseFailure` when the parsing failed.
+     */
+    public func getAllKeys(json: String) throws -> [String] {
+        if let data = json.data(using: .utf8) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                return [String](jsonObject.keys)
+            }
+        }
+        
+        os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
         throw ParserError.parseFailure
     }
 }

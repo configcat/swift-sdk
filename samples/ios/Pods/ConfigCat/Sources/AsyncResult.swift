@@ -81,7 +81,7 @@ public class Async {
 public final class AsyncResult<Value> : Async {
     fileprivate var result: Value?
     
-    override init() {
+    public override init() {
         super.init()
     }
     

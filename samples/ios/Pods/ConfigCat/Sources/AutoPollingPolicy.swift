@@ -56,7 +56,7 @@ public final class AutoPollingPolicy : RefreshPolicy {
                         self.onConfigChanged?(response.body, AutoPollingPolicy.parser)
                     }
                     
-                    if !response.isFailed() && !self.initialized.getAndSet(new: true) {
+                    if !self.initialized.getAndSet(new: true) {
                         self.initResult.complete()
                     }
                 })
