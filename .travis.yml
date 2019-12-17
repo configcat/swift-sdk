@@ -29,6 +29,7 @@ jobs:
 
   - stage: lint
     script:
+    - pod --version
     - pod lib lint --verbose
 
   - stage: publish
