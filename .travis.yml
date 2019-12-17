@@ -10,7 +10,7 @@ stages:
     if: tag =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
 
 before_install:
-  - gem install cocoapods --pre
+  - gem install cocoapods
 
 jobs:
   include:
