@@ -11,6 +11,7 @@ stages:
 
 before_install:
   - gem install cocoapods
+  - pod --version
 
 jobs:
   include:
@@ -29,8 +30,7 @@ jobs:
 
   - stage: lint
     script:
-    - pod --version
-    - pod lib lint --verbose
+    - pod lib lint
 
   - stage: publish
     script:
