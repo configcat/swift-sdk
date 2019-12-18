@@ -1,293 +1,195 @@
-//
-//  Version.swift
-//  Version
-//
-//  Created by Marius Rackwitz on 07/09/14.
-//  Copyright (c) 2014 Marius Rackwitz. All rights reserved.
-//
+/*
+ This source file was modified by Max Howell from its original
+ form that was part of the Swift open source project.
 
-import Foundation
+ This source file is part of the Swift.org open source project
 
-/// Represents a version aligning to [SemVer 2.0.0](http://semver.org).
-public struct Version {
-    /// The major component of the version.
-    ///
-    /// - Note:
-    /// > Increment the MAJOR version when you make incompatible API changes.
-    ///
-    public var major: Int
-    
-    /// An optional minor component of the version.
-    ///
-    /// - Note:
-    /// > Increment the MINOR version when you add functionality in a backwards-compatible manner.
-    ///
-    public var minor: Int?
-    
-    /// Canonicalized form of minor component of the version.
-    ///
-    public var canonicalMinor: Int {
-        return self.minor ?? 0
-    }
-    
-    /// An optional patch component of the version.
-    ///
-    /// - Note:
-    /// > Increment the PATCH version when make backwards-compatible bug fixes.
-    ///
-    public var patch: Int?
-    
-    /// Canonicalized form of patch component of the version.
-    ///
-    public var canonicalPatch: Int {
-        return self.patch ?? 0
-    }
-    
-    /// An optional prerelease component of the version.
-    ///
-    /// - Note:
-    /// > A pre-release version MAY be denoted by appending a hyphen and a series of dot separated
-    /// > identifiers immediately following the patch version. Identifiers MUST comprise only ASCII
-    /// > alphanumerics and hyphen [0-9A-Za-z-]. Identifiers MUST NOT be empty. Numeric identifiers
-    /// > MUST NOT include leading zeroes. Pre-release versions have a lower precedence than the
-    /// > associated normal version. A pre-release version indicates that the version is unstable
-    /// > and might not satisfy the intended compatibility requirements as denoted by its associated
-    /// > normal version.
-    ///
-    /// #### Examples:
-    ///
-    ///    * `1.0.0-alpha`
-    ///    * `1.0.0-alpha.1`
-    ///    * `1.0.0-0.3.7`
-    ///    * `1.0.0-x.7.z.92`
-    ///
-    public var prerelease: String?
-    
-    /// An optional build component of the version.
-    public var build: String?
+ Copyright (c) 2014 - 2017 Apple Inc. and the Swift project authors
+ Licensed under Apache License v2.0 with Runtime Library Exception
 
-    fileprivate static let strictParser = VersionParser(strict: true)
-    fileprivate static let lenientParser = VersionParser(strict: false)
-    
-    /// Initialize a version from its components.
-    public init(major: Int = 0, minor: Int? = nil, patch: Int? = nil, prerelease: String? = nil, build: String? = nil) {
-        self.major = major
-        self.minor = minor
-        self.patch = patch
-        self.prerelease = prerelease
-        self.build = build
-    }
-    
-    /// Initialize a version from its string representation.
-    public init?(_ value: String) {
-        do {
-            let parser = VersionParser(strict: false)
-            self = try parser.parse(string: value)
-        } catch let error {
-            print("Error: Failed to parse version number '\(value)': \(error)")
-            return nil
-        }
-    }
-    
-    /// Canonicalize version by replacing nil components with their defaults
-    public mutating func canonicalize() {
-        self.minor = self.minor ?? 0
-        self.patch = self.patch ?? 0
-    }
-    
-    /// Create canonicalized copy
-    public func canonicalized() -> Version {
-        var copy = self
-        copy.canonicalize()
-        return copy
-    }
+ See http://swift.org/LICENSE.txt for license information
+ See http://swift.org/CONTRIBUTORS.txt for Swift project authors
+*/
 
-    fileprivate static func compare<T: Comparable>(lhs: T, rhs: T) -> ComparisonResult {
-        if lhs < rhs {
-            return .orderedAscending
-        } else if lhs > rhs {
-            return .orderedDescending
-        } else {
-            return .orderedSame
+/**
+ A struct representing a “semver” version, that is: a Semantic Version.
+ - SeeAlso: https://semver.org
+ */
+public struct Version: Hashable {
+    /// The major version.
+    public let major: Int
+
+    /// The minor version.
+    public let minor: Int
+
+    /// The patch version.
+    public let patch: Int
+
+    /// The pre-release identifiers (if any).
+    public let prereleaseIdentifiers: [String]
+
+    /// The build metadatas (if any).
+    public let buildMetadataIdentifiers: [String]
+
+    /**
+     Create a version object.
+     - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
+     - Remark: This initializer variant provided for more readable code when initializing with static integers.
+     */
+    @inlinable
+    public init(_ major: Int, _ minor: Int, _ patch: Int, prereleaseIdentifiers: [String] = [], buildMetadataIdentifiers: [String] = []) {
+        self.major = abs(major)
+        self.minor = abs(minor)
+        self.patch = abs(patch)
+        self.prereleaseIdentifiers = prereleaseIdentifiers
+        self.buildMetadataIdentifiers = buildMetadataIdentifiers
+
+        if major < 0 || minor < 0 || patch < 0 {
+            print("warning: negative component in version: \(major).\(minor).\(patch)")
+            print("notice: negative components were abs’d")
         }
     }
 
-    fileprivate static func compareNumeric(lhs: String, rhs: String) -> ComparisonResult {
-        let lhsComponents = lhs.components(separatedBy: ".")
-        let rhsComponents = rhs.components(separatedBy: ".")
-        let comparables = zip(lhsComponents, rhsComponents)
-        let firstDifferentComponent = comparables.first { $0.0 != $0.1 }
-        if let (l, r) = firstDifferentComponent {
-            let regex = Version.lenientParser.numberRegex
-            if regex.match(string: l) && regex.match(string: r) {
-                return self.compare(lhs: Int(l) ?? 0, rhs: Int(r) ?? 0)
-            } else {
-                return self.compare(lhs: l, rhs: r)
-            }
-        }
-        if lhsComponents.count != rhsComponents.count {
-            return self.compare(lhs: lhsComponents.count, rhs: rhsComponents.count)
-        }
-        return .orderedSame
+    /**
+     Creates a version object.
+     - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
+     - Remark: This initializer variant provided when it would be more readable than the nameless variant.
+     */
+    @inlinable
+    public init(major: Int, minor: Int, patch: Int, prereleaseIdentifiers: [String] = [], buildMetadataIdentifiers: [String] = []) {
+        self.init(major, minor, patch, prereleaseIdentifiers: prereleaseIdentifiers, buildMetadataIdentifiers: buildMetadataIdentifiers)
     }
+
+    /// Represents `0.0.0`
+    public static let null = Version(0,0,0)
 }
 
-
-// MARK: - Equatable
-
-extension Version : Equatable {}
-
-public func ==(lhs: Version, rhs: Version) -> Bool {
-    let equalMajor = lhs.major == rhs.major
-    let equalMinor = lhs.canonicalMinor == rhs.canonicalMinor
-    let equalPatch = lhs.canonicalPatch == rhs.canonicalPatch
-    let equalPrerelease = lhs.prerelease == rhs.prerelease
-    return equalMajor && equalMinor && equalPatch && equalPrerelease
-}
-
-public func ===(lhs: Version, rhs: Version) -> Bool {
-    return (lhs == rhs) && (lhs.build == rhs.build)
-}
-
-public func !==(lhs: Version, rhs: Version) -> Bool {
-    return !(lhs === rhs)
-}
-
-
-// MARK: - Comparable
-
-extension Version : Comparable {}
-
-public func <(lhs: Version, rhs: Version) -> Bool {
-    let majorComparison = Version.compare(lhs: lhs.major, rhs: rhs.major)
-    if majorComparison != .orderedSame {
-        return majorComparison == .orderedAscending
-    }
-
-    let minorComparison = Version.compare(lhs: lhs.canonicalMinor, rhs: rhs.canonicalMinor)
-    if minorComparison != .orderedSame {
-        return minorComparison == .orderedAscending
-    }
-
-    let patchComparison = Version.compare(lhs: lhs.canonicalPatch, rhs: rhs.canonicalPatch)
-    if patchComparison != .orderedSame {
-        return patchComparison == .orderedAscending
-    }
-
-    switch (lhs.prerelease, rhs.prerelease) {
-    case (.some, .none):
-            return true
-    case (.none, .some):
-            return false
-    case (.none, .none):
-            return false
-    case (.some(let lpre), .some(let rpre)):
-        let prereleaseComparison = Version.compareNumeric(lhs: lpre, rhs: rpre)
-        return prereleaseComparison == .orderedAscending
-    }
-}
-
-
-// MARK: - Hashable
-
-extension Version : Hashable {
-    #if swift(>=4.2)
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(major)
-        hasher.combine(canonicalMinor)
-        hasher.combine(canonicalPatch)
-        hasher.combine(prerelease)
-    }
+extension Version: LosslessStringConvertible {
+    /**
+     Creates a version object from a string.
+     - Note: Returns `nil` if the string is not a valid semantic version.
+     - Parameter string: The string to parse.
+     */
+    public init?(_ string: String) {
+    #if compiler(>=5)
+        self.init(internal: string)
     #else
-    public var hashValue: Int {
-        let majorHash = major.hashValue
-        let minorHash = canonicalMinor.hashValue
-        let patchHash = canonicalPatch.hashValue
-        let prereleaseHash = prerelease?.hashValue ?? 0
-        let prime = 31
-        return [majorHash, minorHash, patchHash, prereleaseHash].reduce(0) { $0 &* prime &+ $1 }
-    }
+        //NOTE code duplicated in self.init(internal:); no other way to support Swift 4.2
+
+        let prereleaseStartIndex = string.firstIndex(of: "-")
+        let metadataStartIndex = string.firstIndex(of: "+")
+
+        let requiredEndIndex = prereleaseStartIndex ?? metadataStartIndex ?? string.endIndex
+        let requiredCharacters = string.prefix(upTo: requiredEndIndex)
+        let requiredComponents = requiredCharacters
+            .split(separator: ".", maxSplits: 2, omittingEmptySubsequences: false)
+            .compactMap({ Int($0) })
+
+        guard requiredComponents.count == 3 else { return nil }
+
+        self.major = requiredComponents[0]
+        self.minor = requiredComponents[1]
+        self.patch = requiredComponents[2]
+
+        func identifiers(start: String.Index?, end: String.Index) -> [String] {
+            guard let start = start else { return [] }
+            let identifiers = string[string.index(after: start)..<end]
+            return identifiers.split(separator: ".").map(String.init(_:))
+        }
+
+        self.prereleaseIdentifiers = identifiers(
+            start: prereleaseStartIndex,
+            end: metadataStartIndex ?? string.endIndex)
+        self.buildMetadataIdentifiers = identifiers(
+            start: metadataStartIndex,
+            end: string.endIndex)
     #endif
-}
+    }
 
+#if compiler(>=5)
+    public init?<S: StringProtocol>(_ string: S) {
+        self.init(internal: string)
+    }
 
-// MARK: String Conversion
+    private init?<S: StringProtocol>(internal string: S) {
+        //NOTE code duplicated in self.init(_:); no other way to support Swift 4.2
 
-extension Version : CustomStringConvertible {
+        let prereleaseStartIndex = string.firstIndex(of: "-")
+        let metadataStartIndex = string.firstIndex(of: "+")
+
+        let requiredEndIndex = prereleaseStartIndex ?? metadataStartIndex ?? string.endIndex
+        let requiredCharacters = string.prefix(upTo: requiredEndIndex)
+        let requiredComponents = requiredCharacters
+            .split(separator: ".", maxSplits: 2, omittingEmptySubsequences: false)
+            .compactMap({ Int($0) })
+
+        guard requiredComponents.count == 3 else { return nil }
+
+        self.major = requiredComponents[0]
+        self.minor = requiredComponents[1]
+        self.patch = requiredComponents[2]
+
+        func identifiers(start: String.Index?, end: String.Index) -> [String] {
+            guard let start = start else { return [] }
+            let identifiers = string[string.index(after: start)..<end]
+            return identifiers.split(separator: ".").map(String.init(_:))
+        }
+
+        self.prereleaseIdentifiers = identifiers(
+            start: prereleaseStartIndex,
+            end: metadataStartIndex ?? string.endIndex)
+        self.buildMetadataIdentifiers = identifiers(
+            start: metadataStartIndex,
+            end: string.endIndex)
+    }
+#endif
+
+    /// Returns the lossless string representation of this semantic version.
     public var description: String {
-        return [
-            "\(major)",
-            minor      != nil ? ".\(minor!)"      : "",
-            patch      != nil ? ".\(patch!)"      : "",
-            prerelease != nil ? "-\(prerelease!)" : "",
-            build      != nil ? "+\(build!)"      : ""
-            ].joined(separator: "")
+        var base = "\(major).\(minor).\(patch)"
+        if !prereleaseIdentifiers.isEmpty {
+            base += "-" + prereleaseIdentifiers.joined(separator: ".")
+        }
+        if !buildMetadataIdentifiers.isEmpty {
+            base += "+" + buildMetadataIdentifiers.joined(separator: ".")
+        }
+        return base
     }
 }
 
-extension Version {
-    public static func valid(string: String, strict: Bool = false) -> Bool {
-        return Version.strictParser.versionRegex.match(string: string)
-    }
-}
+public extension Version {
+    /**
+     Creates a version object.
+     - Remark: This initializer variant uses a more tolerant parser, eg. `10.1` parses to `Version(10,1,0)`.
+     - Remark: This initializer will not recognizer builds-metadata-identifiers.
+     - Remark: Tolerates an initial `v` character.
+     */
+    init?<S: StringProtocol>(tolerant: S) {
+        let string = tolerant.dropFirst(tolerant.first == "v" ? 1 : 0)
+        let prereleaseStartIndex = string.firstIndex(of: "-")
+        let requiredEndIndex = prereleaseStartIndex ?? string.endIndex
+        let requiredCharacters = string.prefix(upTo: requiredEndIndex)
+        let maybes = requiredCharacters.split(separator: ".", maxSplits: 2, omittingEmptySubsequences: false).map{ Int($0) }
 
-extension Version: ExpressibleByStringLiteral {
-    public typealias UnicodeScalarLiteralType = StringLiteralType
-    public typealias ExtendedGraphemeClusterLiteralType = StringLiteralType
-    
-    public init(unicodeScalarLiteral value: UnicodeScalarLiteralType) {
-        self.init(stringLiteral: value)
-    }
-    
-    public init(extendedGraphemeClusterLiteral value: ExtendedGraphemeClusterLiteralType) {
-        self.init(stringLiteral: value)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.init(value)!
-    }
-}
-
-extension Version: Codable {}
-
-// MARK: Foundation Extensions
-
-extension Bundle {
-    /// The marketing version number of the bundle.
-    public var version : Version? {
-        return self.versionFromInfoDicitionary(forKey: String(kCFBundleVersionKey))
-    }
-    
-    /// The short version number of the bundle.
-    public var shortVersion : Version? {
-        return self.versionFromInfoDicitionary(forKey: "CFBundleShortVersionString")
-    }
-    
-    func versionFromInfoDicitionary(forKey key: String) -> Version? {
-        guard let dictionary = self.infoDictionary else {
+        guard !maybes.contains(nil), 1...3 ~= maybes.count else {
             return nil
         }
-        guard let bundleVersion = dictionary[key] as? String else {
-            return nil
-        }
-        do {
-            return try Version.lenientParser.parse(string: bundleVersion)
-        } catch {
-            return nil
-        }
-    }
-}
 
-extension ProcessInfo {
-    /// The version of the operating system on which the process is executing.
-    @available(OSX, introduced: 10.10)
-    @available(iOS, introduced: 8.0)
-    public var operationSystemVersion: Version {
-        let version : OperatingSystemVersion = self.operatingSystemVersion
-        return Version(
-            major: version.majorVersion,
-            minor: version.minorVersion,
-            patch: version.patchVersion
-        )
+        var requiredComponents = maybes.map{ $0! }
+        while requiredComponents.count < 3 {
+            requiredComponents.append(0)
+        }
+
+        major = requiredComponents[0]
+        minor = requiredComponents[1]
+        patch = requiredComponents[2]
+
+        if let prereleaseStartIndex = prereleaseStartIndex {
+            let identifiers = string[string.index(after: prereleaseStartIndex)..<string.endIndex]
+            prereleaseIdentifiers = identifiers.split(separator: ".").map(String.init(_:))
+        } else {
+            prereleaseIdentifiers = []
+        }
+        buildMetadataIdentifiers = []
     }
 }

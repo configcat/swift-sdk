@@ -104,13 +104,13 @@ class RolloutEvaluator {
                         .filter {val -> Bool in return !val.isEmpty}
                                         
                     // The rule will be ignored if we found an invalid semantic version
-                    if let invalidValue = (splitted.first {val -> Bool in !Version.valid(string: val)}) {
+                    if let invalidValue = (splitted.first {val -> Bool in Version(val) == nil}) {
                         os_log("%@", log: .default, type: .error,
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(invalidValue)"))
                         continue
                     }
-                    if !Version.valid(string: userValue) {
+                    if Version(userValue) == nil {
                         os_log("%@", log: .default, type: .error,
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(userValue)"))
@@ -118,7 +118,7 @@ class RolloutEvaluator {
                     }
                                         
                     if comparator == 4 { // IS ONE OF
-                        if !Version.valid(string: userValue) {
+                        if Version(userValue) == nil {
                             os_log("%@", log: .default, type: .error,
                                    formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                              error: "Invalid semantic version: \(userValue)"))
@@ -126,7 +126,7 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
+                            if (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))} != nil) {
                                 os_log("%@", log: .default, type: .info,
                                        formatMatchRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                        value: rule[Config.value] as? String ?? ""))
@@ -134,7 +134,7 @@ class RolloutEvaluator {
                             }
                         }
                     } else { // IS NOT ONE OF
-                        if !Version.valid(string: userValue) {
+                        if Version(userValue) == nil {
                             os_log("%@", log: .default, type: .error,
                                    formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                              error: "Invalid semantic version: \(userValue)"))
@@ -142,7 +142,7 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion == Version(val)}) {
+                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))}) {
                                 os_log("%@", log: .default, type: .error,
                                        formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                                  error: "Invalid semantic version: \(invalidValue)"))
@@ -158,14 +158,14 @@ class RolloutEvaluator {
                 // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
                 case 6...9:
                     let comparison = comparisonValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-                    if !Version.valid(string: userValue) {
+                    if Version(userValue) == nil {
                         os_log("%@", log: .default, type: .error,
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(userValue)"))
                         continue
                     }
                     
-                    if !Version.valid(string: comparison) {
+                    if Version(comparison) == nil {
                         os_log("%@", log: .default, type: .error,
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(comparison)"))
@@ -173,10 +173,18 @@ class RolloutEvaluator {
                     }
                     if let userValueVersion = Version(userValue),
                         let comparisonValueVersion = Version(comparison) {
-                        if (comparator == 6 && userValueVersion < comparisonValueVersion)
-                            || (comparator == 7 && userValueVersion <= comparisonValueVersion)
-                            || (comparator == 8 && userValueVersion > comparisonValueVersion)
-                            || (comparator == 9 && userValueVersion >= comparisonValueVersion) {
+                        let userValueVersionWithoutMetadata = Version(major: userValueVersion.major,
+                                                                      minor: userValueVersion.minor,
+                                                                      patch: userValueVersion.patch,
+                                                                      prereleaseIdentifiers: userValueVersion.prereleaseIdentifiers)
+                        let comparisonValueVersionWithoutMetadata = Version(major: comparisonValueVersion.major,
+                                                                            minor: comparisonValueVersion.minor,
+                                                                            patch: comparisonValueVersion.patch,
+                                                                            prereleaseIdentifiers: comparisonValueVersion.prereleaseIdentifiers)
+                        if (comparator == 6 && userValueVersionWithoutMetadata < comparisonValueVersionWithoutMetadata)
+                            || (comparator == 7 && userValueVersionWithoutMetadata <= comparisonValueVersionWithoutMetadata)
+                            || (comparator == 8 && userValueVersionWithoutMetadata > comparisonValueVersionWithoutMetadata)
+                            || (comparator == 9 && userValueVersionWithoutMetadata >= comparisonValueVersionWithoutMetadata) {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: rule[Config.value] as? String ?? ""))
@@ -265,5 +273,15 @@ fileprivate extension Data {
     
     var hexString: String {
         return map { String(format: "%02x", UInt8($0)) }.joined()
+    }
+}
+
+fileprivate extension Version {
+    func isEqualWithoutMetadata(_ other: Version?) -> Bool {
+        if let other = other {
+            return major == other.major && minor == other.minor && patch == other.patch
+                && prereleaseIdentifiers == other.prereleaseIdentifiers
+        }
+        return false
     }
 }
