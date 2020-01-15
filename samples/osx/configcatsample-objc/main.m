@@ -3,16 +3,23 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        ConfigCatClient* client = [[ConfigCatClient alloc]initWithApiKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A"
+        // Initialize the ConfigCatClient with an API Key.
+        ConfigCatClient* client = [[ConfigCatClient alloc]initWithApiKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
                                                              configCache:nil
                                                            policyFactory:nil
                                         maxWaitTimeForSyncCallsInSeconds:0
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                                  baseUrl:@""];
 
-        NSString *featureName = @"keySampleText";
-        NSString *feature = [client getStringValueFor:featureName defaultValue:@"default"];
-        NSLog(@"%@: %@ ", featureName, feature);
+        // Creating a user object to identify your user (optional).
+        User* userObject = [[User alloc]initWithIdentifier:@"Some UserID"
+                                                     email:@"configcat@example.com"
+                                                   country:@"CountryID"
+                                                    custom:@{@"version": @"1.0.0"}];
+        
+        NSString *featureName = @"isPOCFeatureEnabled";
+        BOOL value = [client getBoolValueFor:featureName defaultValue:false user:userObject];
+        NSLog(@"%@: %@", featureName, value ? @"Yes" : @"No");
     }
     return 0;
 }
