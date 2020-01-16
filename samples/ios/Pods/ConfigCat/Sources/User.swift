@@ -14,10 +14,10 @@ public final class User : NSObject {
      - Parameter custom: optional, sets the custom attributes of a user.
      - Returns: A new `User`.
      */
-    public init(identifier: String,
-                email: String? = nil,
-                country: String? = nil,
-                custom: [String: String]? = nil) {
+    @objc public init(identifier: String,
+                      email: String? = nil,
+                      country: String? = nil,
+                      custom: [String: String]? = nil) {
         
         if identifier.isEmpty {
             assert(false, "identifier cannot be empty")
