@@ -1,1 +1,1 @@
-https://github.com/mxcl/Version/releases/tag/1.2.0
+https://github.com/mxcl/Version/releases/tag/2.0.0

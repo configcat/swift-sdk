@@ -130,7 +130,7 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))} != nil) {
+                            if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
                                 let returnValue = rule[Config.value] as? Value
                                 os_log("%@", log: .default, type: .info,
                                        formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
@@ -147,7 +147,7 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))}) {
+                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion == Version(val)}) {
                                 os_log("%@", log: .default, type: .error,
                                        formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                                  error: "Invalid semantic version: \(invalidValue)"))
@@ -291,15 +291,5 @@ fileprivate extension Data {
     
     var hexString: String {
         return map { String(format: "%02x", UInt8($0)) }.joined()
-    }
-}
-
-fileprivate extension Version {
-    func isEqualWithoutMetadata(_ other: Version?) -> Bool {
-        if let other = other {
-            return major == other.major && minor == other.minor && patch == other.patch
-                && prereleaseIdentifiers == other.prereleaseIdentifiers
-        }
-        return false
     }
 }
