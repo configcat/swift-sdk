@@ -249,15 +249,13 @@ class RolloutEvaluator {
     }
     
     private func formatMatchRule<Value>(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Value?) -> String {
-        var format = String(format: "Evaluating rule: [%@:%@] [%@] [%@] => match, returning: ",
+        let format = String(format: "Evaluating rule: [%@:%@] [%@] [%@] => match, returning: ",
                             comparisonAttribute, userValue, RolloutEvaluator.comparatorTexts[comparator], comparisonValue)
-        if let value = value {
-            format += "\(value)"
-        } else {
-            format += "nil"
+        
+        guard let value = value else {
+            return format + "nil"
         }
-
-        return format
+        return format + "\(value)"
     }
     
     private func formatNoMatchRule(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String) -> String {
