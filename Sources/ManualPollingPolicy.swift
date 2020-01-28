@@ -15,15 +15,6 @@ public final class ManualPollingPolicy : RefreshPolicy {
     }
     
     public override func getConfiguration() -> AsyncResult<String> {
-        return super.fetcher.getConfigurationJson()
-            .apply(completion: { response in
-                let cached = super.cache.get()
-                let config = response.body
-                if response.isFetched() && config != cached {
-                    super.cache.set(value: config)
-                }
-                
-                return response.isFetched() ? config : cached
-            })
+        return AsyncResult<String>.completed(result: self.cache.get())
     }
 }

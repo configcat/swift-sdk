@@ -10,8 +10,9 @@ class ManualPollingTests: XCTestCase {
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        
+        policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
+        policy.refresh().wait()
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
     
@@ -22,8 +23,9 @@ class ManualPollingTests: XCTestCase {
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        
+        policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
+        policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
     }
     
@@ -34,8 +36,9 @@ class ManualPollingTests: XCTestCase {
         
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
         let policy = ManualPollingPolicy(cache: FailingCache(), fetcher: fetcher)
-        
+        policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
+        policy.refresh().wait()
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
 }

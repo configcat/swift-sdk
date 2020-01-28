@@ -13,6 +13,7 @@ class ConfigCatClientTests: XCTestCase {
     func testGetIntValue() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "43"), statusCode: 200))
         let client = self.createClient()
+        client.refresh()
         let config = client.getValue(for: "fakeKey", defaultValue: 10)
         
         XCTAssertEqual(43, config)
@@ -37,6 +38,7 @@ class ConfigCatClientTests: XCTestCase {
     func testGetStringValue() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"fake\""), statusCode: 200))
         let client = self.createClient()
+        client.refresh()
         let config = client.getValue(for: "fakeKey", defaultValue: "def")
         
         XCTAssertEqual("fake", config)
@@ -53,6 +55,7 @@ class ConfigCatClientTests: XCTestCase {
     func testGetDoubleValue() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "43.56"), statusCode: 200))
         let client = self.createClient()
+        client.refresh()
         let config = client.getValue(for: "fakeKey", defaultValue: 34.23)
         
         XCTAssertEqual(43.56, config)
@@ -69,6 +72,7 @@ class ConfigCatClientTests: XCTestCase {
     func testGetBoolValue() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "true"), statusCode: 200))
         let client = self.createClient()
+        client.refresh()
         let config = client.getValue(for: "fakeKey", defaultValue: false)
         
         XCTAssertTrue(config)
@@ -94,8 +98,10 @@ class ConfigCatClientTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "55"), statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
         let client = self.createClient()
+        client.refresh()
         var config = client.getValue(for: "fakeKey", defaultValue: 0)
         XCTAssertEqual(55, config)
+        client.refresh()
         config = client.getValue(for: "fakeKey", defaultValue: 0)
         XCTAssertEqual(55, config)
     }
@@ -105,12 +111,14 @@ class ConfigCatClientTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
         let client = self.createClient()
         let config = AsyncResult<Int>()
+        client.refresh()
         client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
             config.complete(result: result)
         }
         
         XCTAssertEqual(55, try config.get())
         
+        client.refresh()
         let config2 = AsyncResult<Int>()
         client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
             config2.complete(result: result)
