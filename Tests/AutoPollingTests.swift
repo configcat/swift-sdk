@@ -16,7 +16,7 @@ class AutoPollingTests: XCTestCase {
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        sleep(2)
+        sleep(3)
         
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
@@ -34,7 +34,7 @@ class AutoPollingTests: XCTestCase {
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        sleep(2)
+        sleep(3)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
     }
@@ -74,7 +74,7 @@ class AutoPollingTests: XCTestCase {
         
         XCTAssertEqual("test", newConfig)
         
-        sleep(2)
+        sleep(3)
         
         XCTAssertEqual("test2", newConfig)
         XCTAssertEqual("test2", try policy.getConfiguration().get())
