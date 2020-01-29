@@ -6,7 +6,7 @@ int main(int argc, const char * argv[]) {
         // Initialize the ConfigCatClient with an API Key.
         ConfigCatClient* client = [[ConfigCatClient alloc]initWithApiKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
                                                              configCache:nil
-                                                           policyFactory:nil
+                                                           refreshMode:nil
                                         maxWaitTimeForSyncCallsInSeconds:0
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                                  baseUrl:@""];

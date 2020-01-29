@@ -1,5 +1,7 @@
+import Foundation
+
 /// The public interface of a refresh policy which's implementors should describe the configuration update rules.
-open class RefreshPolicy : NSObject {
+class RefreshPolicy : NSObject {
     public let cache: ConfigCache
     public let fetcher: ConfigFetcher
     

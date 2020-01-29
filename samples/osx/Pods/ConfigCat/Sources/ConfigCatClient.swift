@@ -1,6 +1,10 @@
 import Foundation
 import os.log
 
+extension ConfigCatClient {
+    public typealias ConfigChangedHandler = (String, ConfigParser) -> ()
+}
+
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
@@ -17,11 +21,20 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      - Parameter sessionConfiguration: the url session configuration.
      - Returns: A new `ConfigCatClient`.
      */
-    @objc public init(apiKey: String,
+    @objc public convenience init(apiKey: String,
                 configCache: ConfigCache? = nil,
-                policyFactory: ((ConfigCache, ConfigFetcher) -> RefreshPolicy)? = nil,
+                refreshMode: PollingMode? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
+                baseUrl: String = "") {
+        self.init(apiKey: apiKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration), configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds, baseUrl: baseUrl)
+    }
+    
+    internal init(apiKey: String,
+                refreshMode: PollingMode?,
+                session: URLSession?,
+                configCache: ConfigCache? = nil,
+                maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 baseUrl: String = "") {
         if apiKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
@@ -32,9 +45,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
         
         let cache = configCache ?? InMemoryConfigCache()
-        let fetcher = ConfigFetcher(config: sessionConfiguration, apiKey: apiKey, baseUrl: baseUrl)
+        let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
+        let fetcher = ConfigFetcher(session: session!, apiKey: apiKey, mode: mode, baseUrl: baseUrl)
         
-        self.refreshPolicy = policyFactory?(cache, fetcher) ?? AutoPollingPolicy(cache: cache, fetcher: fetcher)
+        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache))
         
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }

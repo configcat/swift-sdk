@@ -57,7 +57,7 @@ open class ConfigCache : NSObject {
 }
 
 /// An in-memory cache implementation used to store the fetched configurations.
-public final class InMemoryConfigCache : ConfigCache {
+internal final class InMemoryConfigCache : ConfigCache {
     public override func read() throws -> String {
         return super.inMemoryValue
     }

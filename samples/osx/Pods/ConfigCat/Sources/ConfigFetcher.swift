@@ -8,7 +8,7 @@ enum Status {
 }
 
 /// Represents a fetch response.
-public struct FetchResponse {
+struct FetchResponse {
     fileprivate let status: Status
     
     /**
@@ -48,25 +48,13 @@ public struct FetchResponse {
 }
 
 /// This class is used to fetch the latest configuration.
-public class ConfigFetcher : NSObject {
+class ConfigFetcher : NSObject {
     fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigFetcher.self).bundleIdentifier!, category: "Config Fetcher")
     fileprivate let session: URLSession
     fileprivate let url: String
     fileprivate var etag: String
-    
-    var mode: String
-    
-    /**
-     Initializes a ConfigFetcher instance.
-     
-     - Parameter config: the url session configuration.
-     - Parameter apiKey: the project secret.
-     - Returns: the new ConfigFetcher instance.
-     */
-    public convenience init(config: URLSessionConfiguration, apiKey: String, baseUrl: String = "") {
-        self.init(session: URLSession(configuration: config), apiKey: apiKey, baseUrl: baseUrl)
-    }
+    fileprivate let mode: String
     
     /**
      Initializes a ConfigFetcher instance.
@@ -75,12 +63,12 @@ public class ConfigFetcher : NSObject {
      - Parameter apiKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public init(session: URLSession, apiKey: String, baseUrl: String = "") {
+    public init(session: URLSession, apiKey: String, mode: PollingMode, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
         self.url = base + "/configuration-files/" + apiKey + "/config_v3.json"
         self.etag = ""
-        self.mode = ""
+        self.mode = mode.getPollingIdentifier()
     }
     
     /**

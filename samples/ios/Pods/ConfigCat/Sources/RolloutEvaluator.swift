@@ -65,10 +65,11 @@ class RolloutEvaluator {
                         .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
                     
                     if splitted.contains(userValue) {
+                        let returnValue = rule[Config.value] as? Value
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: rule[Config.value] as? String ?? ""))
-                        return rule[Config.value] as? Value
+                                               value: returnValue))
+                        return returnValue
                     }
                 // IS NOT ONE OF
                 case 1:
@@ -76,26 +77,29 @@ class RolloutEvaluator {
                         .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
                     
                     if !splitted.contains(userValue) {
+                        let returnValue = rule[Config.value] as? Value
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: rule[Config.value] as? String ?? ""))
-                        return rule[Config.value] as? Value
+                                               value: returnValue))
+                        return returnValue
                     }
                 // CONTAINS
                 case 2:
                     if userValue.contains(comparisonValue) {
+                        let returnValue = rule[Config.value] as? Value
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: rule[Config.value] as? String ?? ""))
-                        return rule[Config.value] as? Value
+                                               value: returnValue))
+                        return returnValue
                     }
                 // DOES NOT CONTAIN
                 case 3:
                     if !userValue.contains(comparisonValue) {
+                        let returnValue = rule[Config.value] as? Value
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: rule[Config.value] as? String ?? ""))
-                        return rule[Config.value] as? Value
+                                               value: returnValue))
+                        return returnValue
                     }
                 // IS ONE OF (Semantic version), IS NOT ONE OF (Semantic version)
                 case 4...5:
@@ -126,11 +130,12 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))} != nil) {
+                            if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
+                                let returnValue = rule[Config.value] as? Value
                                 os_log("%@", log: .default, type: .info,
                                        formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                       value: rule[Config.value] as? String ?? ""))
-                                return rule[Config.value] as? Value
+                                                       value: returnValue))
+                                return returnValue
                             }
                         }
                     } else { // IS NOT ONE OF
@@ -142,17 +147,18 @@ class RolloutEvaluator {
                         }
                         
                         if let userValueVersion = Version(userValue) {
-                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion.isEqualWithoutMetadata(Version(val))}) {
+                            if let invalidValue = (splitted.first {val -> Bool in userValueVersion == Version(val)}) {
                                 os_log("%@", log: .default, type: .error,
                                        formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                                  error: "Invalid semantic version: \(invalidValue)"))
                                 continue
                             }
 
+                            let returnValue = rule[Config.value] as? Value
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: rule[Config.value] as? String ?? ""))
-                            return rule[Config.value] as? Value
+                                                   value: returnValue))
+                            return returnValue
                         }
                     }
                 // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
@@ -185,10 +191,11 @@ class RolloutEvaluator {
                             || (comparator == 7 && userValueVersionWithoutMetadata <= comparisonValueVersionWithoutMetadata)
                             || (comparator == 8 && userValueVersionWithoutMetadata > comparisonValueVersionWithoutMetadata)
                             || (comparator == 9 && userValueVersionWithoutMetadata >= comparisonValueVersionWithoutMetadata) {
+                            let returnValue = rule[Config.value] as? Value
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: rule[Config.value] as? String ?? ""))
-                            return rule[Config.value] as? Value
+                                                   value: returnValue))
+                            return returnValue
                         }
                     }
                 case 10...15:
@@ -200,15 +207,19 @@ class RolloutEvaluator {
                             || (comparator == 13 && userValueFloat <= comparisonValueFloat)
                             || (comparator == 14 && userValueFloat > comparisonValueFloat)
                             || (comparator == 15 && userValueFloat >= comparisonValueFloat) {
+                            let returnValue = rule[Config.value] as? Value
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: rule[Config.value] as? String ?? ""))
-                            return rule[Config.value] as? Value
+                                                   value: returnValue))
+                            return returnValue
                         }
                     }
                 default:
                     continue
                 }
+                
+                os_log("%@", log: .default, type: .info,
+                       formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue))
             }
         }
 
@@ -237,9 +248,14 @@ class RolloutEvaluator {
         return json[Config.value] as? Value
     }
     
-    private func formatMatchRule(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: String) -> String {
-        return String(format: "Evaluating rule: [%@:%@] [%@] [%@] => match, returning: %@",
-                      comparisonAttribute, userValue, RolloutEvaluator.comparatorTexts[comparator], comparisonValue, value)
+    private func formatMatchRule<Value>(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Value?) -> String {
+        let format = String(format: "Evaluating rule: [%@:%@] [%@] [%@] => match, returning: ",
+                            comparisonAttribute, userValue, RolloutEvaluator.comparatorTexts[comparator], comparisonValue)
+        
+        guard let value = value else {
+            return format + "nil"
+        }
+        return format + "\(value)"
     }
     
     private func formatNoMatchRule(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String) -> String {
@@ -273,15 +289,5 @@ fileprivate extension Data {
     
     var hexString: String {
         return map { String(format: "%02x", UInt8($0)) }.joined()
-    }
-}
-
-fileprivate extension Version {
-    func isEqualWithoutMetadata(_ other: Version?) -> Bool {
-        if let other = other {
-            return major == other.major && minor == other.minor && patch == other.patch
-                && prereleaseIdentifiers == other.prereleaseIdentifiers
-        }
-        return false
     }
 }

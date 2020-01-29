@@ -1,8 +1,24 @@
+extension Version: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(major)
+        hasher.combine(minor)
+        hasher.combine(patch)
+        hasher.combine(prereleaseIdentifiers)
+    }
+}
+
+extension Version: Equatable {
+    /// Compares the provided versions *without* comparing any build-metadata
+    public static func == (lhs: Version, rhs: Version) -> Bool {
+        return lhs.major == rhs.major && lhs.minor == rhs.minor && lhs.patch == rhs.patch && lhs.prereleaseIdentifiers == rhs.prereleaseIdentifiers
+    }
+}
+
 extension Version: Comparable {
     func isEqualWithoutPrerelease(_ other: Version) -> Bool {
         return major == other.major && minor == other.minor && patch == other.patch
     }
-    
+
     /**
      `1.0.0` is less than `1.0.1`, `1.0.1-alpha` is less than `1.0.1` but
      greater than `1.0.0`.
@@ -46,3 +62,4 @@ extension Version: Comparable {
         return lhs.prereleaseIdentifiers.count < rhs.prereleaseIdentifiers.count
     }
 }
+
