@@ -45,6 +45,8 @@ class RolloutEvaluator {
             
             return json[Config.value] as? Value
         }
+        
+        os_log("User object: %@", log: .default, type: .info, user)
                 
         for rule in rolloutRules {
             if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
