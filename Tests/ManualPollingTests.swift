@@ -8,8 +8,10 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        
         policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
         policy.refresh().wait()
@@ -21,8 +23,9 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
         policy.refresh().wait()
@@ -34,8 +37,9 @@ class ManualPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = ManualPollingPolicy(cache: FailingCache(), fetcher: fetcher)
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         policy.refresh().wait()
         XCTAssertEqual("test", try policy.getConfiguration().get())
         policy.refresh().wait()

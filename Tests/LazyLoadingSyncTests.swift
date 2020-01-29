@@ -8,8 +8,9 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -26,8 +27,9 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -44,8 +46,9 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = LazyLoadingPolicy(cache: FailingCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 2, useAsyncRefresh: false)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         

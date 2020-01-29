@@ -2,15 +2,14 @@ import Foundation
 import os.log
 
 /// Describes a `RefreshPolicy` which polls the latest configuration over HTTP and updates the local cache repeatedly.
-public final class AutoPollingPolicy : RefreshPolicy {
-    public typealias ConfigChangedHandler = (String, ConfigParser) -> ()
+final class AutoPollingPolicy : RefreshPolicy {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: AutoPollingPolicy.self).bundleIdentifier!, category: "Auto Polling Policy")
     fileprivate static let parser = ConfigParser()
     fileprivate let autoPollIntervalInSeconds: Double
     fileprivate let initialized = Synced<Bool>(initValue: false)
     fileprivate var initResult = Async()
     fileprivate let timer = DispatchSource.makeTimerSource()
-    fileprivate let onConfigChanged: ConfigChangedHandler?
+    fileprivate let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
     
     /**
      Initializes a new `AutoPollingPolicy`.
@@ -20,7 +19,7 @@ public final class AutoPollingPolicy : RefreshPolicy {
      - Returns: A new `AutoPollingPolicy`.
      */
     public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher) {
-        self.init(cache: cache, fetcher: fetcher, autoPollIntervalInSeconds: 120)
+        self.init(cache: cache, fetcher: fetcher, config: AutoPollingMode())
     }
     
     /**
@@ -28,17 +27,14 @@ public final class AutoPollingPolicy : RefreshPolicy {
      
      - Parameter cache: the internal cache instance.
      - Parameter fetcher: the internal config fetcher instance.
-     - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
-     - Parameter onConfigChanged: the configuration changed event handler.
+     - Parameter config: the configuration.
      - Returns: A new `AutoPollingPolicy`.
      */
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
-                autoPollIntervalInSeconds: Double = 120,
-                onConfigChanged: ConfigChangedHandler? = nil) {
-        self.autoPollIntervalInSeconds = autoPollIntervalInSeconds
-        self.onConfigChanged = onConfigChanged
-        fetcher.mode = "a"
+                config: AutoPollingMode) {
+        self.autoPollIntervalInSeconds = config.autoPollIntervalInSeconds
+        self.onConfigChanged = config.onConfigChanged
         super.init(cache: cache, fetcher: fetcher)
         
         timer.schedule(deadline: DispatchTime.now(), repeating: autoPollIntervalInSeconds)

@@ -130,11 +130,8 @@ class ConfigCatClientTests: XCTestCase {
     func testForceRefresh() {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test\""), statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test2\""), statusCode: 200))
-        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: false)
-        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
-            policy
-        })
+        
+        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("test", client.getValue(for: "fakeKey", defaultValue: "def"))
         
@@ -145,22 +142,16 @@ class ConfigCatClientTests: XCTestCase {
     
     func testFailingAutoPoll() {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
-            policy
-        })
+        
+        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
     
     func testFailingExpiringCache() {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = LazyLoadingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        let client = ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
-            policy
-        })
+        
+        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
@@ -173,10 +164,6 @@ class ConfigCatClientTests: XCTestCase {
     }
     
     private func createClient() -> ConfigCatClient {
-        let fetcher = ConfigFetcher(session: self.mockSession, apiKey: "")
-        let policy = ManualPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher)
-        return ConfigCatClient(apiKey: "test", policyFactory: { (cache, fetcher) -> RefreshPolicy in
-            policy
-        })
+        return ConfigCatClient(apiKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
     }
 }

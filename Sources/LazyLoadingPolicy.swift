@@ -3,7 +3,7 @@ import Dispatch
 import os.log
 
 /// Describes a `RefreshPolicy` which uses an expiring cache to maintain the internally stored configuration.
-public final class LazyLoadingPolicy : RefreshPolicy {
+final class LazyLoadingPolicy : RefreshPolicy {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: LazyLoadingPolicy.self).bundleIdentifier!, category: "Lazy Loading Policy")
     fileprivate let cacheRefreshIntervalInSeconds: Double
     fileprivate let useAsyncRefresh: Bool
@@ -21,7 +21,7 @@ public final class LazyLoadingPolicy : RefreshPolicy {
      - Returns: A new `LazyLoadingPolicy`.
      */
     public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher) {
-        self.init(cache: cache, fetcher: fetcher, cacheRefreshIntervalInSeconds: 120, useAsyncRefresh: false)
+        self.init(cache: cache, fetcher: fetcher, config: LazyLoadingMode())
     }
     
     /**
@@ -29,14 +29,12 @@ public final class LazyLoadingPolicy : RefreshPolicy {
      
      - Parameter cache: the internal cache instance.
      - Parameter fetcher: the internal config fetcher instance.
-     - Parameter cacheRefreshIntervalInSeconds: sets how long the cache will store its value before fetching the latest from the network again.
-     - Parameter useAsyncRefresh: sets whether the cache should refresh itself asynchronously or synchronously. If it's set to `true` reading from the policy will not wait for the refresh to be finished, instead it returns immediately with the previous stored value. If it's set to `false` the policy will wait until the expired value is being refreshed with the latest configuration.
+     - Parameter config: the configuration.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public init(cache: ConfigCache, fetcher: ConfigFetcher, cacheRefreshIntervalInSeconds: Double, useAsyncRefresh: Bool = false) {
-        self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
-        self.useAsyncRefresh = useAsyncRefresh
-        fetcher.mode = "l"
+    public init(cache: ConfigCache, fetcher: ConfigFetcher, config: LazyLoadingMode) {
+        self.cacheRefreshIntervalInSeconds = config.cacheRefreshIntervalInSeconds
+        self.useAsyncRefresh = config.useAsyncRefresh
         super.init(cache: cache, fetcher: fetcher)
     }
     

@@ -19,7 +19,7 @@ enum AsyncState {
     }
 }
 
-public class Async {
+class Async {
     fileprivate let queue = DispatchQueue(label: "Async queue")
     fileprivate let semaphore = DispatchSemaphore(value: 0)
     fileprivate var completions = [() -> Void]()
@@ -78,7 +78,7 @@ public class Async {
     }
 }
 
-public final class AsyncResult<Value> : Async {
+final class AsyncResult<Value> : Async {
     fileprivate var result: Value?
     
     public override init() {

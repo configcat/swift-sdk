@@ -21,6 +21,14 @@ class RolloutIntegrationTests: XCTestCase {
             XCTFail()
         }
     }
+    
+    func testRolloutMatrixSemantic2() throws {
+        if let url = testBundle.url(forResource: "testmatrix_semantic_2", withExtension: "csv") {
+            try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w")
+        } else {
+            XCTFail()
+        }
+    }
 
     func testRolloutMatrixNumber() throws {
         if let url = testBundle.url(forResource: "testmatrix_number", withExtension: "csv") {
@@ -41,7 +49,11 @@ class RolloutIntegrationTests: XCTestCase {
         let rows = content.components(separatedBy: "\n")
             .map{ row in row.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
         
-        let settingKeys = rows[0].components(separatedBy: ";")
+        let header = rows[0].components(separatedBy: ";")
+        
+        let customKey = header[3]
+        
+        let settingKeys = header
             .map{ key in key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
             .skip(count: 4)
         
@@ -72,7 +84,7 @@ class RolloutIntegrationTests: XCTestCase {
                 
                 var custom: [String: String] = [:]
                 if !testObjects[3].isEmpty && testObjects[3] != "##null##" {
-                    custom["Custom1"] = testObjects[3]
+                    custom[customKey] = testObjects[3]
                 }
                 
                 user = User(identifier: identifier, email: email, country: country, custom: custom)

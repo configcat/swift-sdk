@@ -8,9 +8,10 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
-        
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+
         sleep(1)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -25,8 +26,9 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         sleep(1)
         
@@ -42,14 +44,15 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = AutoPollingPolicy(cache: FailingCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         sleep(1)
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        sleep(2)
+        sleep(3)
         
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
@@ -60,11 +63,12 @@ class AutoPollingTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
         var newConfig = ""
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "")
-        let policy = AutoPollingPolicy(cache: InMemoryConfigCache(), fetcher: fetcher, autoPollIntervalInSeconds: 2,
-        onConfigChanged: { (config, parser) in
+        
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2, onConfigChanged: { (config, parser) in
             newConfig = config
         })
+        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         sleep(1)
         
