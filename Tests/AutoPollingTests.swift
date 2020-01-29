@@ -12,8 +12,6 @@ class AutoPollingTests: XCTestCase {
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
 
-        sleep(1)
-        
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
         sleep(3)
@@ -30,8 +28,6 @@ class AutoPollingTests: XCTestCase {
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
-        sleep(1)
-        
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
         sleep(3)
@@ -47,9 +43,7 @@ class AutoPollingTests: XCTestCase {
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
-        
-        sleep(1)
-        
+                
         XCTAssertEqual("test", try policy.getConfiguration().get())
         
         sleep(3)

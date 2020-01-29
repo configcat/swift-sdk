@@ -28,7 +28,7 @@ class MockURLSession: URLSession {
         completionHandler: @escaping CompletionHandler
         ) -> URLSessionDataTask {
         self.requests.append(request)
-        let response = self.responses.removeFirst()
+        let response = self.responses.count == 1 ? self.responses[0] : self.responses.removeFirst()
         let semaphore = DispatchSemaphore(value: 0)
         return MockURLSessionDataTask {
             self.queue.async {
