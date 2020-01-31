@@ -49,7 +49,7 @@ final class AutoPollingPolicy : RefreshPolicy {
                     let cached = self.cache.get()
                     if response.isFetched() && response.body != cached {
                         self.cache.set(value: response.body)
-                        self.onConfigChanged?(response.body, AutoPollingPolicy.parser)
+                        self.onConfigChanged?()
                     }
                     
                     if !self.initialized.getAndSet(new: true) {

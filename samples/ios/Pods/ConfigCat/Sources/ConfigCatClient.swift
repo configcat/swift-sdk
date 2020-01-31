@@ -2,7 +2,7 @@ import Foundation
 import os.log
 
 extension ConfigCatClient {
-    public typealias ConfigChangedHandler = (String, ConfigParser) -> ()
+    public typealias ConfigChangedHandler = () -> ()
 }
 
 /// A client for handling configurations provided by ConfigCat.

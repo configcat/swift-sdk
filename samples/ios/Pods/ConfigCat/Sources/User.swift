@@ -53,4 +53,15 @@ public final class User : NSObject {
         
         return nil
     }
+    
+    public override var description: String {
+        let jsonEncoder = JSONEncoder()
+        jsonEncoder.outputFormatting = .prettyPrinted
+        do {
+            let jsonData = try jsonEncoder.encode(attributes)
+            return String(data: jsonData, encoding: .utf8) ?? ""
+        } catch {
+            return ""
+        }
+    }
 }
