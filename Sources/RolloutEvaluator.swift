@@ -21,6 +21,8 @@ class RolloutEvaluator {
         "<= (Number)",
         "> (Number)",
         ">= (Number",
+        "IS ONE OF (Sensitive)",
+        "IS NOT ONE OF (Sensitive)",
     ]
 
     func evaluate<Value>(json: Any?, key: String, user: User?) -> Value? {
@@ -212,6 +214,34 @@ class RolloutEvaluator {
                             let returnValue = rule[Config.value] as? Value
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                                   value: returnValue))
+                            return returnValue
+                        }
+                    }
+                // IS ONE OF (Sensitive)
+                case 16:
+                    let splitted = comparisonValue.components(separatedBy: ",")
+                        .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                    
+                    if let userValueHash = userValue.sha1hex {
+                        if splitted.contains(userValueHash) {
+                            let returnValue = rule[Config.value] as? Value
+                            os_log("%@", log: .default, type: .info,
+                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
+                                                   value: returnValue))
+                            return returnValue
+                        }
+                    }
+                // IS NOT ONE OF (Sensitive)
+                case 17:
+                    let splitted = comparisonValue.components(separatedBy: ",")
+                        .map {val in val.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                    
+                    if let userValueHash = userValue.sha1hex {
+                        if !splitted.contains(userValueHash) {
+                            let returnValue = rule[Config.value] as? Value
+                            os_log("%@", log: .default, type: .info,
+                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return returnValue
                         }

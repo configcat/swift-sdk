@@ -38,6 +38,14 @@ class RolloutIntegrationTests: XCTestCase {
         }
     }
 
+    func testRolloutMatrixSensitive() throws {
+        if let url = testBundle.url(forResource: "testmatrix_sensitive", withExtension: "csv") {
+            try testRolloutMatrix(url: url, apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA")
+        } else {
+            XCTFail()
+        }
+    }
+
     func testRolloutMatrix(url: URL, apiKey: String) throws {
         let client: ConfigCatClient = ConfigCatClient(apiKey: apiKey)
         
