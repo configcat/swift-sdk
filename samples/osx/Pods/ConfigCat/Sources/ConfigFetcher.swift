@@ -66,7 +66,7 @@ class ConfigFetcher : NSObject {
     public init(session: URLSession, apiKey: String, mode: PollingMode, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = base + "/configuration-files/" + apiKey + "/config_v3.json"
+        self.url = base + "/configuration-files/" + apiKey + "/config_v4.json"
         self.etag = ""
         self.mode = mode.getPollingIdentifier()
     }
