@@ -1,4 +1,4 @@
-# ConfigCat macOS Sample App
+# ConfigCat macOS Sample
 
 To run the sample project you need [CocoaPods](https://cocoapods.org/) installed.
 
