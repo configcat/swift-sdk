@@ -1,4 +1,4 @@
-# ConfigCat macOS Sample
+# ConfigCat macOS Objective-C Sample
 
 To run the sample project you need [CocoaPods](https://cocoapods.org/) installed.
 
