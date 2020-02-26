@@ -6,14 +6,15 @@
    ```
 2. Run tests
 3. Increase the version in the ConfigCat.podspec file (`spec.version`).
+4. Commit & push.
 ## Publish
 Use the **same version** for the git tag as in the podspec.
 - Via git tag
     1. Create a new version tag.
        ```bash
-       git tag [MAJOR].[MINOR].[PATCH]
+       git tag v[MAJOR].[MINOR].[PATCH]
        ```
-       > Example: `git tag 2.5.5`
+       > Example: `git tag v2.5.5`
     2. Push the tag.
        ```bash
        git push origin --tags
