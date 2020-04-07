@@ -4,7 +4,7 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // Initialize the ConfigCatClient with an SDK Key.
-        ConfigCatClient* client = [[ConfigCatClient alloc]initWithApiKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
+        ConfigCatClient* client = [[ConfigCatClient alloc]initWithSdkKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
                                                              configCache:nil
                                                            refreshMode:nil
                                         maxWaitTimeForSyncCallsInSeconds:0
