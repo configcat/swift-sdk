@@ -60,13 +60,13 @@ class ConfigFetcher : NSObject {
      Initializes a ConfigFetcher instance.
      
      - Parameter session: the url session.
-     - Parameter sdkkey: the project secret.
+     - Parameter sdkKey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public init(session: URLSession, sdkkey: String, mode: PollingMode, baseUrl: String = "") {
+    public init(session: URLSession, sdkKey: String, mode: PollingMode, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = base + "/configuration-files/" + sdkkey + "/config_v4.json"
+        self.url = base + "/configuration-files/" + sdkKey + "/config_v4.json"
         self.etag = ""
         self.mode = mode.getPollingIdentifier()
     }

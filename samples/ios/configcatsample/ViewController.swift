@@ -13,7 +13,7 @@ class ViewController: UIViewController {
             self.configChanged()
         }
         
-        self.client = ConfigCatClient(sdkkey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", refreshMode: mode)
+        self.client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", refreshMode: mode)
         
     }
 

@@ -15,28 +15,28 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     /**
      Initializes a new `ConfigCatClient`.
      
-     - Parameter sdkkey: the SDK Key for to communicate with the ConfigCat services.
+     - Parameter sdkKey: the SDK Key for to communicate with the ConfigCat services.
      - Parameter policyFactory: a function used to create the a `RefreshPolicy` implementation with the given `ConfigFetcher` and `ConfigCache`.
      - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
      - Parameter sessionConfiguration: the url session configuration.
      - Returns: A new `ConfigCatClient`.
      */
-    @objc public convenience init(sdkkey: String,
+    @objc public convenience init(sdkKey: String,
                 configCache: ConfigCache? = nil,
                 refreshMode: PollingMode? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "") {
-        self.init(sdkkey: sdkkey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration), configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds, baseUrl: baseUrl)
+        self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration), configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds, baseUrl: baseUrl)
     }
     
-    internal init(sdkkey: String,
+    internal init(sdkKey: String,
                 refreshMode: PollingMode?,
                 session: URLSession?,
                 configCache: ConfigCache? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 baseUrl: String = "") {
-        if sdkkey.isEmpty {
+        if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
         
@@ -46,7 +46,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         
         let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
-        let fetcher = ConfigFetcher(session: session!, sdkkey: sdkkey, mode: mode, baseUrl: baseUrl)
+        let fetcher = ConfigFetcher(session: session!, sdkKey: sdkKey, mode: mode, baseUrl: baseUrl)
         
         self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache))
         
