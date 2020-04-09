@@ -9,7 +9,7 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let fetcher = ConfigFetcher(session: mockSession, sdkkey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -28,7 +28,7 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let fetcher = ConfigFetcher(session: mockSession, sdkkey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -47,7 +47,7 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, apiKey: "", mode: mode)
+        let fetcher = ConfigFetcher(session: mockSession, sdkkey: "", mode: mode)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())

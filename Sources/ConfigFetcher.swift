@@ -60,13 +60,13 @@ class ConfigFetcher : NSObject {
      Initializes a ConfigFetcher instance.
      
      - Parameter session: the url session.
-     - Parameter apiKey: the project secret.
+     - Parameter sdkkey: the project secret.
      - Returns: the new ConfigFetcher instance.
      */
-    public init(session: URLSession, apiKey: String, mode: PollingMode, baseUrl: String = "") {
+    public init(session: URLSession, sdkkey: String, mode: PollingMode, baseUrl: String = "") {
         let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
         self.session = session
-        self.url = base + "/configuration-files/" + apiKey + "/config_v4.json"
+        self.url = base + "/configuration-files/" + sdkkey + "/config_v4.json"
         self.etag = ""
         self.mode = mode.getPollingIdentifier()
     }
@@ -97,7 +97,7 @@ class ConfigFetcher : NSObject {
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
                 } else {
                     os_log("""
-                        Double-check your API KEY at https://app.configcat.com/apikey. Non success status code: %@
+                        Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
                         """, log: ConfigFetcher.log, type: .error, String(response.statusCode))
                     result.complete(result: FetchResponse(status: .failure, body: ""))
                 }

@@ -131,7 +131,7 @@ class ConfigCatClientTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test\""), statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test2\""), statusCode: 200))
         
-        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
+        let client = ConfigCatClient(sdkkey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("test", client.getValue(for: "fakeKey", defaultValue: "def"))
         
@@ -143,7 +143,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingAutoPoll() {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
         
-        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: self.mockSession)
+        let client = ConfigCatClient(sdkkey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
@@ -151,19 +151,19 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingExpiringCache() {
         mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
         
-        let client = ConfigCatClient(apiKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
+        let client = ConfigCatClient(sdkkey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
         
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
     
     func testGetAllKeys() {
-        let client = ConfigCatClient(apiKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient(sdkkey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
         let keys = client.getAllKeys()
         XCTAssertEqual(16, keys.count)
         XCTAssertTrue(keys.contains("stringDefaultCat"))
     }
     
     private func createClient() -> ConfigCatClient {
-        return ConfigCatClient(apiKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
+        return ConfigCatClient(sdkkey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
     }
 }
