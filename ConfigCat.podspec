@@ -19,6 +19,6 @@ Pod::Spec.new do |spec|
   spec.source_files      = "Sources/*.swift", "Version/*.swift"
   spec.requires_arc      = true
   spec.module_name       = "ConfigCat"
-  spec.documentation_url = "https://docs.configcat.com/docs/sdk-reference/ios"
+  spec.documentation_url = "https://configcat.com/docs/sdk-reference/ios"
 
 end
