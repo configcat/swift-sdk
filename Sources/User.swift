@@ -8,7 +8,7 @@ public final class User : NSObject {
     /**
      Initializes a new `User`.
      
-     - Parameter identifier: the api key for to communicate with the ConfigCat services.
+     - Parameter identifier: the SDK Key for to communicate with the ConfigCat services.
      - Parameter email: optional, sets the email of the user.
      - Parameter country: optional, sets the country of the user.
      - Parameter custom: optional, sets the custom attributes of a user.

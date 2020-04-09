@@ -39,8 +39,8 @@ github "configcat/swift-sdk"
 ```
 Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
-### 2. Go to <a href="https://app.configcat.com/connect" target="_blank">Connect your application</a> tab to get your *API Key*:
-![API-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme01.png  "API-KEY")
+### 2. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> tab to get your *SDK Key*:
+![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme01.png  "SDK-KEY")
 
 ### 3. Import the *ConfigCat* module to your application
 ```swift
@@ -49,7 +49,7 @@ import ConfigCat
 
 ### 4. Create a *ConfigCat* client instance
 ```swift
-let client = ConfigCatClient(apiKey: "#YOUR-API-KEY#")
+let client = ConfigCatClient(sdkkey: "#YOUR-SDK-KEY#")
 ```
 
 ### 5. Get your setting value
