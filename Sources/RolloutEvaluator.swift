@@ -25,9 +25,9 @@ class RolloutEvaluator {
         "IS NOT ONE OF (Sensitive)",
     ]
 
-    func evaluate<Value>(json: Any?, key: String, user: User?) -> Value? {
+    func evaluate<Value>(json: Any?, key: String, user: User?) -> (value: Value?, variationId: String?) {
         guard let json = json as? [String: Any] else {
-            return nil
+            return (nil, nil)
         }
                 
         let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
@@ -45,7 +45,7 @@ class RolloutEvaluator {
                     log: .default, type: .default, key)
             }
             
-            return json[Config.value] as? Value
+            return (json[Config.value] as? Value, json[Config.variationId] as? String)
         }
         
         os_log("User object: %@", log: .default, type: .info, user)
@@ -73,7 +73,7 @@ class RolloutEvaluator {
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
-                        return returnValue
+                        return (returnValue, rule[Config.variationId] as? String)
                     }
                 // IS NOT ONE OF
                 case 1:
@@ -85,7 +85,7 @@ class RolloutEvaluator {
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
-                        return returnValue
+                        return (returnValue, rule[Config.variationId] as? String)
                     }
                 // CONTAINS
                 case 2:
@@ -94,7 +94,7 @@ class RolloutEvaluator {
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
-                        return returnValue
+                        return (returnValue, rule[Config.variationId] as? String)
                     }
                 // DOES NOT CONTAIN
                 case 3:
@@ -103,7 +103,7 @@ class RolloutEvaluator {
                         os_log("%@", log: .default, type: .info,
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
-                        return returnValue
+                        return (returnValue, rule[Config.variationId] as? String)
                     }
                 // IS ONE OF (Semantic version), IS NOT ONE OF (Semantic version)
                 case 4...5:
@@ -139,7 +139,7 @@ class RolloutEvaluator {
                                 os_log("%@", log: .default, type: .info,
                                        formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                        value: returnValue))
-                                return returnValue
+                                return (returnValue, rule[Config.variationId] as? String)
                             }
                         }
                     } else { // IS NOT ONE OF
@@ -162,7 +162,7 @@ class RolloutEvaluator {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
-                            return returnValue
+                            return (returnValue, rule[Config.variationId] as? String)
                         }
                     }
                 // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
@@ -199,7 +199,7 @@ class RolloutEvaluator {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
-                            return returnValue
+                            return (returnValue, rule[Config.variationId] as? String)
                         }
                     }
                 case 10...15:
@@ -215,7 +215,7 @@ class RolloutEvaluator {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
-                            return returnValue
+                            return (returnValue, rule[Config.variationId] as? String)
                         }
                     }
                 // IS ONE OF (Sensitive)
@@ -229,7 +229,7 @@ class RolloutEvaluator {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
-                            return returnValue
+                            return (returnValue, rule[Config.variationId] as? String)
                         }
                     }
                 // IS NOT ONE OF (Sensitive)
@@ -243,7 +243,7 @@ class RolloutEvaluator {
                             os_log("%@", log: .default, type: .info,
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
-                            return returnValue
+                            return (returnValue, rule[Config.variationId] as? String)
                         }
                     }
                 default:
@@ -268,7 +268,7 @@ class RolloutEvaluator {
                             bucket += percentage
                             if scaled < bucket {
                                 os_log("Evaluating %% options. Returning %@", log: .default, type: .info, rule[Config.value] as? String ?? "")
-                                return rule[Config.value] as? Value
+                                return (rule[Config.value] as? Value, rule[Config.variationId] as? String)
                             }
                         }
                     }
@@ -277,7 +277,7 @@ class RolloutEvaluator {
         }
 
         os_log("Returning %@", log: .default, type: .info, json[Config.value] as? String ?? "")
-        return json[Config.value] as? Value
+        return (json[Config.value] as? Value, json[Config.variationId] as? String)
     }
     
     private func formatMatchRule<Value>(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Value?) -> String {

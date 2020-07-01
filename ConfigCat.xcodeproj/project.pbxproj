@@ -186,6 +186,15 @@
 		3F8EDFA02084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
 		3F8EDFA12084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
 		3F8EDFA22084194700906339 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
+		C41F8AB424AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
+		C41F8AB524AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
+		C41F8AB624AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
+		C481321D24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
+		C481321E24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
+		C481321F24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
+		C4D34D3B249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
+		C4D34D3C249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
+		C4D34D3D249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
 		F15F9AF72169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
 		F15F9AF82169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
 		F15F9AF92169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
@@ -272,6 +281,9 @@
 		3F8EDF9720840FE900906339 /* ManualPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
+		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
+		C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdIntegrationTests.swift; sourceTree = "<group>"; };
+		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_variationId.csv; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
 		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix.csv; sourceTree = "<group>"; };
@@ -410,6 +422,8 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */,
+				C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */,
 				1A92102224030C7F0059B111 /* testmatrix_sensitive.csv */,
 				1A65477E23A450A700EA53B8 /* testmatrix_semantic_2.csv */,
 				1AEDBE99238761BA008803E7 /* testmatrix_number.csv */,
@@ -426,6 +440,7 @@
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
 				F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */,
+				C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -671,6 +686,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C4D34D3B249B6F2900908D76 /* testmatrix_variationId.csv in Resources */,
 				1A65477F23A450A700EA53B8 /* testmatrix_semantic_2.csv in Resources */,
 				1A92102324030C7F0059B111 /* testmatrix_sensitive.csv in Resources */,
 				F15F9B132169738100F490CD /* testmatrix.csv in Resources */,
@@ -690,6 +706,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C4D34D3C249B6F2900908D76 /* testmatrix_variationId.csv in Resources */,
 				1A65478023A450A700EA53B8 /* testmatrix_semantic_2.csv in Resources */,
 				1A92102424030C7F0059B111 /* testmatrix_sensitive.csv in Resources */,
 				F15F9B142169738100F490CD /* testmatrix.csv in Resources */,
@@ -709,6 +726,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C4D34D3D249B6F2900908D76 /* testmatrix_variationId.csv in Resources */,
 				1A65478123A450A700EA53B8 /* testmatrix_semantic_2.csv in Resources */,
 				1A92102524030C7F0059B111 /* testmatrix_sensitive.csv in Resources */,
 				F15F9B152169738100F490CD /* testmatrix.csv in Resources */,
@@ -776,6 +794,7 @@
 				3F1F2C9E23E1227E00AFA7D2 /* Version.swift in Sources */,
 				3F1F2C7D23E1218500AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C8523E1218500AFA7D2 /* RolloutEvaluator.swift in Sources */,
+				C481321D24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
 				3F1F2CAB23E1291000AFA7D2 /* PollingModes.swift in Sources */,
 				3F8EDFA02084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F1F2CB123E1291A00AFA7D2 /* ConfigCatClient.swift in Sources */,
@@ -784,6 +803,7 @@
 				3F8EDF9C208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F1F2C7323E1197B00AFA7D2 /* LazyLoadingPolicy.swift in Sources */,
 				3F1F2C7F23E1218500AFA7D2 /* ConfigParser.swift in Sources */,
+				C41F8AB424AD38F70004CF03 /* VariationIdTests.swift in Sources */,
 				3F4D40CA207EC20500BBAEC6 /* Mock.swift in Sources */,
 				3F36F53D2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9820840FE900906339 /* ManualPollingTests.swift in Sources */,
@@ -840,6 +860,7 @@
 				3F1F2CA323E1227E00AFA7D2 /* Version.swift in Sources */,
 				3F1F2C8723E1218600AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C8F23E1218600AFA7D2 /* RolloutEvaluator.swift in Sources */,
+				C481321E24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
 				3F1F2CAA23E1290F00AFA7D2 /* PollingModes.swift in Sources */,
 				3F8EDFA12084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F1F2CB023E1291A00AFA7D2 /* ConfigCatClient.swift in Sources */,
@@ -848,6 +869,7 @@
 				3F8EDF9D208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F1F2C7423E1197C00AFA7D2 /* LazyLoadingPolicy.swift in Sources */,
 				3F1F2C8923E1218600AFA7D2 /* ConfigParser.swift in Sources */,
+				C41F8AB524AD38F70004CF03 /* VariationIdTests.swift in Sources */,
 				3F4D40C9207EC20500BBAEC6 /* Mock.swift in Sources */,
 				3F36F53E2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9920840FE900906339 /* ManualPollingTests.swift in Sources */,
@@ -904,6 +926,7 @@
 				3F1F2CA823E1227F00AFA7D2 /* Version.swift in Sources */,
 				3F1F2C9123E1218700AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C9923E1218700AFA7D2 /* RolloutEvaluator.swift in Sources */,
+				C481321F24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
 				3F1F2CA923E1290E00AFA7D2 /* PollingModes.swift in Sources */,
 				3F8EDFA22084194700906339 /* ConfigCatClientTests.swift in Sources */,
 				3F1F2CAF23E1291900AFA7D2 /* ConfigCatClient.swift in Sources */,
@@ -912,6 +935,7 @@
 				3F8EDF9E208415FC00906339 /* AutoPollingTests.swift in Sources */,
 				3F1F2C7523E1197C00AFA7D2 /* LazyLoadingPolicy.swift in Sources */,
 				3F1F2C9323E1218700AFA7D2 /* ConfigParser.swift in Sources */,
+				C41F8AB624AD38F70004CF03 /* VariationIdTests.swift in Sources */,
 				3F4D40C8207EC20400BBAEC6 /* Mock.swift in Sources */,
 				3F36F53F2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9A20840FE900906339 /* ManualPollingTests.swift in Sources */,

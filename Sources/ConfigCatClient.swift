@@ -63,7 +63,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 ? try self.refreshPolicy.getConfiguration().get()
                 : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             
-            return try ConfigCatClient.parser.parseValue(for: key, json: config,user: user)
+            return try ConfigCatClient.parser.parseValue(for: key, json: config, user: user)
         } catch {
             os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
             return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
@@ -121,7 +121,95 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 }
         }
     }
-    
+
+    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: User? = nil) -> String? {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
+        }
+
+        do {
+            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
+                    ? try self.refreshPolicy.getConfiguration().get()
+                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
+
+            return try ConfigCatClient.parser.parseVariationId(for: key, json: config, user: user)
+        } catch {
+            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            return defaultVariationId
+        }
+    }
+
+    @objc public func getVariationIdAsync(for key: String, defaultVariationId: String?, user: User? = nil, completion: @escaping (String?) -> ()) {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
+        }
+
+        self.refreshPolicy.getConfiguration()
+            .apply { config in
+                do {
+                    let result: String = try ConfigCatClient.parser.parseVariationId(for: key, json: config, user: user)
+                    completion(result)
+                } catch {
+                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    let result = defaultVariationId
+                    completion(result)
+                }
+        }
+    }
+
+    @objc public func getAllVariationIds(user: User? = nil) -> [String] {
+        do {
+            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
+                    ? try self.refreshPolicy.getConfiguration().get()
+                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
+
+            return try ConfigCatClient.parser.getAllVariationIds(json: config, user: user)
+        } catch {
+            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            return []
+        }
+    }
+
+    @objc public func getAllVariationIdsAsync(user: User? = nil, completion: @escaping ([String], Error?) -> ()) {
+        self.refreshPolicy.getConfiguration()
+            .apply { config in
+                do {
+                    let result = try ConfigCatClient.parser.getAllVariationIds(json: config, user: user)
+                    completion(result, nil)
+                } catch {
+                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    completion([], error)
+                }
+        }
+    }
+
+    @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
+        do {
+            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
+                    ? try self.refreshPolicy.getConfiguration().get()
+                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
+
+            let result = try ConfigCatClient.parser.getKeyAndValue(for: variationId, json: config)
+            return KeyValue(key: result.key, value: result.value)
+        } catch {
+            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            return nil
+        }
+    }
+
+    @objc public func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
+        self.refreshPolicy.getConfiguration()
+            .apply { config in
+                do {
+                    let result = try ConfigCatClient.parser.getKeyAndValue(for: variationId, json: config)
+                    completion(KeyValue(key: result.key, value: result.value))
+                } catch {
+                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    completion(nil)
+                }
+        }
+    }
+
     @objc public func refresh() {
         do {
             if self.maxWaitTimeForSyncCallsInSeconds == 0 {
@@ -145,7 +233,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: User?) -> Value {
         do {
-            return try ConfigCatClient.parser.parseValue(for: key, json: json,user: user)
+            return try ConfigCatClient.parser.parseValue(for: key, json: json, user: user)
         } catch {
             os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
             return defaultValue
