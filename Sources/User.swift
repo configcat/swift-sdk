@@ -25,14 +25,14 @@ public final class User : NSObject {
         
         attributes = [:]
         self.identifier = identifier
-        attributes["identifier"] = identifier
+        attributes["Identifier"] = identifier
         
         if let email = email {
-            attributes["email"] = email
+            attributes["Email"] = email
         }
         
         if let country = country {
-            attributes["country"] = country
+            attributes["Country"] = country
         }
         
         if let custom = custom {
