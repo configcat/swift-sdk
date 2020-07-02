@@ -81,8 +81,8 @@ public final class ConfigParser {
     public func parseVariationId(for key: String, json: String, user: User? = nil) throws -> String {
         if let data = json.data(using: .utf8) {
             if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                let (value, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
-                if case let (value?, variationId?) = (value, variationId) {
+                let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                if let variationId = variationId {
                     return variationId
                 } else {
                     os_log("""
@@ -109,8 +109,8 @@ public final class ConfigParser {
             if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                 var variationIds = [String]()
                 for key in jsonObject.keys {
-                    let (value, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
-                    if case let (value?, variationId?) = (value, variationId) {
+                    let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                    if let variationId = variationId {
                         variationIds.append(variationId)
                     } else {
                         os_log("""
@@ -130,22 +130,22 @@ public final class ConfigParser {
         if let data = json.data(using: .utf8) {
             if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
                 for (key, json) in jsonObject {
-                    if let json = json as? [String: Any] {
+                    if let json = json as? [String: Any], let value = json[Config.value] {
                         if variationId == json[Config.variationId] as? String {
-                            return (key, json[Config.value])
+                            return (key, value)
                         }
 
                         let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
                         for rule in rolloutRules {
-                            if variationId == rule[Config.variationId] as? String {
-                                return (key, rule[Config.value])
+                            if variationId == rule[Config.variationId] as? String, let value = json[Config.value]  {
+                                return (key, value)
                             }
                         }
 
                         let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
                         for rule in rolloutPercentageItems {
-                            if variationId == rule[Config.variationId] as? String {
-                                return (key, rule[Config.value])
+                            if variationId == rule[Config.variationId] as? String, let value = json[Config.value] {
+                                return (key, value)
                             }
                         }
                     }
