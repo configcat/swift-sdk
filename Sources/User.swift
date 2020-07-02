@@ -37,7 +37,7 @@ public final class User : NSObject {
         
         if let custom = custom {
             for (key, value) in custom {
-                attributes[key.lowercased()] = value
+                attributes[key] = value
             }
         }
     }
@@ -47,7 +47,7 @@ public final class User : NSObject {
             assert(false, "key cannot be empty")
         }
         
-        if let value = self.attributes[key.lowercased()] {
+        if let value = self.attributes[key] {
             return value
         }
         
