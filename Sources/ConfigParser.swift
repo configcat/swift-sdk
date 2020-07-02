@@ -38,7 +38,7 @@ public final class ConfigParser {
         
         if let data = json.data(using: .utf8) {
             if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
-                if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user) {
+                if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user).value {
                     return value
                 } else {
                     os_log("""
@@ -69,4 +69,93 @@ public final class ConfigParser {
         os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
         throw ParserError.parseFailure
     }
+
+    /**
+     Parse the Variation ID (analytics) of a feature flag or setting based on it's key from the given json.
+
+     - Parameter for: the key of the value.
+     - Parameter json: the json config.
+     - Parameter user: the user object to identify the caller.
+     - Throws: `ParserError.parseFailure` when the parsing failed.
+     */
+    public func parseVariationId(for key: String, json: String, user: User? = nil) throws -> String {
+        if let data = json.data(using: .utf8) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                if let variationId = variationId {
+                    return variationId
+                } else {
+                    os_log("""
+                           Parsing the variation id for the key '%@' failed.
+                           Returning defaultValue.
+                           Here are the available keys: %@
+                           """, log: ConfigParser.log, type: .error, key, [String](jsonObject.keys))
+                }
+            }
+        }
+
+        throw ParserError.parseFailure
+    }
+
+    /**
+     Gets the Variation IDs (analytics) of all feature flags or settings from the config json.
+
+     - Parameter json: the json config.
+     - Parameter user: the user object to identify the caller.
+     - Throws: `ParserError.parseFailure` when the parsing failed.
+     */
+    public func getAllVariationIds(json: String, user: User? = nil) throws -> [String] {
+        if let data = json.data(using: .utf8) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                var variationIds = [String]()
+                for key in jsonObject.keys {
+                    let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                    if let variationId = variationId {
+                        variationIds.append(variationId)
+                    } else {
+                        os_log("""
+                               Parsing the variation id for the key '%@' failed.
+                               """, log: ConfigParser.log, type: .error, key)
+                    }
+                }
+                return variationIds
+            }
+        }
+
+        os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
+        throw ParserError.parseFailure
+    }
+
+    public func getKeyAndValue(for variationId: String, json: String) throws -> (key: String, value: Any) {
+        if let data = json.data(using: .utf8) {
+            if let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] {
+                for (key, json) in jsonObject {
+                    if let json = json as? [String: Any], let value = json[Config.value] {
+                        if variationId == json[Config.variationId] as? String {
+                            return (key, value)
+                        }
+
+                        let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
+                        for rule in rolloutRules {
+                            if variationId == rule[Config.variationId] as? String, let value = json[Config.value]  {
+                                return (key, value)
+                            }
+                        }
+
+                        let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
+                        for rule in rolloutPercentageItems {
+                            if variationId == rule[Config.variationId] as? String, let value = json[Config.value] {
+                                return (key, value)
+                            }
+                        }
+                    }
+                }
+
+                os_log("Could not find the setting for the given variationId: '%@'", log: ConfigParser.log, type: .error, variationId);
+            }
+        }
+
+        throw ParserError.parseFailure
+    }
+
 }

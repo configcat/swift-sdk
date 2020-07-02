@@ -6,4 +6,5 @@ enum Config {
     static let rolloutPercentageItems = "p"
     static let percentage = "p"
     static let rolloutRules = "r"
+    static let variationId = "i"
 }

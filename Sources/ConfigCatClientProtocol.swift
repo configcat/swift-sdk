@@ -1,5 +1,14 @@
 import Foundation
 
+public class KeyValue : NSObject {
+    let key: String?
+    let value: Any?
+    init(key: String?, value: Any?) {
+        self.key = key
+        self.value = value
+    }
+}
+
 /// Defines the public protocol of the `ConfigCatClient`.
 public protocol ConfigCatClientProtocol {
 
@@ -44,7 +53,25 @@ public protocol ConfigCatClientProtocol {
     
     /// Gets all the setting keys asynchronously.
     func getAllKeysAsync(completion: @escaping ([String], Error?) -> ())
-    
+
+    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key.
+    func getVariationId(for key: String, defaultVariationId: String?, user: User?) -> String?
+
+    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
+    func getVariationIdAsync(for key: String, defaultVariationId: String?, user: User?, completion: @escaping (String?) -> ())
+
+    /// Gets the Variation IDs (analytics) of all feature flags or settings.
+    func getAllVariationIds(user: User?) -> [String]
+
+    /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
+    func getAllVariationIdsAsync(user: User?, completion: @escaping ([String], Error?) -> ())
+
+    /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
+    func getKeyAndValue(for variationId: String) -> KeyValue?
+
+    /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
+    func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ())
+
     /// Initiates a force refresh synchronously on the cached configuration.
     func refresh()
     

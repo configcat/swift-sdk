@@ -33,11 +33,11 @@ class Async {
         self.queue.async {
             if(self.state.isPending()) {
                 self.state = .completed
-                self.semaphore.signal()
                 for completion in self.completions {
                     completion()
                 }
                 self.completions.removeAll()
+                self.semaphore.signal()
             }
         }
     }
