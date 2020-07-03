@@ -189,6 +189,13 @@
 		C41F8AB424AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
 		C41F8AB524AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
 		C41F8AB624AD38F70004CF03 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
+		C45414AF24AF2BF2004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B024AF2BF2004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B124AF2BF3004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B224AF2BF3004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B324AF2BF3004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B424AF2BF3004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
+		C45414B524AF2BF3004E66E0 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
 		C481321D24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
 		C481321E24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
 		C481321F24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */; };
@@ -282,6 +289,7 @@
 		3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
+		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
 		C481321C24A15F2A006F4C56 /* VariationIdIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdIntegrationTests.swift; sourceTree = "<group>"; };
 		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_variationId.csv; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
@@ -399,6 +407,7 @@
 		3F880A42207BE91900087A6B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C45414AE24AF2BF2004E66E0 /* KeyValue.swift */,
 				1AEDBE8223876064008803E7 /* Config.swift */,
 				3F880A9E207BF1B100087A6B /* AsyncResult.swift */,
 				3F880AA0207BF1B100087A6B /* AutoPollingPolicy.swift */,
@@ -756,6 +765,7 @@
 				3F880AA7207BF1B100087A6B /* ConfigFetcher.swift in Sources */,
 				1A65478A23A511E300EA53B8 /* Version+Comparable.swift in Sources */,
 				3F880AA4207BF1B100087A6B /* LazyLoadingPolicy.swift in Sources */,
+				C45414AF24AF2BF2004E66E0 /* KeyValue.swift in Sources */,
 				1AEDBE8323876064008803E7 /* Config.swift in Sources */,
 				F15F9AFC216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AA8207BF1B100087A6B /* AutoPollingPolicy.swift in Sources */,
@@ -792,6 +802,7 @@
 				3F1F2C9B23E1227E00AFA7D2 /* Version+Comparable.swift in Sources */,
 				3F36F5392083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F1F2C9E23E1227E00AFA7D2 /* Version.swift in Sources */,
+				C45414B024AF2BF2004E66E0 /* KeyValue.swift in Sources */,
 				3F1F2C7D23E1218500AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C8523E1218500AFA7D2 /* RolloutEvaluator.swift in Sources */,
 				C481321D24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
@@ -822,6 +833,7 @@
 				3F880AB0207BF2A100087A6B /* LazyLoadingPolicy.swift in Sources */,
 				1A65478B23A511E300EA53B8 /* Version+Comparable.swift in Sources */,
 				3F880AB1207BF2A100087A6B /* RefreshPolicy.swift in Sources */,
+				C45414B124AF2BF3004E66E0 /* KeyValue.swift in Sources */,
 				1AEDBE8423876064008803E7 /* Config.swift in Sources */,
 				F15F9AFD216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AAC207BF2A100087A6B /* AutoPollingPolicy.swift in Sources */,
@@ -858,6 +870,7 @@
 				3F1F2CA023E1227E00AFA7D2 /* Version+Comparable.swift in Sources */,
 				3F36F53A2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F1F2CA323E1227E00AFA7D2 /* Version.swift in Sources */,
+				C45414B224AF2BF3004E66E0 /* KeyValue.swift in Sources */,
 				3F1F2C8723E1218600AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C8F23E1218600AFA7D2 /* RolloutEvaluator.swift in Sources */,
 				C481321E24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
@@ -888,6 +901,7 @@
 				3F880AB8207BF2A200087A6B /* LazyLoadingPolicy.swift in Sources */,
 				1A65478C23A511E300EA53B8 /* Version+Comparable.swift in Sources */,
 				3F880AB9207BF2A200087A6B /* RefreshPolicy.swift in Sources */,
+				C45414B324AF2BF3004E66E0 /* KeyValue.swift in Sources */,
 				1AEDBE8523876064008803E7 /* Config.swift in Sources */,
 				F15F9AFE216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880AB4207BF2A200087A6B /* AutoPollingPolicy.swift in Sources */,
@@ -924,6 +938,7 @@
 				3F1F2CA523E1227F00AFA7D2 /* Version+Comparable.swift in Sources */,
 				3F36F53B2083D5C400949B8F /* LazyLoadingSyncTests.swift in Sources */,
 				3F1F2CA823E1227F00AFA7D2 /* Version.swift in Sources */,
+				C45414B424AF2BF3004E66E0 /* KeyValue.swift in Sources */,
 				3F1F2C9123E1218700AFA7D2 /* AsyncResult.swift in Sources */,
 				3F1F2C9923E1218700AFA7D2 /* RolloutEvaluator.swift in Sources */,
 				C481321F24A15F2A006F4C56 /* VariationIdIntegrationTests.swift in Sources */,
@@ -954,6 +969,7 @@
 				3F880AC0207BF2A300087A6B /* LazyLoadingPolicy.swift in Sources */,
 				1A65478D23A511E300EA53B8 /* Version+Comparable.swift in Sources */,
 				3F880AC1207BF2A300087A6B /* RefreshPolicy.swift in Sources */,
+				C45414B524AF2BF3004E66E0 /* KeyValue.swift in Sources */,
 				1AEDBE8623876064008803E7 /* Config.swift in Sources */,
 				F15F9AFF216922F000F490CD /* RolloutEvaluator.swift in Sources */,
 				3F880ABC207BF2A300087A6B /* AutoPollingPolicy.swift in Sources */,
