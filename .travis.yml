@@ -10,6 +10,7 @@ stages:
     if: tag =~ /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/
 
 before_install:
+  - gem install slather
   - gem install cocoapods
   - pod --version
 
@@ -26,7 +27,8 @@ jobs:
     script:
     - set -o pipefail
     - xcodebuild clean test -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
-    - bash <(curl -s https://codecov.io/bash) -X xcodellvm
+    - slather
+    - bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
 
   - stage: lint
     script:

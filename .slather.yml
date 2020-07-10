@@ -1,0 +1,6 @@
+coverage_service: cobertura_xml
+xcodeproj: ./ConfigCat.xcodeproj
+scheme: 'ConfigCat Coverage'
+output_directory: ./
+ignore:
+  - "Version/*.swift"
