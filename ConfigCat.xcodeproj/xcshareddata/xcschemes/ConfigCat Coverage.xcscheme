@@ -41,7 +41,8 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      codeCoverageEnabled = "YES">
+      codeCoverageEnabled = "YES"
+      onlyGenerateCoverageForSpecifiedTargets = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
@@ -57,13 +58,6 @@
             BlueprintIdentifier = "3F880A48207BECB100087A6B"
             BuildableName = "ConfigCat.framework"
             BlueprintName = "ConfigCat macOS"
-            ReferencedContainer = "container:ConfigCat.xcodeproj">
-         </BuildableReference>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A29207BE8F000087A6B"
-            BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat iOS"
             ReferencedContainer = "container:ConfigCat.xcodeproj">
          </BuildableReference>
       </CodeCoverageTargets>
