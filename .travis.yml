@@ -19,14 +19,20 @@ jobs:
   - stage: test
     script:
     - set -o pipefail
-    - xcodebuild clean test -sdk iphonesimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat iOS" -destination "OS=12.0,name=iPhone 8" CODE_SIGNING_REQUIRED=NO -quiet
-    - xcodebuild clean test -sdk appletvsimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat tvOS" -destination "OS=12.0,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO -quiet
-    - xcodebuild clean test -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat macOS" -destination "arch=x86_64" -quiet
+    - xcodebuild build-for-testing -sdk iphonesimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat iOS" -destination "OS=12.0,name=iPhone 8" CODE_SIGNING_REQUIRED=NO -quiet
+    - xcodebuild test-without-building -sdk iphonesimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat iOS" -destination "OS=12.0,name=iPhone 8" CODE_SIGNING_REQUIRED=NO -quiet
+    
+    - xcodebuild build-for-testing -sdk appletvsimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat tvOS" -destination "OS=12.0,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO -quiet
+    - xcodebuild test-without-building -sdk appletvsimulator12.0 -project ConfigCat.xcodeproj -scheme "ConfigCat tvOS" -destination "OS=12.0,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO -quiet
+    
+    - xcodebuild build-for-testing -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat macOS" -destination "arch=x86_64" -quiet
+    - xcodebuild test-without-building -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat macOS" -destination "arch=x86_64" -quiet
 
   - stage: coverage
     script:
     - set -o pipefail
-    - xcodebuild clean test -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
+    - xcodebuild build-for-testing -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
+    - xcodebuild test-without-building -sdk macosx10.14 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
     - slather
     - bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
 
