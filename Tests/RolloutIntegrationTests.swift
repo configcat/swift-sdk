@@ -2,13 +2,18 @@ import XCTest
 import ConfigCat
 
 class RolloutIntegrationTests: XCTestCase {
+    enum TestType {
+        case value
+        case variation
+    }
+
     lazy var testBundle: Bundle = {
         return Bundle(for: type(of: self))
     }()
     
     func testRolloutMatrixText() throws {
         if let url = testBundle.url(forResource: "testmatrix", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", type: .value)
         } else {
             XCTFail()
         }
@@ -16,7 +21,7 @@ class RolloutIntegrationTests: XCTestCase {
 
     func testRolloutMatrixSemantic() throws {
         if let url = testBundle.url(forResource: "testmatrix_semantic", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA")
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", type: .value)
         } else {
             XCTFail()
         }
@@ -24,7 +29,7 @@ class RolloutIntegrationTests: XCTestCase {
     
     func testRolloutMatrixSemantic2() throws {
         if let url = testBundle.url(forResource: "testmatrix_semantic_2", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w")
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", type: .value)
         } else {
             XCTFail()
         }
@@ -32,7 +37,7 @@ class RolloutIntegrationTests: XCTestCase {
 
     func testRolloutMatrixNumber() throws {
         if let url = testBundle.url(forResource: "testmatrix_number", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw")
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", type: .value)
         } else {
             XCTFail()
         }
@@ -40,13 +45,21 @@ class RolloutIntegrationTests: XCTestCase {
 
     func testRolloutMatrixSensitive() throws {
         if let url = testBundle.url(forResource: "testmatrix_sensitive", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA")
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", type: .value)
         } else {
             XCTFail()
         }
     }
 
-    func testRolloutMatrix(url: URL, sdkKey: String) throws {
+    func testRolloutMatrixVariationId() throws {
+        if let url = testBundle.url(forResource: "testmatrix_variationId", withExtension: "csv") {
+            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", type: .variation)
+        } else {
+            XCTFail()
+        }
+    }
+
+    func testRolloutMatrix(url: URL, sdkKey: String, type: TestType) throws {
         let client: ConfigCatClient = ConfigCatClient(sdkKey: sdkKey)
         
         guard let matrixData = try? Data(contentsOf: url), let content = String(bytes: matrixData, encoding: .utf8) else {
@@ -100,7 +113,7 @@ class RolloutIntegrationTests: XCTestCase {
             
             var i: Int = 0
             for settingKey in settingKeys {
-                if let anyValue: Any = client.getValue(for: settingKey, defaultValue: nil, user: user) {
+                if let anyValue: Any = type == .variation ? client.getVariationId(for: settingKey, defaultVariationId: "", user: user) : client.getValue(for: settingKey, defaultValue: nil, user: user) {
                     if let boolValue = anyValue as? Bool,
                         let expectedValue = Bool(testObjects[i + 4].lowercased()) {
                         if boolValue != expectedValue {
