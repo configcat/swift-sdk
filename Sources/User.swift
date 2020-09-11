@@ -18,11 +18,7 @@ public final class User : NSObject {
                       email: String? = nil,
                       country: String? = nil,
                       custom: [String: String]? = nil) {
-        
-        if identifier.isEmpty {
-            assert(false, "identifier cannot be empty")
-        }
-        
+
         attributes = [:]
         self.identifier = identifier
         attributes["Identifier"] = identifier

@@ -1,5 +1,6 @@
 Identifier;Email;Country;Custom1;bool30TrueAdvancedRules;boolDefaultFalse;boolDefaultTrue;double25Pi25E25Gr25Zero;doubleDefaultPi;integer25One25Two25Three25FourAdvancedRules;integerDefaultOne;string25Cat25Dog25Falcon25Horse;string25Cat25Dog25Falcon25HorseAdvancedRules;string75Cat0Dog25Falcon0Horse;stringContainsDogDefaultCat;stringDefaultCat;stringIsInDogDefaultCat;stringIsNotInDogDefaultCat;stringNotContainsDogDefaultCat
 ##null##;;;;True;False;True;-1.0;3.1415;-1;1;Chicken;Chicken;Chicken;Cat;Cat;Cat;Cat;Cat
+;;;;False;False;True;2.7182;3.1415;4;1;Dog;Dog;Cat;Cat;Cat;Cat;Cat;Cat
 a@configcat.com;a@configcat.com;Hungary;admin;False;False;True;5.561;3.1415;5;1;Cat;Dolphin;Cat;Dog;Cat;Dog;Cat;Cat
 b@configcat.com;b@configcat.com;Hungary;;False;False;True;5.561;3.1415;5;1;Falcon;Dolphin;Cat;Dog;Cat;Dog;Cat;Cat
 c@configcat.com;c@configcat.com;United Kingdom;admin;False;False;True;5.561;3.1415;5;1;Dog;Dolphin;Falcon;Dog;Cat;Dog;Dog;Cat

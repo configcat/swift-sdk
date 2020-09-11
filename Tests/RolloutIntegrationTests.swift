@@ -88,7 +88,7 @@ class RolloutIntegrationTests: XCTestCase {
             }
             
             var user: User? = nil
-            if !testObjects[0].isEmpty && testObjects[0] != "##null##" {
+            if testObjects[0] != "##null##" {
                 
                 var email = ""
                 var country = ""
