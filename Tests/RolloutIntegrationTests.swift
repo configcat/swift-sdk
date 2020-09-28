@@ -88,7 +88,7 @@ class RolloutIntegrationTests: XCTestCase {
             }
             
             var user: User? = nil
-            if !testObjects[0].isEmpty && testObjects[0] != "##null##" {
+            if testObjects[0] != "##null##" {
                 
                 var email = ""
                 var country = ""
@@ -113,48 +113,60 @@ class RolloutIntegrationTests: XCTestCase {
             
             var i: Int = 0
             for settingKey in settingKeys {
-                if let anyValue: Any = type == .variation ? client.getVariationId(for: settingKey, defaultVariationId: "", user: user) : client.getValue(for: settingKey, defaultValue: nil, user: user) {
-                    if let boolValue = anyValue as? Bool,
-                        let expectedValue = Bool(testObjects[i + 4].lowercased()) {
-                        if boolValue != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, boolValue))
+                if type == .value {
+                    if let anyValue: Any = client.getValue(for: settingKey, defaultValue: nil, user: user) {
+                        if let boolValue = anyValue as? Bool,
+                            let expectedValue = Bool(testObjects[i + 4].lowercased()) {
+                            if boolValue != expectedValue {
+                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, boolValue))
+                            }
+                            
+                            i += 1
+                            continue
                         }
                         
-                        i += 1
-                        continue
+                        if let intValue = anyValue as? Int,
+                            let expectedValue = Int(testObjects[i + 4]) {
+                            if intValue != expectedValue {
+                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, intValue))
+                            }
+                            
+                            i += 1
+                            continue
+                        }
+                        
+                        if let doubleValue = anyValue as? Double,
+                            let expectedValue = Double(testObjects[i + 4]) {
+                            if doubleValue != expectedValue {
+                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, doubleValue))
+                            }
+                            
+                            i += 1
+                            continue
+                        }
+                        
+                        if let stringValue = anyValue as? String {
+                            let expectedValue = testObjects[i + 4]
+                            if stringValue != expectedValue {
+                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, stringValue))
+                            }
+                            
+                            i += 1
+                            continue
+                        }
                     }
-                    
-                    if let intValue = anyValue as? Int,
-                        let expectedValue = Int(testObjects[i + 4]) {
-                        if intValue != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, intValue))
-                        }
-                        
-                        i += 1
-                        continue
-                    }
-                    
-                    if let doubleValue = anyValue as? Double,
-                        let expectedValue = Double(testObjects[i + 4]) {
-                        if doubleValue != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, doubleValue))
-                        }
-                        
-                        i += 1
-                        continue
-                    }
-                    
-                    if let stringValue = anyValue as? String {
-                        let expectedValue = testObjects[i + 4]
-                        if stringValue != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, stringValue))
-                        }
-                        
-                        i += 1
-                        continue
+                } else {
+                    if let stringValue: String = client.getVariationId(for: settingKey, defaultVariationId: "", user: user) {
+                            let expectedValue = testObjects[i + 4]
+                            if stringValue != expectedValue {
+                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, stringValue))
+                            }
+                            
+                            i += 1
+                            continue
                     }
                 }
-                    
+                
                 XCTFail()
             }
         }
