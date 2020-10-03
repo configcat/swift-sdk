@@ -9,8 +9,8 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -28,8 +28,8 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -47,8 +47,8 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         

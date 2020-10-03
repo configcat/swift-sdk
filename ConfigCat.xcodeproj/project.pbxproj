@@ -199,6 +199,9 @@
 		C4D34D3B249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
 		C4D34D3C249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
 		C4D34D3D249B6F2900908D76 /* testmatrix_variationId.csv in Resources */ = {isa = PBXBuildFile; fileRef = C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */; };
+		F10F787E2528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
+		F10F787F2528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
+		F10F78802528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
 		F15F9AF72169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
 		F15F9AF82169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
 		F15F9AF92169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
@@ -288,6 +291,7 @@
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
 		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_variationId.csv; sourceTree = "<group>"; };
+		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
 		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix.csv; sourceTree = "<group>"; };
@@ -445,6 +449,7 @@
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
 				F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */,
+				F10F787D2528950D0021F468 /* DataGovernanceTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -791,6 +796,7 @@
 				3F1F2C8023E1218500AFA7D2 /* RefreshPolicy.swift in Sources */,
 				3F1F2C9C23E1227E00AFA7D2 /* Version+Foundation.swift in Sources */,
 				3F4D40C5207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
+				F10F787E2528950D0021F468 /* DataGovernanceTests.swift in Sources */,
 				3F1F2C7023E1192400AFA7D2 /* PollingMode.swift in Sources */,
 				3F1F2C7623E119B200AFA7D2 /* ConfigCache.swift in Sources */,
 				3F1F2C7E23E1218500AFA7D2 /* AutoPollingPolicy.swift in Sources */,
@@ -858,6 +864,7 @@
 				3F1F2C8A23E1218600AFA7D2 /* RefreshPolicy.swift in Sources */,
 				3F1F2CA123E1227E00AFA7D2 /* Version+Foundation.swift in Sources */,
 				3F4D40C6207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
+				F10F787F2528950D0021F468 /* DataGovernanceTests.swift in Sources */,
 				3F1F2C7123E1192500AFA7D2 /* PollingMode.swift in Sources */,
 				3F1F2C7723E119B300AFA7D2 /* ConfigCache.swift in Sources */,
 				3F1F2C8823E1218600AFA7D2 /* AutoPollingPolicy.swift in Sources */,
@@ -925,6 +932,7 @@
 				3F1F2C9423E1218700AFA7D2 /* RefreshPolicy.swift in Sources */,
 				3F1F2CA623E1227F00AFA7D2 /* Version+Foundation.swift in Sources */,
 				3F4D40C7207EC17000BBAEC6 /* ConfigFetcherTests.swift in Sources */,
+				F10F78802528950D0021F468 /* DataGovernanceTests.swift in Sources */,
 				3F1F2C7223E1192600AFA7D2 /* PollingMode.swift in Sources */,
 				3F1F2C7823E119B300AFA7D2 /* ConfigCache.swift in Sources */,
 				3F1F2C9223E1218700AFA7D2 /* AutoPollingPolicy.swift in Sources */,

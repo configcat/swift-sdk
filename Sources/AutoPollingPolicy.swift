@@ -16,10 +16,11 @@ final class AutoPollingPolicy : RefreshPolicy {
      
      - Parameter cache: the internal cache instance.
      - Parameter fetcher: the internal config fetcher instance.
+     - Parameter sdkKey: the sdk key.          
      - Returns: A new `AutoPollingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher) {
-        self.init(cache: cache, fetcher: fetcher, config: AutoPollingMode())
+    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, sdkKey: String) {
+        self.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey, config: AutoPollingMode())
     }
     
     /**
@@ -27,15 +28,17 @@ final class AutoPollingPolicy : RefreshPolicy {
      
      - Parameter cache: the internal cache instance.
      - Parameter fetcher: the internal config fetcher instance.
+     - Parameter sdkKey: the sdk key.
      - Parameter config: the configuration.
      - Returns: A new `AutoPollingPolicy`.
      */
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
+                sdkKey: String,
                 config: AutoPollingMode) {
         self.autoPollIntervalInSeconds = config.autoPollIntervalInSeconds
         self.onConfigChanged = config.onConfigChanged
-        super.init(cache: cache, fetcher: fetcher)
+        super.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey)
         
         timer.schedule(deadline: DispatchTime.now(), repeating: autoPollIntervalInSeconds)
         timer.setEventHandler(handler: { [weak self] in
@@ -46,9 +49,9 @@ final class AutoPollingPolicy : RefreshPolicy {
             os_log("Polling the latest configuration", log: AutoPollingPolicy.log, type: .debug)
             self.fetcher.getConfigurationJson()
                 .apply(completion: { response in
-                    let cached = self.cache.get()
+                    let cached = self.readCache()
                     if response.isFetched() && response.body != cached {
-                        self.cache.set(value: response.body)
+                        self.writeCache(value: response.body)
                         self.onConfigChanged?()
                     }
                     
@@ -67,16 +70,16 @@ final class AutoPollingPolicy : RefreshPolicy {
     
     public override func getConfiguration() -> AsyncResult<String> {
         if self.initResult.completed {
-            return self.readCache()
+            return self.readCacheAsync()
         }
         
         return self.initResult.apply(completion: {
-            return self.cache.get()
+            return self.readCache()
         })
     }
     
-    private func readCache() -> AsyncResult<String> {
+    private func readCacheAsync() -> AsyncResult<String> {
         os_log("Reading from cache", log: AutoPollingPolicy.log, type: .debug)
-        return AsyncResult<String>.completed(result: self.cache.get())
+        return AsyncResult<String>.completed(result: self.readCache())
     }
 }

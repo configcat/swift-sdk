@@ -5,6 +5,14 @@ extension ConfigCatClient {
     public typealias ConfigChangedHandler = () -> ()
 }
 
+/// Describes the location of your feature flag and setting data within the ConfigCat CDN.
+@objc public enum DataGovernance : Int {
+    /// Select this if your feature flags are published to all global CDN nodes.
+    case global
+    /// Select this if your feature flags are published to CDN nodes only in the EU.
+    case euOnly
+}
+
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
@@ -16,18 +24,25 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      Initializes a new `ConfigCatClient`.
      
      - Parameter sdkKey: the SDK Key for to communicate with the ConfigCat services.
-     - Parameter policyFactory: a function used to create the a `RefreshPolicy` implementation with the given `ConfigFetcher` and `ConfigCache`.
+     - Parameter dataGovernance: default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
+     https://app.configcat.com/organization/data-governance
+     - Parameter configCache: a cache implementation, see `ConfigCache`.
+     - Parameter refreshMode: the polling mode, `autoPoll`, `lazyLoad` or `manualPoll`.
      - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
      - Parameter sessionConfiguration: the url session configuration.
+     - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
      - Returns: A new `ConfigCatClient`.
      */
     @objc public convenience init(sdkKey: String,
+                dataGovernance: DataGovernance = DataGovernance.global,
                 configCache: ConfigCache? = nil,
                 refreshMode: PollingMode? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "") {
-        self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration), configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds, baseUrl: baseUrl)
+        self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
+                  configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds,
+                  baseUrl: baseUrl, dataGovernance: dataGovernance)
     }
     
     internal init(sdkKey: String,
@@ -35,7 +50,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 session: URLSession?,
                 configCache: ConfigCache? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
-                baseUrl: String = "") {
+                baseUrl: String = "",
+                dataGovernance: DataGovernance = DataGovernance.global) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
@@ -46,9 +62,13 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         
         let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
-        let fetcher = ConfigFetcher(session: session!, sdkKey: sdkKey, mode: mode, baseUrl: baseUrl)
+        let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
+                                    sdkKey: sdkKey,
+                                    mode: mode.getPollingIdentifier(),
+                                    dataGovernance: dataGovernance,
+                                    baseUrl: baseUrl)
         
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache))
+        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, sdkKey: sdkKey))
         
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }
