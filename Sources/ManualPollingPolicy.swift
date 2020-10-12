@@ -7,13 +7,16 @@ final class ManualPollingPolicy : RefreshPolicy {
      
      - Parameter cache: the internal cache instance.
      - Parameter fetcher: the internal config fetcher instance.
+     - Parameter sdkKey: the sdk key.
      - Returns: A new `ManualPollingPolicy`.
      */
-    public required init(cache: ConfigCache, fetcher: ConfigFetcher) {
-        super.init(cache: cache, fetcher: fetcher)
+    public required init(cache: ConfigCache,
+                         fetcher: ConfigFetcher,
+                         sdkKey: String) {
+        super.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey)
     }
     
     public override func getConfiguration() -> AsyncResult<String> {
-        return AsyncResult<String>.completed(result: self.cache.get())
+        return AsyncResult<String>.completed(result: self.readCache())
     }
 }

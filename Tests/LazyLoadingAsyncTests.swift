@@ -9,8 +9,8 @@ class LazyLoadingAsyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
-        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())
@@ -34,8 +34,8 @@ class LazyLoadingAsyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500, delay: 2))
         
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
-        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache()))
+        let fetcher = ConfigFetcher(session: mockSession, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
         XCTAssertEqual("test", try policy.getConfiguration().get())

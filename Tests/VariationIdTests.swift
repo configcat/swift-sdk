@@ -3,7 +3,7 @@ import ConfigCat
 
 class VariationIdTests: XCTestCase {
     var mockSession = MockURLSession()
-    let testJsonFormat = "{ \"key1\": { \"v\": true, \"i\": \"fakeId1\", \"p\": [], \"r\": [] }, \"key2\": { \"v\": false, \"i\": \"fakeId2\", \"p\": [], \"r\": [] } }"
+    let testJsonFormat = "{ \"f\": { \"key1\": { \"v\": true, \"i\": \"fakeId1\", \"p\": [], \"r\": [] }, \"key2\": { \"v\": false, \"i\": \"fakeId2\", \"p\": [], \"r\": [] } } }"
     
     override func setUp() {
         super.setUp()

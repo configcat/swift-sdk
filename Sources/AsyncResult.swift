@@ -156,6 +156,18 @@ final class AsyncResult<Value> : Async {
         return self.apply(completion: completion)
     }
     
+    public func compose(completion: @escaping (Value) -> AsyncResult) -> AsyncResult {
+        let result = AsyncResult()
+        self.accept { value in
+            let newResult = completion(value)
+            newResult.accept { newVal in
+                result.complete(result: newVal)
+            }
+        }
+        
+        return result
+    }
+    
     public class func completed(result: Value) -> AsyncResult<Value> {
         return AsyncResult<Value>(result: result)
     }

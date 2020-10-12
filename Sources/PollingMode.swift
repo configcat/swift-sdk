@@ -69,22 +69,24 @@ class ManualPollingMode : PollingMode {
 class RefreshPolicyFactory : PollingModeVisitor {
     private let cache: ConfigCache
     private let fetcher: ConfigFetcher
+    private let sdkKey: String
     
-    init(fetcher: ConfigFetcher, cache: ConfigCache) {
+    init(fetcher: ConfigFetcher, cache: ConfigCache, sdkKey: String) {
         self.fetcher = fetcher
         self.cache = cache
+        self.sdkKey = sdkKey
     }
     
     func visit(pollingMode: AutoPollingMode) -> RefreshPolicy {
-        return AutoPollingPolicy(cache: self.cache, fetcher: self.fetcher, config: pollingMode)
+        return AutoPollingPolicy(cache: self.cache, fetcher: self.fetcher, sdkKey: self.sdkKey, config: pollingMode)
     }
     
     func visit(pollingMode: ManualPollingMode) -> RefreshPolicy {
-        return ManualPollingPolicy(cache: self.cache, fetcher: self.fetcher)
+        return ManualPollingPolicy(cache: self.cache, fetcher: self.fetcher, sdkKey: self.sdkKey)
     }
     
     func visit(pollingMode: LazyLoadingMode) -> RefreshPolicy {
-        return LazyLoadingPolicy(cache: self.cache, fetcher: self.fetcher, config: pollingMode)
+        return LazyLoadingPolicy(cache: self.cache, fetcher: self.fetcher, sdkKey: self.sdkKey, config: pollingMode)
         
     }
 }

@@ -7,6 +7,12 @@ enum Status {
     case failure
 }
 
+enum RedirectMode: Int {
+    case noRedirect
+    case shouldRedirect
+    case forceRedirect
+}
+
 /// Represents a fetch response.
 struct FetchResponse {
     fileprivate let status: Status
@@ -47,36 +53,89 @@ struct FetchResponse {
     }
 }
 
-/// This class is used to fetch the latest configuration.
 class ConfigFetcher : NSObject {
     fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
     fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigFetcher.self).bundleIdentifier!, category: "Config Fetcher")
     fileprivate let session: URLSession
-    fileprivate let url: String
+    fileprivate var url: String
     fileprivate var etag: String
     fileprivate let mode: String
+    fileprivate let sdkKey: String
+    fileprivate let urlIsCustom: Bool
     
-    /**
-     Initializes a ConfigFetcher instance.
-     
-     - Parameter session: the url session.
-     - Parameter sdkKey: the project secret.
-     - Returns: the new ConfigFetcher instance.
-     */
-    public init(session: URLSession, sdkKey: String, mode: PollingMode, baseUrl: String = "") {
-        let base = baseUrl.isEmpty ? "https://cdn.configcat.com" : baseUrl
+    static let configJsonName: String = "config_v5"
+    
+    static let globalBaseUrl: String = "https://cdn-global.configcat.com"
+    static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
+
+    public init(session: URLSession, sdkKey: String, mode: String,
+                dataGovernance: DataGovernance, baseUrl: String = "") {
         self.session = session
-        self.url = base + "/configuration-files/" + sdkKey + "/config_v4.json"
+        self.sdkKey = sdkKey
+        self.urlIsCustom = !baseUrl.isEmpty
+        self.url = baseUrl.isEmpty
+            ? dataGovernance == DataGovernance.euOnly
+                ? ConfigFetcher.euOnlyBaseUrl
+                : ConfigFetcher.globalBaseUrl
+            : baseUrl
         self.etag = ""
-        self.mode = mode.getPollingIdentifier()
+        self.mode = mode
+    }
+
+    public func getConfigurationJson() -> AsyncResult<FetchResponse> {
+        return self.executeFetch(executionCount: 2)
     }
     
-    /**
-     Gets the latest configuration from the network asynchronously.
-     
-     - Returns: the AsyncResult which computes the fetch response.
-     */
-    public func getConfigurationJson() -> AsyncResult<FetchResponse> {
+    private func executeFetch(executionCount: Int) -> AsyncResult<FetchResponse> {
+        return self.sendFetchRequest().compose { response in
+            if !response.isFetched() {
+                return AsyncResult.completed(result: response)
+            }
+            
+            do {
+                guard let preferences = try ConfigParser.parsePreferences(json: response.body) else {return AsyncResult.completed(result: response)}
+                guard let newUrl = preferences[Config.preferencesUrl] as? String else {return AsyncResult.completed(result: response)}
+                
+                if newUrl.isEmpty || newUrl == self.url {
+                    return AsyncResult.completed(result: response)
+                }
+                
+                guard let redirect = preferences[Config.preferencesRedirect] as? Int else {return AsyncResult.completed(result: response)}
+                
+                if self.urlIsCustom && redirect != RedirectMode.forceRedirect.rawValue {
+                    return AsyncResult.completed(result: response)
+                }
+                
+                self.url = newUrl
+                
+                if redirect == RedirectMode.noRedirect.rawValue {
+                    return AsyncResult.completed(result: response)
+                }
+                
+                if redirect == RedirectMode.shouldRedirect.rawValue {
+                    os_log("""
+                           Your dataGovernance parameter at ConfigCatClient
+                           initialization is not in sync with your preferences on the ConfigCat
+                           Dashboard: https://app.configcat.com/organization/data-governance.
+                           Only Organization Admins can access this preference.
+                           """, log: ConfigFetcher.log, type: .default)
+                }
+                
+                if executionCount > 0 {
+                    return self.executeFetch(executionCount: executionCount - 1)
+                }
+                
+            } catch {
+                os_log("An error occured during the config fetch: %@", log: ConfigFetcher.log, type: .error, error.localizedDescription)
+                return AsyncResult.completed(result: response)
+            }
+            
+            os_log("Redirect loop during config.json fetch. Please contact support@configcat.com.", log: ConfigFetcher.log, type: .error)
+            return AsyncResult.completed(result: response)
+        }
+    }
+    
+    private func sendFetchRequest() -> AsyncResult<FetchResponse> {
         let request = self.getRequest()
         let result = AsyncResult<FetchResponse>()
         
@@ -108,7 +167,7 @@ class ConfigFetcher : NSObject {
     }
     
     private func getRequest() -> URLRequest {
-        var request = URLRequest(url: URL(string: self.url)!)
+        var request = URLRequest(url: URL(string: self.url + "/configuration-files/" + sdkKey + "/" + ConfigFetcher.configJsonName + ".json")!)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.addValue("ConfigCat-Swift/" + self.mode + "-" + ConfigFetcher.version, forHTTPHeaderField: "X-ConfigCat-UserAgent")
         

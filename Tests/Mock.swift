@@ -60,15 +60,11 @@ enum TestError : Error {
 }
 
 public class FailingCache : ConfigCache {
-    
-    override init() {     
-    }
-    
-    public override func read() throws -> String {
+    public func read(for key: String) throws -> String {
         throw TestError.test
     }
     
-    public override func write(value: String) throws {
+    public func write(for key: String, value: String) throws {
         throw TestError.test
     }
 }

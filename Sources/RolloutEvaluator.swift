@@ -301,7 +301,7 @@ class RolloutEvaluator {
     }
 }
 
-fileprivate extension String {
+internal extension String {
     var sha1hex: String? {
         if let utf8Data = data(using: .utf8, allowLossyConversion: false) {
             return utf8Data.digestSHA1.hexString
@@ -310,7 +310,7 @@ fileprivate extension String {
     }
 }
 
-fileprivate extension Data {
+internal extension Data {
     var digestSHA1: Data {
         var bytes: [UInt8] = Array(repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
         withUnsafeBytes {
