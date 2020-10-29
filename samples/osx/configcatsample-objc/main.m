@@ -13,7 +13,7 @@ int main(int argc, const char * argv[]) {
                                                                  baseUrl:@""];
 
         // Creating a user object to identify your user (optional).
-        User* userObject = [[User alloc]initWithIdentifier:@"Some UserID"
+        CCUser* userObject = [[CCUser alloc]initWithIdentifier:@"Some UserID"
                                                      email:@"configcat@example.com"
                                                    country:@"CountryID"
                                                     custom:@{@"version": @"1.0.0"}];
