@@ -21,7 +21,7 @@ public final class ConfigParser {
      - Throws: `ParserError.invalidRequestedType` when the `Value` type is not supported.
      - Throws: `ParserError.parseFailure` when the parsing failed.
      */
-    public func parseValue<Value>(for key: String, json: String, user: User? = nil) throws -> Value {
+    public func parseValue<Value>(for key: String, json: String, user: ConfigCatUser? = nil) throws -> Value {
         if Value.self != String.self &&
             Value.self != String?.self &&
             Value.self != Int.self &&
@@ -74,7 +74,7 @@ public final class ConfigParser {
      - Parameter user: the user object to identify the caller.
      - Throws: `ParserError.parseFailure` when the parsing failed.
      */
-    public func parseVariationId(for key: String, json: String, user: User? = nil) throws -> String {
+    public func parseVariationId(for key: String, json: String, user: ConfigCatUser? = nil) throws -> String {
         if let jsonObject = try ConfigParser.parseEntries(json: json) {
             let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
             if let variationId = variationId {
@@ -98,7 +98,7 @@ public final class ConfigParser {
      - Parameter user: the user object to identify the caller.
      - Throws: `ParserError.parseFailure` when the parsing failed.
      */
-    public func getAllVariationIds(json: String, user: User? = nil) throws -> [String] {
+    public func getAllVariationIds(json: String, user: ConfigCatUser? = nil) throws -> [String] {
         if let jsonObject = try ConfigParser.parseEntries(json: json) {
             var variationIds = [String]()
             for key in jsonObject.keys {

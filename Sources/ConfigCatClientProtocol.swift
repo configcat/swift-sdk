@@ -27,7 +27,7 @@ public protocol ConfigCatClientProtocol {
      - Parameter defaultValue: in case of any failure, this value will be returned.
      - Parameter user: the user object to identify the caller.
      */
-    func getValue<Value>(for key: String, defaultValue: Value, user: User?) -> Value
+    func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value
     
     /**
      Gets a value asynchronously as `Value` from the configuration identified by the given `key`.
@@ -37,7 +37,7 @@ public protocol ConfigCatClientProtocol {
      - Parameter user: the user object to identify the caller.
      - Parameter completion: the function which will be called when the configuration is successfully fetched.
      */
-    func getValueAsync<Value>(for key: String, defaultValue: Value, user: User?, completion: @escaping (Value) -> ())
+    func getValueAsync<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ())
     
     /// Gets all the setting keys.
     func getAllKeys() -> [String]
@@ -46,16 +46,16 @@ public protocol ConfigCatClientProtocol {
     func getAllKeysAsync(completion: @escaping ([String], Error?) -> ())
 
     /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key.
-    func getVariationId(for key: String, defaultVariationId: String?, user: User?) -> String?
+    func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser?) -> String?
 
     /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
-    func getVariationIdAsync(for key: String, defaultVariationId: String?, user: User?, completion: @escaping (String?) -> ())
+    func getVariationIdAsync(for key: String, defaultVariationId: String?, user: ConfigCatUser?, completion: @escaping (String?) -> ())
 
     /// Gets the Variation IDs (analytics) of all feature flags or settings.
-    func getAllVariationIds(user: User?) -> [String]
+    func getAllVariationIds(user: ConfigCatUser?) -> [String]
 
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
-    func getAllVariationIdsAsync(user: User?, completion: @escaping ([String], Error?) -> ())
+    func getAllVariationIdsAsync(user: ConfigCatUser?, completion: @escaping ([String], Error?) -> ())
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     func getKeyAndValue(for variationId: String) -> KeyValue?
@@ -80,19 +80,19 @@ public protocol ConfigCatClientProtocol {
     func getDoubleValue(for key: String, defaultValue: Double) -> Double
     func getBoolValue(for key: String, defaultValue: Bool) -> Bool
     func getAnyValue(for key: String, defaultValue: Any) -> Any
-    func getStringValue(for key: String, defaultValue: String, user: User?) -> String
-    func getIntValue(for key: String, defaultValue: Int, user: User?) -> Int
-    func getDoubleValue(for key: String, defaultValue: Double, user: User?) -> Double
-    func getBoolValue(for key: String, defaultValue: Bool, user: User?) -> Bool
-    func getAnyValue(for key: String, defaultValue: Any, user: User?) -> Any
+    func getStringValue(for key: String, defaultValue: String, user: ConfigCatUser?) -> String
+    func getIntValue(for key: String, defaultValue: Int, user: ConfigCatUser?) -> Int
+    func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?) -> Double
+    func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?) -> Bool
+    func getAnyValue(for key: String, defaultValue: Any, user: ConfigCatUser?) -> Any
     func getStringValueAsync(for key: String, defaultValue: String, completion: @escaping (String) -> ())
     func getIntValueAsync(for key: String, defaultValue: Int, completion: @escaping (Int) -> ())
     func getDoubleValueAsync(for key: String, defaultValue: Double, completion: @escaping (Double) -> ())
     func getBoolValueAsync(for key: String, defaultValue: Bool, completion: @escaping (Bool) -> ())
     func getAnyValueAsync(for key: String, defaultValue: Any, completion: @escaping (Any) -> ())
-    func getStringValueAsync(for key: String, defaultValue: String, user: User?, completion: @escaping (String) -> ())
-    func getIntValueAsync(for key: String, defaultValue: Int, user: User?, completion: @escaping (Int) -> ())
-    func getDoubleValueAsync(for key: String, defaultValue: Double, user: User?, completion: @escaping (Double) -> ())
-    func getBoolValueAsync(for key: String, defaultValue: Bool, user: User?, completion: @escaping (Bool) -> ())
-    func getAnyValueAsync(for key: String, defaultValue: Any, user: User?, completion: @escaping (Any) -> ())
+    func getStringValueAsync(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ())
+    func getIntValueAsync(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ())
+    func getDoubleValueAsync(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ())
+    func getBoolValueAsync(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ())
+    func getAnyValueAsync(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ())
 }

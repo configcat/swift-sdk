@@ -73,7 +73,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }
     
-    public func getValue<Value>(for key: String, defaultValue: Value, user: User?) -> Value {
+    public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
@@ -94,7 +94,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         return getValue(for: key, defaultValue: defaultValue, user: nil)
     }
     
-    public func getValueAsync<Value>(for key: String, defaultValue: Value, user: User?, completion: @escaping (Value) -> ()) {
+    public func getValueAsync<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ()) {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
@@ -142,7 +142,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
-    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: User? = nil) -> String? {
+    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
@@ -159,7 +159,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
-    @objc public func getVariationIdAsync(for key: String, defaultVariationId: String?, user: User? = nil, completion: @escaping (String?) -> ()) {
+    @objc public func getVariationIdAsync(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil, completion: @escaping (String?) -> ()) {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
@@ -177,7 +177,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
-    @objc public func getAllVariationIds(user: User? = nil) -> [String] {
+    @objc public func getAllVariationIds(user: ConfigCatUser? = nil) -> [String] {
         do {
             let config = self.maxWaitTimeForSyncCallsInSeconds == 0
                     ? try self.refreshPolicy.getConfiguration().get()
@@ -190,7 +190,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
-    @objc public func getAllVariationIdsAsync(user: User? = nil, completion: @escaping ([String], Error?) -> ()) {
+    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String], Error?) -> ()) {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
@@ -246,12 +246,12 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.refresh().accept(completion: completion)
     }
 
-    private func getDefaultConfig<Value>(for key: String, defaultValue: Value, user: User?) -> Value {
+    private func getDefaultConfig<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         let latest = self.refreshPolicy.lastCachedConfiguration
         return latest.isEmpty ? defaultValue : self.deserializeJson(for: key, json: latest, defaultValue: defaultValue, user: user)
     }
     
-    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: User?) -> Value {
+    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         do {
             return try ConfigCatClient.parser.parseValue(for: key, json: json, user: user)
         } catch {
@@ -280,19 +280,19 @@ extension ConfigCatClient {
         return getValue(for: key, defaultValue: defaultValue, user: nil)
     }
 
-    @objc public func getStringValue(for key: String, defaultValue: String, user: User?) -> String {
+    @objc public func getStringValue(for key: String, defaultValue: String, user: ConfigCatUser?) -> String {
         return getValue(for: key, defaultValue: defaultValue, user: user)
     }
-    @objc public func getIntValue(for key: String, defaultValue: Int, user: User?) -> Int {
+    @objc public func getIntValue(for key: String, defaultValue: Int, user: ConfigCatUser?) -> Int {
         return getValue(for: key, defaultValue: defaultValue, user: user)
     }
-    @objc public func getDoubleValue(for key: String, defaultValue: Double, user: User?) -> Double {
+    @objc public func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?) -> Double {
         return getValue(for: key, defaultValue: defaultValue, user: user)
     }
-    @objc public func getBoolValue(for key: String, defaultValue: Bool, user: User?) -> Bool {
+    @objc public func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?) -> Bool {
         return getValue(for: key, defaultValue: defaultValue, user: user)
     }
-    @objc public func getAnyValue(for key: String, defaultValue: Any, user: User?) -> Any {
+    @objc public func getAnyValue(for key: String, defaultValue: Any, user: ConfigCatUser?) -> Any {
         return getValue(for: key, defaultValue: defaultValue, user: user)
     }
 
@@ -312,19 +312,19 @@ extension ConfigCatClient {
         return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
     }
 
-    @objc public func getStringValueAsync(for key: String, defaultValue: String, user: User?, completion: @escaping (String) -> ()) {
+    @objc public func getStringValueAsync(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
-    @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: User?, completion: @escaping (Int) -> ()) {
+    @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
-    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: User?, completion: @escaping (Double) -> ()) {
+    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
-    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: User?, completion: @escaping (Bool) -> ()) {
+    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
-    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: User?, completion: @escaping (Any) -> ()) {
+    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ()) {
         return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
 }

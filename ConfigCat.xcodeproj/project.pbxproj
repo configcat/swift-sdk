@@ -70,7 +70,7 @@
 		3F1F2C8023E1218500AFA7D2 /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F1F2C8123E1218500AFA7D2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F1F2C8223E1218500AFA7D2 /* ManualPollingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */; };
-		3F1F2C8423E1218500AFA7D2 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		3F1F2C8423E1218500AFA7D2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		3F1F2C8523E1218500AFA7D2 /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
 		3F1F2C8623E1218600AFA7D2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEDBE8223876064008803E7 /* Config.swift */; };
 		3F1F2C8723E1218600AFA7D2 /* AsyncResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9E207BF1B100087A6B /* AsyncResult.swift */; };
@@ -79,7 +79,7 @@
 		3F1F2C8A23E1218600AFA7D2 /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F1F2C8B23E1218600AFA7D2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F1F2C8C23E1218600AFA7D2 /* ManualPollingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */; };
-		3F1F2C8E23E1218600AFA7D2 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		3F1F2C8E23E1218600AFA7D2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		3F1F2C8F23E1218600AFA7D2 /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
 		3F1F2C9023E1218700AFA7D2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEDBE8223876064008803E7 /* Config.swift */; };
 		3F1F2C9123E1218700AFA7D2 /* AsyncResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9E207BF1B100087A6B /* AsyncResult.swift */; };
@@ -88,7 +88,7 @@
 		3F1F2C9423E1218700AFA7D2 /* RefreshPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */; };
 		3F1F2C9523E1218700AFA7D2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		3F1F2C9623E1218700AFA7D2 /* ManualPollingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */; };
-		3F1F2C9823E1218700AFA7D2 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		3F1F2C9823E1218700AFA7D2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		3F1F2C9923E1218700AFA7D2 /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
 		3F1F2C9A23E1227E00AFA7D2 /* Version+Codable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65478523A511E300EA53B8 /* Version+Codable.swift */; };
 		3F1F2C9B23E1227E00AFA7D2 /* Version+Comparable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65478323A511E300EA53B8 /* Version+Comparable.swift */; };
@@ -202,10 +202,10 @@
 		F10F787E2528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
 		F10F787F2528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
 		F10F78802528950D0021F468 /* DataGovernanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10F787D2528950D0021F468 /* DataGovernanceTests.swift */; };
-		F15F9AF72169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
-		F15F9AF82169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
-		F15F9AF92169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
-		F15F9AFA2169176A00F490CD /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* User.swift */; };
+		F15F9AF72169176A00F490CD /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
+		F15F9AF82169176A00F490CD /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
+		F15F9AF92169176A00F490CD /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
+		F15F9AFA2169176A00F490CD /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		F15F9AFC216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
 		F15F9AFD216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
 		F15F9AFE216922F000F490CD /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
@@ -292,7 +292,7 @@
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
 		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_variationId.csv; sourceTree = "<group>"; };
 		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
-		F15F9AF62169176A00F490CD /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		F15F9AF62169176A00F490CD /* ConfigCatUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatUser.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
 		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix.csv; sourceTree = "<group>"; };
 		F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutIntegrationTests.swift; sourceTree = "<group>"; };
@@ -420,7 +420,7 @@
 				3F880AC3207BFA4A00087A6B /* ManualPollingPolicy.swift */,
 				3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */,
 				3F880ACD207C072400087A6B /* ConfigCatClient.swift */,
-				F15F9AF62169176A00F490CD /* User.swift */,
+				F15F9AF62169176A00F490CD /* ConfigCatUser.swift */,
 				F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */,
 				3F1F2C6023E103C600AFA7D2 /* PollingMode.swift */,
 				3F1F2C6523E10BF300AFA7D2 /* PollingModes.swift */,
@@ -774,7 +774,7 @@
 				3F880AAA207BF1B100087A6B /* Synced.swift in Sources */,
 				1A65479223A511E300EA53B8 /* Version+Codable.swift in Sources */,
 				3F880AC4207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
-				F15F9AF72169176A00F490CD /* User.swift in Sources */,
+				F15F9AF72169176A00F490CD /* ConfigCatUser.swift in Sources */,
 				1A65478623A511E300EA53B8 /* Version+Range.swift in Sources */,
 				3F880AC9207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AA3207BF1B100087A6B /* ConfigParser.swift in Sources */,
@@ -818,7 +818,7 @@
 				3F4D40CA207EC20500BBAEC6 /* Mock.swift in Sources */,
 				3F36F53D2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9820840FE900906339 /* ManualPollingTests.swift in Sources */,
-				3F1F2C8423E1218500AFA7D2 /* User.swift in Sources */,
+				3F1F2C8423E1218500AFA7D2 /* ConfigCatUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -842,7 +842,7 @@
 				3F880AB2207BF2A100087A6B /* Synced.swift in Sources */,
 				1A65479323A511E300EA53B8 /* Version+Codable.swift in Sources */,
 				3F880AC5207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
-				F15F9AF82169176A00F490CD /* User.swift in Sources */,
+				F15F9AF82169176A00F490CD /* ConfigCatUser.swift in Sources */,
 				1A65478723A511E300EA53B8 /* Version+Range.swift in Sources */,
 				3F880ACA207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AAB207BF2A100087A6B /* AsyncResult.swift in Sources */,
@@ -886,7 +886,7 @@
 				3F4D40C9207EC20500BBAEC6 /* Mock.swift in Sources */,
 				3F36F53E2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9920840FE900906339 /* ManualPollingTests.swift in Sources */,
-				3F1F2C8E23E1218600AFA7D2 /* User.swift in Sources */,
+				3F1F2C8E23E1218600AFA7D2 /* ConfigCatUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -910,7 +910,7 @@
 				3F880ABA207BF2A200087A6B /* Synced.swift in Sources */,
 				1A65479423A511E300EA53B8 /* Version+Codable.swift in Sources */,
 				3F880AC6207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
-				F15F9AF92169176A00F490CD /* User.swift in Sources */,
+				F15F9AF92169176A00F490CD /* ConfigCatUser.swift in Sources */,
 				1A65478823A511E300EA53B8 /* Version+Range.swift in Sources */,
 				3F880ACB207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880AB3207BF2A200087A6B /* AsyncResult.swift in Sources */,
@@ -954,7 +954,7 @@
 				3F4D40C8207EC20400BBAEC6 /* Mock.swift in Sources */,
 				3F36F53F2083DA3600949B8F /* LazyLoadingAsyncTests.swift in Sources */,
 				3F8EDF9A20840FE900906339 /* ManualPollingTests.swift in Sources */,
-				3F1F2C9823E1218700AFA7D2 /* User.swift in Sources */,
+				3F1F2C9823E1218700AFA7D2 /* ConfigCatUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -978,7 +978,7 @@
 				3F880AC2207BF2A300087A6B /* Synced.swift in Sources */,
 				1A65479523A511E300EA53B8 /* Version+Codable.swift in Sources */,
 				3F880AC7207BFA4A00087A6B /* ManualPollingPolicy.swift in Sources */,
-				F15F9AFA2169176A00F490CD /* User.swift in Sources */,
+				F15F9AFA2169176A00F490CD /* ConfigCatUser.swift in Sources */,
 				1A65478923A511E300EA53B8 /* Version+Range.swift in Sources */,
 				3F880ACC207BFFA400087A6B /* ConfigCatClientProtocol.swift in Sources */,
 				3F880ABB207BF2A300087A6B /* AsyncResult.swift in Sources */,
