@@ -1,6 +1,7 @@
 import Foundation
 
 /// An object containing attributes to properly identify a given user for rollout evaluation.
+@objc(CCUser)
 public final class User : NSObject {
     fileprivate var attributes: [String: String]
     fileprivate(set) var identifier: String
