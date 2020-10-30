@@ -78,7 +78,7 @@ Using this feature, you will be able to get different setting values for differe
 Read more about [Targeting here](https://configcat.com/docs/advanced/targeting/).
 
 ```swift
-let user = User(identifier: "#USER-IDENTIFIER#")
+let user = ConfigCatUser(identifier: "#USER-IDENTIFIER#")
 let isMyAwesomeFeatureEnabled = client.getValue(for: "isMyAwesomeFeatureEnabled", user: user, defaultValue: false)
 if(isMyAwesomeFeatureEnabled) {
     doTheNewThing()
