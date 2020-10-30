@@ -87,7 +87,7 @@ class RolloutIntegrationTests: XCTestCase {
                 continue
             }
             
-            var user: User? = nil
+            var user: ConfigCatUser? = nil
             if testObjects[0] != "##null##" {
                 
                 var email = ""
@@ -108,7 +108,7 @@ class RolloutIntegrationTests: XCTestCase {
                     custom[customKey] = testObjects[3]
                 }
                 
-                user = User(identifier: identifier, email: email, country: country, custom: custom)
+                user = ConfigCatUser(identifier: identifier, email: email, country: country, custom: custom)
             }
             
             var i: Int = 0

@@ -25,7 +25,7 @@ class RolloutEvaluator {
         "IS NOT ONE OF (Sensitive)",
     ]
 
-    func evaluate<Value>(json: Any?, key: String, user: User?) -> (value: Value?, variationId: String?) {
+    func evaluate<Value>(json: Any?, key: String, user: ConfigCatUser?) -> (value: Value?, variationId: String?) {
         guard let json = json as? [String: Any] else {
             return (nil, nil)
         }
