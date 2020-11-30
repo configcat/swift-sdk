@@ -167,6 +167,7 @@ class DataGovernanceTests: XCTestCase {
     
     private func createfetcher(url: String = "") -> ConfigFetcher {
         return ConfigFetcher(session: self.mockSession,
+                             logger: Logger.noLogger,
                              sdkKey: "",
                              mode: "",
                              dataGovernance: DataGovernance.global,

@@ -3,7 +3,6 @@ import CommonCrypto
 import os.log
 
 class RolloutEvaluator {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: RolloutEvaluator.self).bundleIdentifier!, category: "Rollout Evaluator")
     fileprivate static let comparatorTexts = [
         "IS ONE OF",
         "IS NOT ONE OF",
@@ -24,7 +23,14 @@ class RolloutEvaluator {
         "IS ONE OF (Sensitive)",
         "IS NOT ONE OF (Sensitive)",
     ]
-
+    fileprivate let log: Logger;
+    
+    
+    public init(logger: Logger) {
+        self.log = logger
+    }
+    
+    
     func evaluate<Value>(json: Any?, key: String, user: ConfigCatUser?) -> (value: Value?, variationId: String?) {
         guard let json = json as? [String: Any] else {
             return (nil, nil)
@@ -35,20 +41,20 @@ class RolloutEvaluator {
         
         guard let user = user else {
             if rolloutRules.count > 0 || rolloutPercentageItems.count > 0 {
-                os_log(
+                self.log.warning(message:
                     """
-                    Evaluating get_value(%@). UserObject missing!
+                    Evaluating getValue(%@). UserObject missing!
                     You should pass a UserObject to get_value(),
                     in order to make targeting work properly.
                     Read more: https://configcat.com/docs/advanced/user-object/
                     """,
-                    log: .default, type: .default, key)
+                    key)
             }
             
             return (json[Config.value] as? Value, json[Config.variationId] as? String)
         }
         
-        os_log("User object: %@", log: .default, type: .info, user)
+        self.log.info(message: "User object: %@", user)
                 
         for rule in rolloutRules {
             if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
@@ -57,7 +63,7 @@ class RolloutEvaluator {
                 let userValue = user.getAttribute(for: comparisonAttribute) {
                 
                 if comparisonValue.isEmpty || userValue.isEmpty {
-                    os_log("%@", log: .default, type: .info,
+                    self.log.info(message: "%@",
                            formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue))
                     continue
                 }
@@ -70,7 +76,7 @@ class RolloutEvaluator {
                     
                     if splitted.contains(userValue) {
                         let returnValue = rule[Config.value] as? Value
-                        os_log("%@", log: .default, type: .info,
+                        self.log.info(message: "%@",
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
                         return (returnValue, rule[Config.variationId] as? String)
@@ -82,7 +88,7 @@ class RolloutEvaluator {
                     
                     if !splitted.contains(userValue) {
                         let returnValue = rule[Config.value] as? Value
-                        os_log("%@", log: .default, type: .info,
+                        self.log.info(message: "%@",
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
                         return (returnValue, rule[Config.variationId] as? String)
@@ -91,7 +97,7 @@ class RolloutEvaluator {
                 case 2:
                     if userValue.contains(comparisonValue) {
                         let returnValue = rule[Config.value] as? Value
-                        os_log("%@", log: .default, type: .info,
+                        self.log.info(message: "%@",
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
                         return (returnValue, rule[Config.variationId] as? String)
@@ -100,7 +106,7 @@ class RolloutEvaluator {
                 case 3:
                     if !userValue.contains(comparisonValue) {
                         let returnValue = rule[Config.value] as? Value
-                        os_log("%@", log: .default, type: .info,
+                        self.log.info(message: "%@",
                                formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                value: returnValue))
                         return (returnValue, rule[Config.variationId] as? String)
@@ -113,13 +119,13 @@ class RolloutEvaluator {
                                         
                     // The rule will be ignored if we found an invalid semantic version
                     if let invalidValue = (splitted.first {val -> Bool in Version(val) == nil}) {
-                        os_log("%@", log: .default, type: .error,
+                        self.log.error(message: "%@",
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(invalidValue)"))
                         continue
                     }
                     if Version(userValue) == nil {
-                        os_log("%@", log: .default, type: .error,
+                        self.log.error(message: "%@",
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(userValue)"))
                         continue
@@ -127,7 +133,7 @@ class RolloutEvaluator {
                                         
                     if comparator == 4 { // IS ONE OF
                         if Version(userValue) == nil {
-                            os_log("%@", log: .default, type: .error,
+                            self.log.error(message: "%@",
                                    formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                              error: "Invalid semantic version: \(userValue)"))
                             continue
@@ -136,7 +142,7 @@ class RolloutEvaluator {
                         if let userValueVersion = Version(userValue) {
                             if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
                                 let returnValue = rule[Config.value] as? Value
-                                os_log("%@", log: .default, type: .info,
+                                self.log.info(message: "%@",
                                        formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                        value: returnValue))
                                 return (returnValue, rule[Config.variationId] as? String)
@@ -144,7 +150,7 @@ class RolloutEvaluator {
                         }
                     } else { // IS NOT ONE OF
                         if Version(userValue) == nil {
-                            os_log("%@", log: .default, type: .error,
+                            self.log.error(message: "%@",
                                    formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                              error: "Invalid semantic version: \(userValue)"))
                             continue
@@ -152,14 +158,14 @@ class RolloutEvaluator {
                         
                         if let userValueVersion = Version(userValue) {
                             if let invalidValue = (splitted.first {val -> Bool in userValueVersion == Version(val)}) {
-                                os_log("%@", log: .default, type: .error,
+                                self.log.error(message: "%@",
                                        formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                                  error: "Invalid semantic version: \(invalidValue)"))
                                 continue
                             }
 
                             let returnValue = rule[Config.value] as? Value
-                            os_log("%@", log: .default, type: .info,
+                            self.log.info(message: "%@",
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return (returnValue, rule[Config.variationId] as? String)
@@ -169,14 +175,14 @@ class RolloutEvaluator {
                 case 6...9:
                     let comparison = comparisonValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                     if Version(userValue) == nil {
-                        os_log("%@", log: .default, type: .error,
+                        self.log.error(message: "%@",
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(userValue)"))
                         continue
                     }
                     
                     if Version(comparison) == nil {
-                        os_log("%@", log: .default, type: .error,
+                        self.log.error(message: "%@",
                                formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                          error: "Invalid semantic version: \(comparison)"))
                         continue
@@ -196,7 +202,7 @@ class RolloutEvaluator {
                             || (comparator == 8 && userValueVersionWithoutMetadata > comparisonValueVersionWithoutMetadata)
                             || (comparator == 9 && userValueVersionWithoutMetadata >= comparisonValueVersionWithoutMetadata) {
                             let returnValue = rule[Config.value] as? Value
-                            os_log("%@", log: .default, type: .info,
+                            self.log.info(message: "%@",
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return (returnValue, rule[Config.variationId] as? String)
@@ -212,7 +218,7 @@ class RolloutEvaluator {
                             || (comparator == 14 && userValueFloat > comparisonValueFloat)
                             || (comparator == 15 && userValueFloat >= comparisonValueFloat) {
                             let returnValue = rule[Config.value] as? Value
-                            os_log("%@", log: .default, type: .info,
+                            self.log.info(message: "%@",
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return (returnValue, rule[Config.variationId] as? String)
@@ -226,7 +232,7 @@ class RolloutEvaluator {
                     if let userValueHash = userValue.sha1hex {
                         if splitted.contains(userValueHash) {
                             let returnValue = rule[Config.value] as? Value
-                            os_log("%@", log: .default, type: .info,
+                            self.log.info(message: "%@",
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return (returnValue, rule[Config.variationId] as? String)
@@ -240,7 +246,7 @@ class RolloutEvaluator {
                     if let userValueHash = userValue.sha1hex {
                         if !splitted.contains(userValueHash) {
                             let returnValue = rule[Config.value] as? Value
-                            os_log("%@", log: .default, type: .info,
+                            self.log.info(message: "%@",
                                    formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
                                                    value: returnValue))
                             return (returnValue, rule[Config.variationId] as? String)
@@ -250,7 +256,7 @@ class RolloutEvaluator {
                     continue
                 }
                 
-                os_log("%@", log: .default, type: .info,
+                self.log.info(message: "%@",
                        formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue))
             }
         }
@@ -267,7 +273,7 @@ class RolloutEvaluator {
                         if let percentage = rule[Config.percentage] as? Int {
                             bucket += percentage
                             if scaled < bucket {
-                                os_log("Evaluating %% options. Returning %@", log: .default, type: .info, rule[Config.value] as? String ?? "")
+                                self.log.info(message: "Evaluating %% options. Returning %@", rule[Config.value] as? String ?? "")
                                 return (rule[Config.value] as? Value, rule[Config.variationId] as? String)
                             }
                         }
@@ -276,7 +282,7 @@ class RolloutEvaluator {
             }
         }
 
-        os_log("Returning %@", log: .default, type: .info, json[Config.value] as? String ?? "")
+        self.log.info(message:"Returning %@", json[Config.value] as? String ?? "")
         return (json[Config.value] as? Value, json[Config.variationId] as? String)
     }
     

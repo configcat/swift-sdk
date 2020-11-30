@@ -12,8 +12,9 @@ final class ManualPollingPolicy : RefreshPolicy {
      */
     public required init(cache: ConfigCache,
                          fetcher: ConfigFetcher,
+                         logger: Logger,
                          sdkKey: String) {
-        super.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey)
+        super.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey)
     }
     
     public override func getConfiguration() -> AsyncResult<String> {

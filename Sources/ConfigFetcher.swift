@@ -55,7 +55,7 @@ struct FetchResponse {
 
 class ConfigFetcher : NSObject {
     fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigFetcher.self).bundleIdentifier!, category: "Config Fetcher")
+    fileprivate let log: Logger
     fileprivate let session: URLSession
     fileprivate var url: String
     fileprivate var etag: String
@@ -68,8 +68,9 @@ class ConfigFetcher : NSObject {
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
 
-    public init(session: URLSession, sdkKey: String, mode: String,
+    public init(session: URLSession, logger: Logger, sdkKey: String, mode: String,
                 dataGovernance: DataGovernance, baseUrl: String = "") {
+        self.log = logger
         self.session = session
         self.sdkKey = sdkKey
         self.urlIsCustom = !baseUrl.isEmpty
@@ -113,12 +114,12 @@ class ConfigFetcher : NSObject {
                 }
                 
                 if redirect == RedirectMode.shouldRedirect.rawValue {
-                    os_log("""
+                    self.log.warning(message: """
                            Your dataGovernance parameter at ConfigCatClient
                            initialization is not in sync with your preferences on the ConfigCat
                            Dashboard: https://app.configcat.com/organization/data-governance.
                            Only Organization Admins can access this preference.
-                           """, log: ConfigFetcher.log, type: .default)
+                           """)
                 }
                 
                 if executionCount > 0 {
@@ -126,11 +127,11 @@ class ConfigFetcher : NSObject {
                 }
                 
             } catch {
-                os_log("An error occured during the config fetch: %@", log: ConfigFetcher.log, type: .error, error.localizedDescription)
+                self.log.error(message: "An error occured during the config fetch: %@", error.localizedDescription)
                 return AsyncResult.completed(result: response)
             }
             
-            os_log("Redirect loop during config.json fetch. Please contact support@configcat.com.", log: ConfigFetcher.log, type: .error)
+            self.log.error(message: "Redirect loop during config.json fetch. Please contact support@configcat.com.")
             return AsyncResult.completed(result: response)
         }
     }
@@ -141,23 +142,23 @@ class ConfigFetcher : NSObject {
         
         self.session.dataTask(with: request) { data, resp, error in
             if let error = error {
-                os_log("An error occured during the config fetch: %@", log: ConfigFetcher.log, type: .error, error.localizedDescription)
+                self.log.error(message: "An error occured during the config fetch: %@", error.localizedDescription)
                 result.complete(result: FetchResponse(status: .failure, body: ""))
             } else {
                 let response = resp as! HTTPURLResponse
                 if response.statusCode >= 200 && response.statusCode < 300, let data = data {
-                    os_log("Fetch was successful: new config fetched", log: ConfigFetcher.log, type: .debug)
+                    self.log.debug(message: "Fetch was successful: new config fetched")
                     if let etag = response.allHeaderFields["Etag"] as? String {
                         self.etag = etag
                     }
                     result.complete(result: FetchResponse(status: .fetched, body: String(data: data, encoding: .utf8)!))
                 } else if response.statusCode == 304 {
-                    os_log("Fetch was successful: not modified", log: ConfigFetcher.log, type: .debug)
+                    self.log.debug(message: "Fetch was successful: not modified")
                     result.complete(result: FetchResponse(status: .notModified, body: ""))
                 } else {
-                    os_log("""
+                    self.log.error(message: """
                         Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                        """, log: ConfigFetcher.log, type: .error, String(response.statusCode))
+                        """, String(response.statusCode))
                     result.complete(result: FetchResponse(status: .failure, body: ""))
                 }
             }

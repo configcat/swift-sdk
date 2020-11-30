@@ -3,8 +3,6 @@ import os.log
 
 /// Describes a `RefreshPolicy` which polls the latest configuration over HTTP and updates the local cache repeatedly.
 final class AutoPollingPolicy : RefreshPolicy {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: AutoPollingPolicy.self).bundleIdentifier!, category: "Auto Polling Policy")
-    fileprivate static let parser = ConfigParser()
     fileprivate let autoPollIntervalInSeconds: Double
     fileprivate let initialized = Synced<Bool>(initValue: false)
     fileprivate var initResult = Async()
@@ -19,8 +17,8 @@ final class AutoPollingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.          
      - Returns: A new `AutoPollingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, sdkKey: String) {
-        self.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey, config: AutoPollingMode())
+    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, sdkKey: String) {
+        self.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey, config: AutoPollingMode())
     }
     
     /**
@@ -34,11 +32,12 @@ final class AutoPollingPolicy : RefreshPolicy {
      */
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
+                logger: Logger,
                 sdkKey: String,
                 config: AutoPollingMode) {
         self.autoPollIntervalInSeconds = config.autoPollIntervalInSeconds
         self.onConfigChanged = config.onConfigChanged
-        super.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey)
+        super.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey)
         
         timer.schedule(deadline: DispatchTime.now(), repeating: autoPollIntervalInSeconds)
         timer.setEventHandler(handler: { [weak self] in
@@ -46,7 +45,6 @@ final class AutoPollingPolicy : RefreshPolicy {
                 return
             }
             
-            os_log("Polling the latest configuration", log: AutoPollingPolicy.log, type: .debug)
             self.fetcher.getConfigurationJson()
                 .apply(completion: { response in
                     let cached = self.readCache()
@@ -79,7 +77,6 @@ final class AutoPollingPolicy : RefreshPolicy {
     }
     
     private func readCacheAsync() -> AsyncResult<String> {
-        os_log("Reading from cache", log: AutoPollingPolicy.log, type: .debug)
         return AsyncResult<String>.completed(result: self.readCache())
     }
 }

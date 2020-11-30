@@ -15,8 +15,8 @@ extension ConfigCatClient {
 
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigCatClient.self).bundleIdentifier!, category: "ConfigCat Client")
-    fileprivate static let parser = ConfigParser()
+    fileprivate let log: Logger
+    fileprivate let parser: ConfigParser
     fileprivate let refreshPolicy: RefreshPolicy
     fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
     
@@ -39,10 +39,11 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 refreshMode: PollingMode? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
-                baseUrl: String = "") {
+                baseUrl: String = "",
+                logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
                   configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds,
-                  baseUrl: baseUrl, dataGovernance: dataGovernance)
+                  baseUrl: baseUrl, dataGovernance: dataGovernance, logLevel: logLevel)
     }
     
     internal init(sdkKey: String,
@@ -51,7 +52,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 configCache: ConfigCache? = nil,
                 maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 baseUrl: String = "",
-                dataGovernance: DataGovernance = DataGovernance.global) {
+                dataGovernance: DataGovernance = DataGovernance.global,
+                logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
@@ -60,15 +62,18 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             assert(false, "maxWaitTimeForSyncCallsInSeconds cannot be less than 2")
         }
         
+        self.log = Logger(level: logLevel)
+        self.parser = ConfigParser(logger: self.log, evaluator: RolloutEvaluator(logger: self.log))
         let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
         let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
+                                    logger: self.log,
                                     sdkKey: sdkKey,
                                     mode: mode.getPollingIdentifier(),
                                     dataGovernance: dataGovernance,
                                     baseUrl: baseUrl)
         
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, sdkKey: sdkKey))
+        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, sdkKey: sdkKey))
         
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }
@@ -83,9 +88,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 ? try self.refreshPolicy.getConfiguration().get()
                 : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             
-            return try ConfigCatClient.parser.parseValue(for: key, json: config, user: user)
+            return try self.parser.parseValue(for: key, json: config, user: user)
         } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
         }
     }
@@ -102,10 +107,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
-                    let result: Value = try ConfigCatClient.parser.parseValue(for: key, json: config, user: user)
+                    let result: Value = try self.parser.parseValue(for: key, json: config, user: user)
                     completion(result)
                 } catch {
-                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
                     let result = self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
                     completion(result)
                 }
@@ -122,9 +127,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 ? try self.refreshPolicy.getConfiguration().get()
                 : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             
-            return try ConfigCatClient.parser.getAllKeys(json: config)
+            return try self.parser.getAllKeys(json: config)
         } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
         }
     }
@@ -133,10 +138,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
-                    let result = try ConfigCatClient.parser.getAllKeys(json: config)
+                    let result = try self.parser.getAllKeys(json: config)
                     completion(result, nil)
                 } catch {
-                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
                     completion([], error)
                 }
         }
@@ -152,9 +157,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                     ? try self.refreshPolicy.getConfiguration().get()
                     : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
 
-            return try ConfigCatClient.parser.parseVariationId(for: key, json: config, user: user)
+            return try self.parser.parseVariationId(for: key, json: config, user: user)
         } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return defaultVariationId
         }
     }
@@ -167,10 +172,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
-                    let result: String = try ConfigCatClient.parser.parseVariationId(for: key, json: config, user: user)
+                    let result: String = try self.parser.parseVariationId(for: key, json: config, user: user)
                     completion(result)
                 } catch {
-                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
                     let result = defaultVariationId
                     completion(result)
                 }
@@ -183,9 +188,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                     ? try self.refreshPolicy.getConfiguration().get()
                     : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
 
-            return try ConfigCatClient.parser.getAllVariationIds(json: config, user: user)
+            return try self.parser.getAllVariationIds(json: config, user: user)
         } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
         }
     }
@@ -194,10 +199,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
-                    let result = try ConfigCatClient.parser.getAllVariationIds(json: config, user: user)
+                    let result = try self.parser.getAllVariationIds(json: config, user: user)
                     completion(result, nil)
                 } catch {
-                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
                     completion([], error)
                 }
         }
@@ -209,10 +214,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                     ? try self.refreshPolicy.getConfiguration().get()
                     : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
 
-            let result = try ConfigCatClient.parser.getKeyAndValue(for: variationId, json: config)
+            let result = try self.parser.getKeyAndValue(for: variationId, json: config)
             return KeyValue(key: result.key, value: result.value)
         } catch {
-            os_log("An error occurred during reading the configuration. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return nil
         }
     }
@@ -221,10 +226,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy.getConfiguration()
             .apply { config in
                 do {
-                    let result = try ConfigCatClient.parser.getKeyAndValue(for: variationId, json: config)
+                    let result = try self.parser.getKeyAndValue(for: variationId, json: config)
                     completion(KeyValue(key: result.key, value: result.value))
                 } catch {
-                    os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
                     completion(nil)
                 }
         }
@@ -238,7 +243,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 try self.refreshPolicy.refresh().wait(timeout: self.maxWaitTimeForSyncCallsInSeconds)
             }
         } catch {
-            os_log("An error occurred during refresh. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during refresh. %@", error.localizedDescription)
         }
     }
     
@@ -253,9 +258,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         do {
-            return try ConfigCatClient.parser.parseValue(for: key, json: json, user: user)
+            return try self.parser.parseValue(for: key, json: json, user: user)
         } catch {
-            os_log("An error occurred during deserializaton. %@", log: ConfigCatClient.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
             return defaultValue
         }
     }

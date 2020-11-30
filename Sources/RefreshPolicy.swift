@@ -5,8 +5,7 @@ import Foundation
 class RefreshPolicy : NSObject {
     let cache: ConfigCache
     let fetcher: ConfigFetcher
-    
-    let log: OSLog = OSLog(subsystem: Bundle(for: RefreshPolicy.self).bundleIdentifier!, category: "Config Refresh Policy")
+    let log: Logger
     
     fileprivate var inMemoryValue: String = ""
     fileprivate let cacheKey: String
@@ -16,7 +15,7 @@ class RefreshPolicy : NSObject {
         do {
             try self.cache.write(for: self.cacheKey, value: value)
         } catch {
-            os_log("An error occured during the cache write: %@", log: self.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occured during the cache write: %@", error.localizedDescription)
         }
     }
     
@@ -24,7 +23,7 @@ class RefreshPolicy : NSObject {
         do {
             return try self.cache.read(for: self.cacheKey)
         } catch {
-            os_log("An error occured during the cache read, using in memory value: %@", log: self.log, type: .error, error.localizedDescription)
+            self.log.error(message: "An error occured during the cache read, using in memory value: %@", error.localizedDescription)
             return self.inMemoryValue
         }
     }
@@ -40,9 +39,10 @@ class RefreshPolicy : NSObject {
      - Parameter fetcher: the internal config fetcher instance.
      - Returns: A new `RefreshPolicy`.
      */
-    public required init(cache: ConfigCache, fetcher: ConfigFetcher, sdkKey: String) {
+    public required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, sdkKey: String) {
         self.cache = cache
         self.fetcher = fetcher
+        self.log = logger
         let keyToHash = "swift_" + sdkKey + "_" + ConfigFetcher.configJsonName
         self.cacheKey = String(keyToHash.sha1hex ?? keyToHash)
     }

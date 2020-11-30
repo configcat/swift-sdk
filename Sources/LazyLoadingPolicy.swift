@@ -4,7 +4,6 @@ import os.log
 
 /// Describes a `RefreshPolicy` which uses an expiring cache to maintain the internally stored configuration.
 final class LazyLoadingPolicy : RefreshPolicy {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: LazyLoadingPolicy.self).bundleIdentifier!, category: "Lazy Loading Policy")
     fileprivate let cacheRefreshIntervalInSeconds: Double
     fileprivate let useAsyncRefresh: Bool
     fileprivate var lastRefreshTime = Date.distantPast
@@ -21,8 +20,8 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, sdkKey: String) {
-        self.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey, config: LazyLoadingMode())
+    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, sdkKey: String) {
+        self.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey, config: LazyLoadingMode())
     }
     
     /**
@@ -36,11 +35,12 @@ final class LazyLoadingPolicy : RefreshPolicy {
      */
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
+                logger: Logger,
                 sdkKey: String,
                 config: LazyLoadingMode) {
         self.cacheRefreshIntervalInSeconds = config.cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = config.useAsyncRefresh
-        super.init(cache: cache, fetcher: fetcher, sdkKey: sdkKey)
+        super.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey)
     }
     
     public override func getConfiguration() -> AsyncResult<String> {
@@ -52,7 +52,6 @@ final class LazyLoadingPolicy : RefreshPolicy {
                     : self.fetching
             }
             
-            os_log("Cache expired, refreshing", log: LazyLoadingPolicy.log, type: .debug)
             if(initialized) {
                 self.fetching = self.fetch()
                 if(self.useAsyncRefresh) {
@@ -97,7 +96,6 @@ final class LazyLoadingPolicy : RefreshPolicy {
     }
     
     private func readCacheAsync() -> AsyncResult<String> {
-        os_log("Reading from cache", log: LazyLoadingPolicy.log, type: .debug)
         return AsyncResult<String>.completed(result: self.readCache())
     }
 }

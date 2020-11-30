@@ -7,9 +7,14 @@ enum ParserError: Error {
 }
 
 /// A json parser which can be used to deserialize configuration json strings.
-public final class ConfigParser {
-    fileprivate static let log: OSLog = OSLog(subsystem: Bundle(for: ConfigParser.self).bundleIdentifier!, category: "Config Parser")
-    fileprivate let evaluator = RolloutEvaluator()
+final class ConfigParser {
+    fileprivate let log: Logger
+    fileprivate let evaluator: RolloutEvaluator
+    
+    public init(logger: Logger, evaluator: RolloutEvaluator) {
+        self.log = logger
+        self.evaluator = evaluator
+    }
     
     /**
      Parses a json element identified by the `key` from the given json
@@ -32,7 +37,7 @@ public final class ConfigParser {
             Value.self != Bool?.self &&
             Value.self != Any.self &&
             Value.self != Any?.self {
-            os_log("Only String, Integer, Double, Bool or Any types can be parsed.", log: ConfigParser.log, type: .error)
+            self.log.error(message: "Only String, Integer, Double, Bool or Any types can be parsed.")
             throw ParserError.invalidRequestedType
         }
         
@@ -40,11 +45,11 @@ public final class ConfigParser {
             if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user).value {
                 return value
             } else {
-                os_log("""
+                self.log.error(message: """
                         Parsing the json value for the key '%@' failed.
                         Returning defaultValue.
                         Here are the available keys: %@
-                        """, log: ConfigParser.log, type: .error, key, [String](jsonObject.keys))
+                        """, key, [String](jsonObject.keys))
             }
         }
         
@@ -62,7 +67,7 @@ public final class ConfigParser {
             return [String](jsonObject.keys)
         }
         
-        os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
+        self.log.error(message: "Parsing the json failed.")
         throw ParserError.parseFailure
     }
     
@@ -80,11 +85,11 @@ public final class ConfigParser {
             if let variationId = variationId {
                 return variationId
             } else {
-                os_log("""
+                self.log.error(message: """
                        Parsing the variation id for the key '%@' failed.
                        Returning defaultValue.
                        Here are the available keys: %@
-                       """, log: ConfigParser.log, type: .error, key, [String](jsonObject.keys))
+                       """, key, [String](jsonObject.keys))
             }
         }
         
@@ -106,15 +111,15 @@ public final class ConfigParser {
                 if let variationId = variationId {
                     variationIds.append(variationId)
                 } else {
-                    os_log("""
+                    self.log.error(message: """
                                Parsing the variation id for the key '%@' failed.
-                               """, log: ConfigParser.log, type: .error, key)
+                               """, key)
                 }
             }
             return variationIds
         }
         
-        os_log("Parsing the json failed.", log: ConfigParser.log, type: .error)
+        self.log.error(message: "Parsing the json failed.")
         throw ParserError.parseFailure
     }
     
@@ -143,7 +148,7 @@ public final class ConfigParser {
             }
         }
         
-        os_log("Could not find the setting for the given variationId: '%@'", log: ConfigParser.log, type: .error, variationId);
+        self.log.error(message: "Could not find the setting for the given variationId: '%@'", variationId);
         
         throw ParserError.parseFailure
     }
