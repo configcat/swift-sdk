@@ -36,7 +36,6 @@ public struct Version {
      - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
      - Remark: This initializer variant provided for more readable code when initializing with static integers.
      */
-    @inlinable
     public init(_ major: Int, _ minor: Int, _ patch: Int, pre: [String] = [], build: [String] = []) {
         self.major = abs(major)
         self.minor = abs(minor)
@@ -55,7 +54,6 @@ public struct Version {
      - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
      - Remark: This initializer variant provided when it would be more readable than the nameless variant.
      */
-    @inlinable
     public init(major: Int, minor: Int, patch: Int, prereleaseIdentifiers: [String] = [], buildMetadataIdentifiers: [String] = []) {
         self.init(major, minor, patch, pre: prereleaseIdentifiers, build: buildMetadataIdentifiers)
     }
