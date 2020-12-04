@@ -10,7 +10,8 @@ int main(int argc, const char * argv[]) {
                                                            refreshMode:nil
                                         maxWaitTimeForSyncCallsInSeconds:0
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
-                                                                 baseUrl:@""];
+                                                                 baseUrl:@""
+                                                                 logLevel:LogLevelInfo];
 
         // Creating a user object to identify your user (optional).
         ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"Some UserID"
