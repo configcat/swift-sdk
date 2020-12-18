@@ -1,5 +1,5 @@
 import XCTest
-import ConfigCat
+@testable import ConfigCat
 
 class VariationIdTests: XCTestCase {
     var mockSession = MockURLSession()

@@ -250,16 +250,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		1A3B096423909055002A3A62 /* Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Version.swift; path = Version/Version.swift; sourceTree = SOURCE_ROOT; };
-		1A65477E23A450A700EA53B8 /* testmatrix_semantic_2.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_semantic_2.csv; sourceTree = "<group>"; };
-		1A65478223A511E300EA53B8 /* Version+Range.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Version+Range.swift"; path = "Version/Version+Range.swift"; sourceTree = SOURCE_ROOT; };
-		1A65478323A511E300EA53B8 /* Version+Comparable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Version+Comparable.swift"; path = "Version/Version+Comparable.swift"; sourceTree = SOURCE_ROOT; };
-		1A65478423A511E300EA53B8 /* Version+Foundation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Version+Foundation.swift"; path = "Version/Version+Foundation.swift"; sourceTree = SOURCE_ROOT; };
-		1A65478523A511E300EA53B8 /* Version+Codable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "Version+Codable.swift"; path = "Version/Version+Codable.swift"; sourceTree = SOURCE_ROOT; };
-		1A92102224030C7F0059B111 /* testmatrix_sensitive.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_sensitive.csv; sourceTree = "<group>"; };
+		1A3B096423909055002A3A62 /* Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
+		1A65477E23A450A700EA53B8 /* testmatrix_semantic_2.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_semantic_2.csv; path = Resources/testmatrix_semantic_2.csv; sourceTree = "<group>"; };
+		1A65478223A511E300EA53B8 /* Version+Range.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Version+Range.swift"; sourceTree = "<group>"; };
+		1A65478323A511E300EA53B8 /* Version+Comparable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Version+Comparable.swift"; sourceTree = "<group>"; };
+		1A65478423A511E300EA53B8 /* Version+Foundation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Version+Foundation.swift"; sourceTree = "<group>"; };
+		1A65478523A511E300EA53B8 /* Version+Codable.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Version+Codable.swift"; sourceTree = "<group>"; };
+		1A92102224030C7F0059B111 /* testmatrix_sensitive.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_sensitive.csv; path = Resources/testmatrix_sensitive.csv; sourceTree = "<group>"; };
 		1AEDBE8223876064008803E7 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
-		1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_semantic.csv; sourceTree = "<group>"; };
-		1AEDBE99238761BA008803E7 /* testmatrix_number.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_number.csv; sourceTree = "<group>"; };
+		1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_semantic.csv; path = Resources/testmatrix_semantic.csv; sourceTree = "<group>"; };
+		1AEDBE99238761BA008803E7 /* testmatrix_number.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_number.csv; path = Resources/testmatrix_number.csv; sourceTree = "<group>"; };
 		3F029E89207EB3BD0019942F /* Mock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Mock.swift; sourceTree = "<group>"; };
 		3F1F2C6023E103C600AFA7D2 /* PollingMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingMode.swift; sourceTree = "<group>"; };
 		3F1F2C6523E10BF300AFA7D2 /* PollingModes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollingModes.swift; sourceTree = "<group>"; };
@@ -270,15 +270,15 @@
 		3F880A2C207BE8F000087A6B /* ConfigCat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConfigCat.h; sourceTree = "<group>"; };
 		3F880A2D207BE8F000087A6B /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-iOS.plist"; sourceTree = "<group>"; };
 		3F880A32207BE8F000087A6B /* ConfigCat iOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ConfigCat iOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F880A39207BE8F000087A6B /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-iOS.plist"; sourceTree = "<group>"; };
+		3F880A39207BE8F000087A6B /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-iOS.plist"; path = "Resources/Info-iOS.plist"; sourceTree = "<group>"; };
 		3F880A49207BECB100087A6B /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F880A4C207BECB100087A6B /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
 		3F880A51207BECB100087A6B /* ConfigCat macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ConfigCat macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F880A58207BECB100087A6B /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
+		3F880A58207BECB100087A6B /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-macOS.plist"; path = "Resources/Info-macOS.plist"; sourceTree = "<group>"; };
 		3F880A74207BEEEB00087A6B /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F880A77207BEEEB00087A6B /* Info-tvOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-tvOS.plist"; sourceTree = "<group>"; };
 		3F880A7C207BEEEB00087A6B /* ConfigCat tvOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ConfigCat tvOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		3F880A83207BEEEB00087A6B /* Info-tvOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-tvOS.plist"; sourceTree = "<group>"; };
+		3F880A83207BEEEB00087A6B /* Info-tvOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-tvOS.plist"; path = "Resources/Info-tvOS.plist"; sourceTree = "<group>"; };
 		3F880A92207BF05400087A6B /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3F880A95207BF05400087A6B /* Info-watchOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-watchOS.plist"; sourceTree = "<group>"; };
 		3F880A9B207BF1B100087A6B /* ConfigParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigParser.swift; sourceTree = "<group>"; };
@@ -297,11 +297,11 @@
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
-		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix_variationId.csv; sourceTree = "<group>"; };
+		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_variationId.csv; path = Resources/testmatrix_variationId.csv; sourceTree = "<group>"; };
 		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* ConfigCatUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatUser.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
-		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = testmatrix.csv; sourceTree = "<group>"; };
+		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix.csv; path = Resources/testmatrix.csv; sourceTree = "<group>"; };
 		F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutIntegrationTests.swift; sourceTree = "<group>"; };
 		F1E1180A257532D700DA245A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -372,7 +372,7 @@
 				1A3B096423909055002A3A62 /* Version.swift */,
 			);
 			name = Version;
-			path = Sources;
+			path = Sources/Version;
 			sourceTree = "<group>";
 		};
 		3F8809CB207BE3F100087A6B = {
@@ -434,7 +434,8 @@
 				3F1F2C6523E10BF300AFA7D2 /* PollingModes.swift */,
 				F1E1180A257532D700DA245A /* Log.swift */,
 			);
-			path = Sources;
+			name = Sources;
+			path = Sources/ConfigCat;
 			sourceTree = "<group>";
 		};
 		3F880A43207BE92000087A6B /* Tests */ = {
@@ -460,7 +461,8 @@
 				F15F9B16216973B000F490CD /* RolloutIntegrationTests.swift */,
 				F10F787D2528950D0021F468 /* DataGovernanceTests.swift */,
 			);
-			path = Tests;
+			name = Tests;
+			path = Tests/ConfigCatTests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -1279,7 +1281,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-iOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-iOS.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1338,7 +1340,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-iOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-iOS.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 11.2;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -1547,7 +1549,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-macOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-macOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = YES;
@@ -1606,7 +1608,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-macOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-macOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
@@ -1808,7 +1810,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-tvOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-tvOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1866,7 +1868,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = "Tests/Info-tvOS.plist";
+				INFOPLIST_FILE = "Tests/ConfigCatTests/Resources/Info-tvOS.plist";
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.configcat.tvOSTests.client;

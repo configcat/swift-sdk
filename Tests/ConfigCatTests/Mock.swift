@@ -1,5 +1,5 @@
 import Foundation
-import ConfigCat
+@testable import ConfigCat
 
 class MockURLSessionDataTask: URLSessionDataTask {
     private let closure: () -> ()

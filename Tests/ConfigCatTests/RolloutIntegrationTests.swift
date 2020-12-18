@@ -1,5 +1,5 @@
 import XCTest
-import ConfigCat
+@testable import ConfigCat
 
 class RolloutIntegrationTests: XCTestCase {
     enum TestType {
@@ -8,7 +8,11 @@ class RolloutIntegrationTests: XCTestCase {
     }
 
     lazy var testBundle: Bundle = {
-        return Bundle(for: type(of: self))
+        #if SWIFT_PACKAGE
+            return Bundle.module
+        #else
+            return Bundle(for: type(of: self))
+        #endif
     }()
     
     func testRolloutMatrixText() throws {

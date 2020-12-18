@@ -1,43 +1,37 @@
 import XCTest
-import ConfigCat
+@testable import ConfigCat
 
-class LazyLoadingSyncTests: XCTestCase {
-
+class AutoPollingTests: XCTestCase {
+    
     func testGet() {
         let mockSession = MockURLSession()
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200, delay: 2))
+        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, sdkKey: ""))
-        
+
         XCTAssertEqual("test", try policy.getConfiguration().get())
-        XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        //wait for cache invalidation
         sleep(3)
         
-        //next call will block until the new value is fetched
         XCTAssertEqual("test2", try policy.getConfiguration().get())
     }
     
-    func testGetFailedRefresh() {
+    func testGetFailedRequest() {
         let mockSession = MockURLSession()
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 500))
         
-        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(),dataGovernance: DataGovernance.global)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, sdkKey: ""))
         
         XCTAssertEqual("test", try policy.getConfiguration().get())
-        XCTAssertEqual("test", try policy.getConfiguration().get())
         
-        //wait for cache invalidation
         sleep(3)
         
-        //next call will block until the new value is fetched
         XCTAssertEqual("test", try policy.getConfiguration().get())
     }
     
@@ -46,13 +40,34 @@ class LazyLoadingSyncTests: XCTestCase {
         mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
         
-        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, sdkKey: ""))
+                
+        XCTAssertEqual("test", try policy.getConfiguration().get())
+        
+        sleep(3)
+        
+        XCTAssertEqual("test2", try policy.getConfiguration().get())
+    }
+    
+    func testOnConfigChanged() {
+        let mockSession = MockURLSession()
+        mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: "test2", statusCode: 200))
+        
+        var called = false
+        
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2, onConfigChanged: { () in
+            called = true
+        })
         let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
         let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, sdkKey: ""))
         
-        XCTAssertEqual("test", try policy.getConfiguration().get())
+        sleep(1)
         
-        //wait for cache invalidation
+        XCTAssertTrue(called)
+        
         sleep(3)
         
         XCTAssertEqual("test2", try policy.getConfiguration().get())

@@ -1,5 +1,5 @@
 import XCTest
-import ConfigCat
+@testable import ConfigCat
 
 class ManualPollingTests: XCTestCase {
     

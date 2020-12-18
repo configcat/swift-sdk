@@ -1,5 +1,5 @@
 import XCTest
-import ConfigCat
+@testable import ConfigCat
 
 class DataGovernanceTests: XCTestCase {
     private let jsonTemplate: String = "{ \"p\": { \"u\": \"%@\", \"r\": %@ }, \"f\": {} }"
