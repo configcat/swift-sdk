@@ -23,7 +23,10 @@ let package = Package(
                 ]),
         .target(name: "ConfigCat",
                 dependencies: ["Version"],
-                exclude: ["Version/LICENSE" , "Version/version.txt"],
+                exclude: ["Resources/ConfigCat.h", "Resources/Info.plist"],
+//                resources: [
+//                    .process("Resources")
+//                ],
                 swiftSettings: [
                     .define("DEBUG", .when(configuration: .debug))
                 ],
@@ -32,10 +35,11 @@ let package = Package(
                 ]),
         .testTarget(name: "ConfigCatTests",
                     dependencies: ["ConfigCat"],
+                    exclude: ["Resources/Info.plist"],
                     resources: [
                         .process("Resources")]
-                    )
-
+        )
+        
     ],
     swiftLanguageVersions: [.v4]
 )
