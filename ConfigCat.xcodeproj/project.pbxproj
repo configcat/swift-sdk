@@ -72,6 +72,16 @@
 		B4BD2B0D258CA7DF007371E2 /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		B46F8B9925A4DA860059CF95 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3F8809CC207BE3F100087A6B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B4BD2AAE258CA6FF007371E2;
+			remoteInfo = ConfigCat;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		1A3B096423909055002A3A62 /* Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
 		1A65477E23A450A700EA53B8 /* testmatrix_semantic_2.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_semantic_2.csv; path = Resources/testmatrix_semantic_2.csv; sourceTree = "<group>"; };
@@ -275,6 +285,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				B46F8B9A25A4DA860059CF95 /* PBXTargetDependency */,
 			);
 			name = "ConfigCat Tests";
 			productName = "ConfigCat iOSTests";
@@ -412,6 +423,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B46F8B9A25A4DA860059CF95 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B4BD2AAE258CA6FF007371E2 /* ConfigCat */;
+			targetProxy = B46F8B9925A4DA860059CF95 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		3F8809D0207BE3F100087A6B /* Debug */ = {
