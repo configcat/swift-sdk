@@ -24,9 +24,6 @@ let package = Package(
         .target(name: "ConfigCat",
                 dependencies: ["Version"],
                 exclude: ["Resources/ConfigCat.h", "Resources/Info.plist"],
-//                resources: [
-//                    .process("Resources")
-//                ],
                 swiftSettings: [
                     .define("DEBUG", .when(configuration: .debug))
                 ],
