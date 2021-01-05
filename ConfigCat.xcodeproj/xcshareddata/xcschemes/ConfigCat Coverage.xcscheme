@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0930"
+   LastUpgradeVersion = "1220"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,23 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F880A48207BECB100087A6B"
+               BlueprintIdentifier = "B4BD2AAE258CA6FF007371E2"
                BuildableName = "ConfigCat.framework"
-               BlueprintName = "ConfigCat macOS"
-               ReferencedContainer = "container:ConfigCat.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "NO"
-            buildForProfiling = "NO"
-            buildForArchiving = "NO"
-            buildForAnalyzing = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F880A50207BECB100087A6B"
-               BuildableName = "ConfigCat macOSTests.xctest"
-               BlueprintName = "ConfigCat macOSTests"
+               BlueprintName = "ConfigCat"
                ReferencedContainer = "container:ConfigCat.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -41,34 +27,17 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      codeCoverageEnabled = "YES"
-      onlyGenerateCoverageForSpecifiedTargets = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A48207BECB100087A6B"
-            BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat macOS"
-            ReferencedContainer = "container:ConfigCat.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
-      <CodeCoverageTargets>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A48207BECB100087A6B"
-            BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat macOS"
-            ReferencedContainer = "container:ConfigCat.xcodeproj">
-         </BuildableReference>
-      </CodeCoverageTargets>
+      codeCoverageEnabled = "YES">
       <Testables>
          <TestableReference
-            skipped = "NO">
+            skipped = "NO"
+            parallelizable = "YES"
+            testExecutionOrdering = "random">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "3F880A50207BECB100087A6B"
-               BuildableName = "ConfigCat macOSTests.xctest"
-               BlueprintName = "ConfigCat macOSTests"
+               BlueprintIdentifier = "B4BD2AE0258CA7DF007371E2"
+               BuildableName = "ConfigCat Tests.xctest"
+               BlueprintName = "ConfigCat Tests"
                ReferencedContainer = "container:ConfigCat.xcodeproj">
             </BuildableReference>
          </TestableReference>
@@ -84,15 +53,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A48207BECB100087A6B"
-            BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat macOS"
-            ReferencedContainer = "container:ConfigCat.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -103,9 +63,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "3F880A48207BECB100087A6B"
+            BlueprintIdentifier = "B4BD2AAE258CA6FF007371E2"
             BuildableName = "ConfigCat.framework"
-            BlueprintName = "ConfigCat macOS"
+            BlueprintName = "ConfigCat"
             ReferencedContainer = "container:ConfigCat.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

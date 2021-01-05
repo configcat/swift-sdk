@@ -39,6 +39,20 @@ github "configcat/swift-sdk"
 ```
 Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
+**Swift Package Manager:**
+
+You can add ConfigCat to an Xcode project by adding it as a package dependency.
+
+> https://github.com/configcat/swift-sdk
+
+If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
+
+``` swift
+dependencies: [
+  .package(url: "https://github.com/configcat/swift-sdk", from: "7.2.0")
+]
+```
+
 ### 2. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> tab to get your *SDK Key*:
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme01.png  "SDK-KEY")
 

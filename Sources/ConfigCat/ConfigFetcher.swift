@@ -54,7 +54,7 @@ struct FetchResponse {
 }
 
 class ConfigFetcher : NSObject {
-    fileprivate static let version: String = Bundle(for: ConfigFetcher.self).infoDictionary?["CFBundleShortVersionString"] as! String
+    private static let version: String = "7.2.0"
     fileprivate let log: Logger
     fileprivate let session: URLSession
     fileprivate var url: String

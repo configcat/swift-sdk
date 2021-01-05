@@ -2,6 +2,10 @@ import Foundation
 import CommonCrypto
 import os.log
 
+#if SWIFT_PACKAGE
+import Version
+#endif
+
 class RolloutEvaluator {
     fileprivate static let comparatorTexts = [
         "IS ONE OF",
