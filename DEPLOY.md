@@ -5,7 +5,7 @@
    pod lib lint
    ```
 2. Run tests
-3. Increase the version in the ConfigCat.podspec file (`spec.version`) and the `ConfigFetcher.swift` file (`private static let version: String`)
+3. Increase the version in the ConfigCat.podspec file (`spec.version`), the `ConfigFetcher.swift` file (`private static let version: String`) and may need to update ConfigCat.xcconfig (MARKETING_VERSION) as well.
 4. Commit & push.
 ## Publish
 Use the **same version** for the git tag as in the podspec.
