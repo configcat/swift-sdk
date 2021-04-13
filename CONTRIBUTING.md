@@ -27,12 +27,12 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 
 ## Build instructions
 
-1. Open ConfigCat.xcodeproj in Xcode
+1. Open `ConfigCat.xcodeproj` in Xcode
 2. Open menu Product
 3. select Build
 
 ## Running tests
 
-1. Open ConfigCat.xcodeproj in Xcode
+1. Open `ConfigCat.xcodeproj` in Xcode
 2. Open menu Product
 3. select Test
