@@ -29,10 +29,10 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 
 1. Open `ConfigCat.xcodeproj` in Xcode
 2. Open menu Product
-3. select Build
+3. Select Build
 
 ## Running tests
 
 1. Open `ConfigCat.xcodeproj` in Xcode
 2. Open menu Product
-3. select Test
+3. Select Test
