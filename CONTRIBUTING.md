@@ -34,5 +34,5 @@ In general, we follow the ["fork-and-pull" Git workflow](https://github.com/susa
 ## Running tests
 
 1. Open `ConfigCat.xcodeproj` in Xcode
-2. Open menu Product
+2. Open Product menu
 3. Select Test
