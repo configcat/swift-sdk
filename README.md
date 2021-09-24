@@ -53,8 +53,8 @@ dependencies: [
 ]
 ```
 
-### 2. Go to <a href="https://app.configcat.com/sdkkey" target="_blank">Connect your application</a> section to get your *SDK Key*:
-![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme02-2.png  "SDK-KEY")
+### 2. Go to the <a href="https://app.configcat.com/sdkkey" target="_blank">ConfigCat Dashboard</a> to get your *SDK Key*:
+![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme02-3.png  "SDK-KEY")
 
 ### 3. Import the *ConfigCat* module to your application
 ```swift
