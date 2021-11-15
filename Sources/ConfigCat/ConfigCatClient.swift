@@ -19,7 +19,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let parser: ConfigParser
     fileprivate let refreshPolicy: RefreshPolicy
     fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
-    
+    fileprivate static var sdkKeys: Set<String> = []
+
     /**
      Initializes a new `ConfigCatClient`.
      
@@ -61,8 +62,14 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         if maxWaitTimeForSyncCallsInSeconds != 0 && maxWaitTimeForSyncCallsInSeconds < 2 {
             assert(false, "maxWaitTimeForSyncCallsInSeconds cannot be less than 2")
         }
-        
+
         self.log = Logger(level: logLevel)
+        if (!ConfigCatClient.sdkKeys.insert(sdkKey).inserted) {
+            self.log.warning(message: """
+                                      A ConfigCat Client is already initialized with sdkKey %@.
+                                      We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
+                                      """, sdkKey)
+        }
         self.parser = ConfigParser(logger: self.log, evaluator: RolloutEvaluator(logger: self.log))
         let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
@@ -76,6 +83,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, sdkKey: sdkKey))
         
         self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
+    }
+
+    deinit {
+        ConfigCatClient.sdkKeys.removeAll()
     }
     
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
