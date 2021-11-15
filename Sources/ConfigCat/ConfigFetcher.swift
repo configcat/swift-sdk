@@ -62,6 +62,7 @@ class ConfigFetcher : NSObject {
     fileprivate let mode: String
     fileprivate let sdkKey: String
     fileprivate let urlIsCustom: Bool
+    fileprivate let isFetching = Synced<Bool>(initValue: false)
     
     static let configJsonName: String = "config_v5"
     
@@ -83,6 +84,10 @@ class ConfigFetcher : NSObject {
         self.mode = mode
     }
 
+    public func isFetchingConfigurationJson() -> Bool {
+        return isFetching.get();
+    }
+    
     public func getConfigurationJson() -> AsyncResult<FetchResponse> {
         return self.executeFetch(executionCount: 2)
     }
@@ -141,6 +146,7 @@ class ConfigFetcher : NSObject {
         let result = AsyncResult<FetchResponse>()
         
         self.session.dataTask(with: request) { data, resp, error in
+            self.isFetching.testAndSet(expect: true, new: false)
             if let error = error {
                 self.log.error(message: "An error occured during the config fetch: %@", error.localizedDescription)
                 result.complete(result: FetchResponse(status: .failure, body: ""))
@@ -163,7 +169,8 @@ class ConfigFetcher : NSObject {
                 }
             }
         }.resume()
-        
+        isFetching.testAndSet(expect: false, new: true)
+
         return result
     }
     

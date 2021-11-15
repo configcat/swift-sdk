@@ -46,4 +46,18 @@ class ConfigFetcherTests: XCTestCase {
         
         XCTAssertEqual(etag, mockSession.requests.last?.value(forHTTPHeaderField: "If-None-Match"))
     }
+
+    func testOngoingFetch() throws {
+        let mockSession = MockURLSession()
+        mockSession.enqueueResponse(response: Response(body: "", statusCode: 200, delay: 1))
+
+        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        var asyncResponse = fetcher.getConfigurationJson()
+        var isFetching = try fetcher.isFetchingConfigurationJson()
+        XCTAssertTrue(isFetching)
+
+        var response = try asyncResponse.get()
+        isFetching = try fetcher.isFetchingConfigurationJson()
+        XCTAssertFalse(isFetching)
+    }
 }

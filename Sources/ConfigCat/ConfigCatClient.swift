@@ -37,7 +37,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 dataGovernance: DataGovernance = DataGovernance.global,
                 configCache: ConfigCache? = nil,
                 refreshMode: PollingMode? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 0,
+                maxWaitTimeForSyncCallsInSeconds: Int = 5,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "",
                 logLevel: LogLevel = .warning) {
@@ -50,7 +50,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 refreshMode: PollingMode?,
                 session: URLSession?,
                 configCache: ConfigCache? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 0,
+                maxWaitTimeForSyncCallsInSeconds: Int = 5,
                 baseUrl: String = "",
                 dataGovernance: DataGovernance = DataGovernance.global,
                 logLevel: LogLevel = .warning) {

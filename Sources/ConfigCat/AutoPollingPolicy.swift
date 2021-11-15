@@ -44,7 +44,12 @@ final class AutoPollingPolicy : RefreshPolicy {
             guard let `self` = self else {
                 return
             }
-            
+
+            if self.fetcher.isFetchingConfigurationJson() {
+                self.log.debug(message: "Config fetching is skipped because there is an ongoing fetch request")
+                return;
+            }
+
             self.fetcher.getConfigurationJson()
                 .apply(completion: { response in
                     let cached = self.readCache()
