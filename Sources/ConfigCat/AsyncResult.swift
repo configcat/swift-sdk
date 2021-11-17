@@ -23,16 +23,16 @@ class Async {
     fileprivate let queue = DispatchQueue(label: "Async queue")
     fileprivate let semaphore = DispatchSemaphore(value: 0)
     fileprivate var completions = [() -> Void]()
-    fileprivate var state = AsyncState.pending
+    fileprivate var state = Synced<AsyncState>(initValue: AsyncState.pending)
     
     var completed: Bool {
-        return self.state.isCompleted()
+        return self.state.get().isCompleted()
     }
     
     public func complete() {
         self.queue.async {
-            if(self.state.isPending()) {
-                self.state = .completed
+            if(self.state.get().isPending()) {
+                self.state.set(new: .completed)
                 for completion in self.completions {
                     completion()
                 }
@@ -44,7 +44,7 @@ class Async {
     
     public func wait(timeout: Int) throws {
         _ = self.semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(timeout))
-        if(self.state.isPending()) {
+        if(self.state.get().isPending()) {
             throw AsyncError.timedOut
         }
     }
@@ -56,7 +56,7 @@ class Async {
     @discardableResult
     public func accept(completion: @escaping () -> Void) -> Async {
         self.queue.async {
-            if self.state.isCompleted() {
+            if self.state.get().isCompleted() {
                 completion()
             } else {
                 self.completions.append(completion)
@@ -88,7 +88,7 @@ final class AsyncResult<Value> : Async {
     init(result: Value) {
         super.init()
         self.result = result
-        self.state = .completed
+        self.state.set(new: .completed)
         self.semaphore.signal()
     }
     
@@ -118,7 +118,7 @@ final class AsyncResult<Value> : Async {
     @discardableResult
     public func apply(completion: @escaping (Value) -> Void) -> AsyncResult<Value> {
         self.queue.async {
-            if self.state.isCompleted() {
+            if self.state.get().isCompleted() {
                 guard let result = self.result else {
                     assert(false, "completion handlers executed on an incomplete AsyncResult")
                     return

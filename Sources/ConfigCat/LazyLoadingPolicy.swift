@@ -52,14 +52,14 @@ final class LazyLoadingPolicy : RefreshPolicy {
                     : self.fetching
             }
             
-            if(initialized) {
+            if initialized {
                 self.fetching = self.fetch()
-                if(self.useAsyncRefresh) {
+                if self.useAsyncRefresh {
                     return self.readCacheAsync()
                 }
                 return self.fetching
             } else {
-                if(self.isFetching.testAndSet(expect: false, new: true)) {
+                if self.isFetching.testAndSet(expect: false, new: true) {
                     self.fetching = self.fetch()
                 }
                 return self.initAsync.apply(completion: {

@@ -62,8 +62,8 @@ class ConfigFetcher : NSObject {
     fileprivate let mode: String
     fileprivate let sdkKey: String
     fileprivate let urlIsCustom: Bool
-    fileprivate let isFetching = Synced<Bool>(initValue: false)
-    
+    fileprivate var fetchingRequest: AsyncResult<FetchResponse>?
+
     static let configJsonName: String = "config_v5"
     
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
@@ -84,8 +84,9 @@ class ConfigFetcher : NSObject {
         self.mode = mode
     }
 
-    public func isFetchingConfigurationJson() -> Bool {
-        return isFetching.get();
+    public func isFetching() -> Bool {
+        guard let fetchingRequest = fetchingRequest else {return false}
+        return !fetchingRequest.completed
     }
     
     public func getConfigurationJson() -> AsyncResult<FetchResponse> {
@@ -142,11 +143,17 @@ class ConfigFetcher : NSObject {
     }
     
     private func sendFetchRequest() -> AsyncResult<FetchResponse> {
+        if let fetchingRequest = fetchingRequest {
+            if !fetchingRequest.completed {
+                self.log.debug(message: "Config fetching is skipped because there is an ongoing fetch request")
+                return fetchingRequest
+            }
+        }
+
         let request = self.getRequest()
         let result = AsyncResult<FetchResponse>()
         
         self.session.dataTask(with: request) { data, resp, error in
-            self.isFetching.testAndSet(expect: true, new: false)
             if let error = error {
                 self.log.error(message: "An error occured during the config fetch: %@", error.localizedDescription)
                 result.complete(result: FetchResponse(status: .failure, body: ""))
@@ -169,8 +176,8 @@ class ConfigFetcher : NSObject {
                 }
             }
         }.resume()
-        isFetching.testAndSet(expect: false, new: true)
 
+        fetchingRequest = result
         return result
     }
     

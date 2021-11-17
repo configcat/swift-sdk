@@ -45,7 +45,7 @@ final class AutoPollingPolicy : RefreshPolicy {
                 return
             }
 
-            if self.fetcher.isFetchingConfigurationJson() {
+            if self.fetcher.isFetching() {
                 self.log.debug(message: "Config fetching is skipped because there is an ongoing fetch request")
                 return;
             }
