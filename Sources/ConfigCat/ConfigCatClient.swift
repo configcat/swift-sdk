@@ -18,7 +18,6 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let log: Logger
     fileprivate let parser: ConfigParser
     fileprivate let refreshPolicy: RefreshPolicy
-    fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
     fileprivate static var sdkKeys: Set<String> = []
 
     /**
@@ -38,29 +37,22 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 dataGovernance: DataGovernance = DataGovernance.global,
                 configCache: ConfigCache? = nil,
                 refreshMode: PollingMode? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 5,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "",
                 logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
-                  configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds,
-                  baseUrl: baseUrl, dataGovernance: dataGovernance, logLevel: logLevel)
+                  configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, logLevel: logLevel)
     }
     
     internal init(sdkKey: String,
                 refreshMode: PollingMode?,
                 session: URLSession?,
                 configCache: ConfigCache? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 5,
                 baseUrl: String = "",
                 dataGovernance: DataGovernance = DataGovernance.global,
                 logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
-        }
-        
-        if maxWaitTimeForSyncCallsInSeconds != 0 && maxWaitTimeForSyncCallsInSeconds < 2 {
-            assert(false, "maxWaitTimeForSyncCallsInSeconds cannot be less than 2")
         }
 
         self.log = Logger(level: logLevel)
@@ -81,8 +73,6 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                                     baseUrl: baseUrl)
         
         self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, sdkKey: sdkKey))
-        
-        self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
     }
 
     deinit {
@@ -95,10 +85,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
         
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            
+            let config = try self.refreshPolicy.getConfiguration().get()
             return try self.parser.parseValue(for: key, json: config, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
@@ -134,10 +121,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     @objc public func getAllKeys() -> [String] {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            
+            let config = try self.refreshPolicy.getConfiguration().get()
             return try self.parser.getAllKeys(json: config)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
@@ -164,10 +148,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
 
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
+            let config = try self.refreshPolicy.getConfiguration().get()
             return try self.parser.parseVariationId(for: key, json: config, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
@@ -195,10 +176,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil) -> [String] {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
+            let config = try self.refreshPolicy.getConfiguration().get()
             return try self.parser.getAllVariationIds(json: config, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
@@ -221,10 +199,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
     @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
+            let config = try self.refreshPolicy.getConfiguration().get()
             let result = try self.parser.getKeyAndValue(for: variationId, json: config)
             return KeyValue(key: result.key, value: result.value)
         } catch {
@@ -247,15 +222,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func refresh() {
-        do {
-            if self.maxWaitTimeForSyncCallsInSeconds == 0 {
-                self.refreshPolicy.refresh().wait()
-            } else {
-                try self.refreshPolicy.refresh().wait(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            }
-        } catch {
-            self.log.error(message: "An error occurred during refresh. %@", error.localizedDescription)
-        }
+        self.refreshPolicy.refresh().wait()
     }
     
     @objc public func refreshAsync(completion: @escaping () -> ()) {
