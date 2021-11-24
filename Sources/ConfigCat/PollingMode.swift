@@ -21,10 +21,13 @@ protocol PollingModeVisitor {
 
 class AutoPollingMode : PollingMode {
     let autoPollIntervalInSeconds: Double
+    let maxInitWaitTimeInSeconds: Int
     let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
-    
-    init(autoPollIntervalInSeconds: Double = 120, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
+
+
+    init(autoPollIntervalInSeconds: Double = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds
+        self.maxInitWaitTimeInSeconds = maxInitWaitTimeInSeconds
         self.onConfigChanged = onConfigChanged
     }
     
@@ -41,7 +44,7 @@ class LazyLoadingMode : PollingMode {
     let cacheRefreshIntervalInSeconds: Double
     let useAsyncRefresh: Bool
     
-    init(cacheRefreshIntervalInSeconds: Double = 120, useAsyncRefresh: Bool = false) {
+    init(cacheRefreshIntervalInSeconds: Double = 60, useAsyncRefresh: Bool = false) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = useAsyncRefresh
     }

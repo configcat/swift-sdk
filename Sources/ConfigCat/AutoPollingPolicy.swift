@@ -7,6 +7,7 @@ final class AutoPollingPolicy : RefreshPolicy {
     fileprivate let initialized = Synced<Bool>(initValue: false)
     fileprivate var initResult = Async()
     fileprivate let timer = DispatchSource.makeTimerSource()
+    fileprivate let initTimer = DispatchSource.makeTimerSource()
     fileprivate let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
     
     /**
@@ -64,11 +65,24 @@ final class AutoPollingPolicy : RefreshPolicy {
                 })
         })
         timer.resume()
+
+        // Waiting for the client initialization.
+        // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
+        // the default value will be returned.
+        initTimer.schedule(deadline: DispatchTime.now() + DispatchTimeInterval.seconds(config.maxInitWaitTimeInSeconds))
+        initTimer.setEventHandler(handler: { [weak self] in
+            guard let `self` = self else {return}
+            if !self.initialized.getAndSet(new: true) {
+                self.initResult.complete()
+            }
+        })
+        initTimer.resume()
     }
     
     /// Deinitalizes the AutoPollingPolicy instance.
     deinit {
         self.timer.cancel()
+        self.initTimer.cancel()
     }
     
     public override func getConfiguration() -> AsyncResult<String> {

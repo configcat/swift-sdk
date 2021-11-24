@@ -89,4 +89,21 @@ class AutoPollingTests: XCTestCase {
 
         XCTAssertEqual("test", try policy.getConfiguration().get())
     }
+
+    func testInitWaitTimeTimeout() {
+        let mockSession = MockURLSession()
+        mockSession.enqueueResponse(response: Response(body: "test", statusCode: 200, delay: 5))
+
+        let start = Date()
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
+        let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, sdkKey: ""))
+        XCTAssertEqual("", try policy.getConfiguration().get())
+
+        let endTime = Date()
+        let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
+        print(elapsedTimeInSeconds)
+        XCTAssert(elapsedTimeInSeconds > 1)
+        XCTAssert(elapsedTimeInSeconds < 2)
+    }
 }

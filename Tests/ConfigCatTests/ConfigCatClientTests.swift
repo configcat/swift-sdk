@@ -162,7 +162,15 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual(16, keys.count)
         XCTAssertTrue(keys.contains("stringDefaultCat"))
     }
-    
+
+    func testSdkKeys() {
+        var client:ConfigCatClient? = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
+        var client2:ConfigCatClient? = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
+        client = nil
+        client2 = nil
+        var client3 = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
+    }
+
     private func createClient() -> ConfigCatClient {
         return ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
     }
