@@ -64,7 +64,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
         self.parser = ConfigParser(logger: self.log, evaluator: RolloutEvaluator(logger: self.log))
         let cache = configCache ?? InMemoryConfigCache()
-        let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
+        let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
         let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
                                     logger: self.log,
                                     sdkKey: sdkKey,
