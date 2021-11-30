@@ -155,7 +155,11 @@ class ConfigFetcher : NSObject {
         
         self.session.dataTask(with: request) { data, resp, error in
             if let error = error {
-                self.log.error(message: "An error occured during the config fetch: %@", error.localizedDescription)
+                var extraInfo = ""
+                if error._code == NSURLErrorTimedOut {
+                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
+                }
+                self.log.error(message: "An error occured during the config fetch: %@%@", error.localizedDescription, extraInfo)
                 result.complete(result: FetchResponse(status: .failure, body: ""))
             } else {
                 let response = resp as! HTTPURLResponse
