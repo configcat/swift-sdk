@@ -13,8 +13,11 @@ class ViewController: UIViewController {
             self.configChanged()
         }
         
-        self.client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", refreshMode: mode)
-        
+        self.client = ConfigCatClient(
+            sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ",
+            refreshMode: mode,
+            logLevel: .info // Info level logging helps to inspect the feature flag evaluation process. Remove this line to avoid too detailed logging in your application.
+        )
     }
 
     override func didReceiveMemoryWarning() {
