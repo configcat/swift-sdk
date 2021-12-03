@@ -39,7 +39,9 @@ class RolloutEvaluator {
         guard let json = json as? [String: Any] else {
             return (nil, nil)
         }
-                
+
+        self.log.info(message: "Evaluating getValue(%@).", key)
+
         let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
         let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
         
@@ -48,7 +50,7 @@ class RolloutEvaluator {
                 self.log.warning(message:
                     """
                     Evaluating getValue(%@). UserObject missing!
-                    You should pass a UserObject to get_value(),
+                    You should pass a UserObject to getValue(),
                     in order to make targeting work properly.
                     Read more: https://configcat.com/docs/advanced/user-object/
                     """,
