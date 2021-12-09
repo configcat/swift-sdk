@@ -221,6 +221,16 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
+    @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any] {
+        do {
+            let config = try self.refreshPolicy.getConfiguration().get()
+            return try self.parser.getAllValues(json: config, user: user)
+        } catch {
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
+            return [:]
+        }
+    }
+
     @objc public func refresh() {
         self.refreshPolicy.refresh().wait()
     }

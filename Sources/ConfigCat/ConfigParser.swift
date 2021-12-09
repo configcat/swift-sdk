@@ -121,14 +121,33 @@ final class ConfigParser {
                 if let variationId = variationId {
                     variationIds.append(variationId)
                 } else {
-                    self.log.error(message: """
-                               Parsing the variation id for the key '%@' failed.
-                               """, key)
+                    self.log.error(message: "Parsing the variation id for the key '%@' failed.", key)
                 }
             }
             return variationIds
         }
         
+        self.log.error(message: "Parsing the json failed.")
+        throw ParserError.parseFailure
+    }
+
+    public func getAllValues(json: String, user: ConfigCatUser? = nil) throws -> [String: Any] {
+        if let jsonObject = try ConfigParser.parseEntries(json: json) {
+            var allValues = [String: Any]()
+            for key in jsonObject.keys {
+                let (value, _, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                if let evaluateLog = evaluateLog {
+                    self.log.info(message: "%@", evaluateLog)
+                }
+                if let value = value {
+                    allValues[key] = value
+                } else {
+                    self.log.error(message: "Parsing the value for the key '%@' failed.", key)
+                }
+            }
+            return allValues
+        }
+
         self.log.error(message: "Parsing the json failed.")
         throw ParserError.parseFailure
     }
