@@ -35,11 +35,11 @@ class RolloutEvaluator {
     }
     
     
-    func evaluate<Value>(json: Any?, key: String, user: ConfigCatUser?) -> (value: Value?, variationId: String?) {
+    func evaluate<Value>(json: Any?, key: String, user: ConfigCatUser?) -> (value: Value?, variationId: String?, evaluateLog: String?) {
         guard let json = json as? [String: Any] else {
-            return (nil, nil)
+            return (nil, nil, nil)
         }
-                
+
         let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
         let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
         
@@ -48,18 +48,18 @@ class RolloutEvaluator {
                 self.log.warning(message:
                     """
                     Evaluating getValue(%@). UserObject missing!
-                    You should pass a UserObject to get_value(),
+                    You should pass a UserObject to getValue(),
                     in order to make targeting work properly.
                     Read more: https://configcat.com/docs/advanced/user-object/
                     """,
                     key)
             }
             
-            return (json[Config.value] as? Value, json[Config.variationId] as? String)
+            return (json[Config.value] as? Value, json[Config.variationId] as? String, nil)
         }
-        
-        self.log.info(message: "User object: %@", user)
-                
+
+        var evaluateLog = String(format: "Evaluating getValue(%@).\nUser object: %@.", key, user)
+
         for rule in rolloutRules {
             if let comparisonAttribute = rule[Config.comparisonAttribute] as? String,
                 let comparisonValue = rule[Config.comparisonValue] as? String,
@@ -67,8 +67,7 @@ class RolloutEvaluator {
                 let userValue = user.getAttribute(for: comparisonAttribute) {
                 
                 if comparisonValue.isEmpty || userValue.isEmpty {
-                    self.log.info(message: "%@",
-                           formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue))
+                    evaluateLog += "\n" + formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue)
                     continue
                 }
                 
@@ -80,10 +79,8 @@ class RolloutEvaluator {
                     
                     if splitted.contains(userValue) {
                         let returnValue = rule[Config.value] as? Value
-                        self.log.info(message: "%@",
-                               formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: returnValue))
-                        return (returnValue, rule[Config.variationId] as? String)
+                        evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                        return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                     }
                 // IS NOT ONE OF
                 case 1:
@@ -92,28 +89,22 @@ class RolloutEvaluator {
                     
                     if !splitted.contains(userValue) {
                         let returnValue = rule[Config.value] as? Value
-                        self.log.info(message: "%@",
-                               formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: returnValue))
-                        return (returnValue, rule[Config.variationId] as? String)
+                        evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                        return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                     }
                 // CONTAINS
                 case 2:
                     if userValue.contains(comparisonValue) {
                         let returnValue = rule[Config.value] as? Value
-                        self.log.info(message: "%@",
-                               formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: returnValue))
-                        return (returnValue, rule[Config.variationId] as? String)
+                        evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                        return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                     }
                 // DOES NOT CONTAIN
                 case 3:
                     if !userValue.contains(comparisonValue) {
                         let returnValue = rule[Config.value] as? Value
-                        self.log.info(message: "%@",
-                               formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                               value: returnValue))
-                        return (returnValue, rule[Config.variationId] as? String)
+                        evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                        return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                     }
                 // IS ONE OF (Semantic version), IS NOT ONE OF (Semantic version)
                 case 4...5:
@@ -123,72 +114,75 @@ class RolloutEvaluator {
                                         
                     // The rule will be ignored if we found an invalid semantic version
                     if let invalidValue = (splitted.first {val -> Bool in Version(val) == nil}) {
-                        self.log.error(message: "%@",
-                               formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                         error: "Invalid semantic version: \(invalidValue)"))
+                        let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                error: "Invalid semantic version: \(invalidValue)")
+                        self.log.warning(message: "%@", message)
+                        evaluateLog += "\n" + message
                         continue
                     }
                     if Version(userValue) == nil {
-                        self.log.error(message: "%@",
-                               formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                         error: "Invalid semantic version: \(userValue)"))
+                        let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                error: "Invalid semantic version: \(userValue)")
+                        self.log.warning(message: "%@", message)
+                        evaluateLog += "\n" + message
                         continue
                     }
                                         
                     if comparator == 4 { // IS ONE OF
                         if Version(userValue) == nil {
-                            self.log.error(message: "%@",
-                                   formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                             error: "Invalid semantic version: \(userValue)"))
+                            let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                    error: "Invalid semantic version: \(userValue)")
+                            self.log.warning(message: "%@", message)
+                            evaluateLog += "\n" + message
                             continue
                         }
                         
                         if let userValueVersion = Version(userValue) {
                             if (splitted.first {val -> Bool in userValueVersion == Version(val)} != nil) {
                                 let returnValue = rule[Config.value] as? Value
-                                self.log.info(message: "%@",
-                                       formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                       value: returnValue))
-                                return (returnValue, rule[Config.variationId] as? String)
+                                evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                                return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                             }
                         }
                     } else { // IS NOT ONE OF
                         if Version(userValue) == nil {
-                            self.log.error(message: "%@",
-                                   formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                             error: "Invalid semantic version: \(userValue)"))
+                            let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                    error: "Invalid semantic version: \(userValue)")
+                            self.log.warning(message: "%@", message)
+                            evaluateLog += "\n" + message
                             continue
                         }
                         
                         if let userValueVersion = Version(userValue) {
                             if let invalidValue = (splitted.first {val -> Bool in userValueVersion == Version(val)}) {
-                                self.log.error(message: "%@",
-                                       formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                                 error: "Invalid semantic version: \(invalidValue)"))
+                                let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                        error: "Invalid semantic version: \(invalidValue)")
+                                self.log.warning(message: "%@", message)
+                                evaluateLog += "\n" + message
                                 continue
                             }
 
                             let returnValue = rule[Config.value] as? Value
-                            self.log.info(message: "%@",
-                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: returnValue))
-                            return (returnValue, rule[Config.variationId] as? String)
+                            evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                            return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                         }
                     }
                 // LESS THAN, LESS THAN OR EQUALS TO, GREATER THAN, GREATER THAN OR EQUALS TO (Semantic version)
                 case 6...9:
                     let comparison = comparisonValue.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                     if Version(userValue) == nil {
-                        self.log.error(message: "%@",
-                               formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                         error: "Invalid semantic version: \(userValue)"))
+                        let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                error: "Invalid semantic version: \(userValue)")
+                        self.log.warning(message: "%@", message)
+                        evaluateLog += "\n" + message
                         continue
                     }
                     
                     if Version(comparison) == nil {
-                        self.log.error(message: "%@",
-                               formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                         error: "Invalid semantic version: \(comparison)"))
+                        let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
+                                error: "Invalid semantic version: \(comparison)")
+                        self.log.warning(message: "%@", message)
+                        evaluateLog += "\n" + message
                         continue
                     }
                     if let userValueVersion = Version(userValue),
@@ -206,10 +200,8 @@ class RolloutEvaluator {
                             || (comparator == 8 && userValueVersionWithoutMetadata > comparisonValueVersionWithoutMetadata)
                             || (comparator == 9 && userValueVersionWithoutMetadata >= comparisonValueVersionWithoutMetadata) {
                             let returnValue = rule[Config.value] as? Value
-                            self.log.info(message: "%@",
-                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: returnValue))
-                            return (returnValue, rule[Config.variationId] as? String)
+                            evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                            return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                         }
                     }
                 case 10...15:
@@ -222,10 +214,8 @@ class RolloutEvaluator {
                             || (comparator == 14 && userValueFloat > comparisonValueFloat)
                             || (comparator == 15 && userValueFloat >= comparisonValueFloat) {
                             let returnValue = rule[Config.value] as? Value
-                            self.log.info(message: "%@",
-                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: returnValue))
-                            return (returnValue, rule[Config.variationId] as? String)
+                            evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                            return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                         }
                     }
                 // IS ONE OF (Sensitive)
@@ -236,10 +226,8 @@ class RolloutEvaluator {
                     if let userValueHash = userValue.sha1hex {
                         if splitted.contains(userValueHash) {
                             let returnValue = rule[Config.value] as? Value
-                            self.log.info(message: "%@",
-                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: returnValue))
-                            return (returnValue, rule[Config.variationId] as? String)
+                            evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                            return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                         }
                     }
                 // IS NOT ONE OF (Sensitive)
@@ -250,18 +238,15 @@ class RolloutEvaluator {
                     if let userValueHash = userValue.sha1hex {
                         if !splitted.contains(userValueHash) {
                             let returnValue = rule[Config.value] as? Value
-                            self.log.info(message: "%@",
-                                   formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue,
-                                                   value: returnValue))
-                            return (returnValue, rule[Config.variationId] as? String)
+                            evaluateLog += "\n" + formatMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValueHash, comparator: comparator, comparisonValue: comparisonValue, value: returnValue)
+                            return (returnValue, rule[Config.variationId] as? String, evaluateLog)
                         }
                     }
                 default:
                     continue
                 }
-                
-                self.log.info(message: "%@",
-                       formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue))
+
+                evaluateLog += "\n" + formatNoMatchRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue)
             }
         }
 
@@ -277,8 +262,8 @@ class RolloutEvaluator {
                         if let percentage = rule[Config.percentage] as? Int {
                             bucket += percentage
                             if scaled < bucket {
-                                self.log.info(message: "Evaluating %% options. Returning %@", rule[Config.value] as? String ?? "")
-                                return (rule[Config.value] as? Value, rule[Config.variationId] as? String)
+                                evaluateLog += "\n" + String(format: "Evaluating %% options. Returning %@", rule[Config.value] as? String ?? "")
+                                return (rule[Config.value] as? Value, rule[Config.variationId] as? String, evaluateLog)
                             }
                         }
                     }
@@ -286,8 +271,8 @@ class RolloutEvaluator {
             }
         }
 
-        self.log.info(message:"Returning %@", json[Config.value] as? String ?? "")
-        return (json[Config.value] as? Value, json[Config.variationId] as? String)
+        evaluateLog += "\n" + String(format: "Returning %@", json[Config.value] as? String ?? "")
+        return (json[Config.value] as? Value, json[Config.variationId] as? String, evaluateLog)
     }
     
     private func formatMatchRule<Value>(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Value?) -> String {

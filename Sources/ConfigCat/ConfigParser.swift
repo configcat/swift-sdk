@@ -42,7 +42,11 @@ final class ConfigParser {
         }
         
         if let jsonObject = try ConfigParser.parseEntries(json: json) {
-            if let value: Value = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user).value {
+            let (value, _, evaluateLog): (Value?, String?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+            if let evaluateLog = evaluateLog {
+                self.log.info(message: "%@", evaluateLog)
+            }
+            if let value = value {
                 return value
             } else {
                 self.log.error(message: """
@@ -81,7 +85,10 @@ final class ConfigParser {
      */
     public func parseVariationId(for key: String, json: String, user: ConfigCatUser? = nil) throws -> String {
         if let jsonObject = try ConfigParser.parseEntries(json: json) {
-            let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+            let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+            if let evaluateLog = evaluateLog {
+                self.log.info(message: "%@", evaluateLog)
+            }
             if let variationId = variationId {
                 return variationId
             } else {
@@ -107,7 +114,10 @@ final class ConfigParser {
         if let jsonObject = try ConfigParser.parseEntries(json: json) {
             var variationIds = [String]()
             for key in jsonObject.keys {
-                let (_, variationId): (Any?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: jsonObject[key], key: key, user: user)
+                if let evaluateLog = evaluateLog {
+                    self.log.info(message: "%@", evaluateLog)
+                }
                 if let variationId = variationId {
                     variationIds.append(variationId)
                 } else {
