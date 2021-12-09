@@ -4,14 +4,16 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         // Initialize the ConfigCatClient with an SDK Key.
+        // Info level logging helps to inspect the feature flag evaluation process.
+        // Use the default Warning level to avoid too detailed logging in your application.
         ConfigCatClient* client = [[ConfigCatClient alloc]initWithSdkKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
                                                           dataGovernance:DataGovernanceGlobal
                                                              configCache:nil
-                                                           refreshMode:nil
+                                                             refreshMode:nil
                                         maxWaitTimeForSyncCallsInSeconds:0
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                                  baseUrl:@""
-                                                                 logLevel:LogLevelInfo];
+                                                                logLevel:LogLevelInfo];
 
         // Creating a user object to identify your user (optional).
         ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"Some UserID"
