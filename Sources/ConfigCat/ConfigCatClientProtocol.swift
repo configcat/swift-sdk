@@ -63,6 +63,12 @@ public protocol ConfigCatClientProtocol {
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ())
 
+    /// Gets the values of all feature flags or settings.
+    func getAllValues(user: ConfigCatUser?) -> [String: Any]
+
+    /// Gets the values of all feature flags or settings asynchronously.
+    func getAllValuesAsync(user: ConfigCatUser?, completion: @escaping ([String: Any], Error?) -> ())
+
     /// Initiates a force refresh synchronously on the cached configuration.
     func refresh()
     

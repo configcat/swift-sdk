@@ -231,6 +231,19 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
+    @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any], Error?) -> ()) {
+        self.refreshPolicy.getConfiguration()
+            .apply { config in
+                do {
+                    let result = try self.parser.getAllValues(json: config, user: user)
+                    completion(result, nil)
+                } catch {
+                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
+                    completion([:], error)
+                }
+        }
+    }
+
     @objc public func refresh() {
         self.refreshPolicy.refresh().wait()
     }
