@@ -70,6 +70,7 @@
 		B4BD2B0B258CA7DF007371E2 /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
 		B4BD2B0C258CA7DF007371E2 /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE99238761BA008803E7 /* testmatrix_number.csv */; };
 		B4BD2B0D258CA7DF007371E2 /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */; };
+		C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -121,6 +122,7 @@
 		B4BD2C13258CB452007371E2 /* ConfigCat.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ConfigCat.xcconfig; sourceTree = "<group>"; };
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
+		C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCatClientIntegrationTests.swift; sourceTree = "<group>"; };
 		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_variationId.csv; path = Resources/testmatrix_variationId.csv; sourceTree = "<group>"; };
 		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* ConfigCatUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatUser.swift; sourceTree = "<group>"; };
@@ -220,6 +222,7 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */,
 				C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */,
 				C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */,
 				1A92102224030C7F0059B111 /* testmatrix_sensitive.csv */,
@@ -410,6 +413,7 @@
 				B4BD2AF9258CA7DF007371E2 /* ConfigCatClient.swift in Sources */,
 				B4BD2AFA258CA7DF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
 				B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */,
+				C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */,
 				B4BD2AFC258CA7DF007371E2 /* AutoPollingTests.swift in Sources */,
 				B4BD2AFD258CA7DF007371E2 /* LazyLoadingPolicy.swift in Sources */,
 				B4BD2AFE258CA7DF007371E2 /* ConfigParser.swift in Sources */,

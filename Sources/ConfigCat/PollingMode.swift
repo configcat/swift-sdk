@@ -24,7 +24,6 @@ class AutoPollingMode : PollingMode {
     let maxInitWaitTimeInSeconds: Int
     let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
 
-
     init(autoPollIntervalInSeconds: Double = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds
         self.maxInitWaitTimeInSeconds = maxInitWaitTimeInSeconds
