@@ -18,9 +18,12 @@ WATCHOS_DEPLOYMENT_TARGET = 3.0
 // the hyphen (`-`). This value is used as the `CFBundleIdentifier` in the `Info.plist`
 // of the built bundle.
 PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvos*] = com.configcat.tvOS.client
+PRODUCT_BUNDLE_IDENTIFIER[sdk=appletvsimulator*] = com.configcat.tvOS.client
 PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*] = com.configcat.iOS.client
+PRODUCT_BUNDLE_IDENTIFIER[sdk=iphonesimulator*] = com.configcat.iOS.client
 PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*] = com.configcat.macOS.client
 PRODUCT_BUNDLE_IDENTIFIER[sdk=watchos*] = com.configcat.watchOS.client
+PRODUCT_BUNDLE_IDENTIFIER[sdk=watchsimulator*] = com.configcat.watchOS.client
 
 // Base SDK
 //
