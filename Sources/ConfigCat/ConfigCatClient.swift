@@ -18,6 +18,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let log: Logger
     fileprivate let parser: ConfigParser
     fileprivate let refreshPolicy: RefreshPolicy
+    fileprivate let sdkKey: String
+    fileprivate let overrideDataSource: OverrideDataSource?
     fileprivate static var sdkKeys: Set<String> = []
 
     /**
@@ -30,6 +32,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      - Parameter refreshMode: the polling mode, `autoPoll`, `lazyLoad` or `manualPoll`.
      - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
      - Parameter sessionConfiguration: the url session configuration.
+     - Parameter flagOverrides: An OverrideDataSource implementation used to override feature flags & settings.
      - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
      - Returns: A new `ConfigCatClient`.
      */
@@ -39,9 +42,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 refreshMode: PollingMode? = nil,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "",
+                flagOverrides: OverrideDataSource? = nil,
                 logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
-                  configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, logLevel: logLevel)
+                  configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
     }
     
     internal init(sdkKey: String,
@@ -50,6 +54,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                 configCache: ConfigCache? = nil,
                 baseUrl: String = "",
                 dataGovernance: DataGovernance = DataGovernance.global,
+                flagOverrides: OverrideDataSource? = nil,
                 logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
@@ -62,34 +67,59 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                                       We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
                                       """, sdkKey)
         }
+        self.sdkKey = sdkKey
+        self.overrideDataSource = flagOverrides
         self.parser = ConfigParser(logger: self.log, evaluator: RolloutEvaluator(logger: self.log))
         let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
+        let configJsonCache = ConfigJsonCache(logger: self.log)
         let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
                                     logger: self.log,
+                                    configJsonCache: configJsonCache,
                                     sdkKey: sdkKey,
                                     mode: mode.getPollingIdentifier(),
                                     dataGovernance: dataGovernance,
                                     baseUrl: baseUrl)
         
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, sdkKey: sdkKey))
+        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
     }
 
     deinit {
-        ConfigCatClient.sdkKeys.removeAll()
+        ConfigCatClient.sdkKeys.remove(sdkKey)
+    }
+
+    internal func getSettingsAsync() -> AsyncResult<[String: Any]> {
+        if let overrideDataSource = self.overrideDataSource {
+            switch overrideDataSource.behaviour {
+            case .localOnly:
+                return AsyncResult<[String:Any]>.completed(result: overrideDataSource.getOverrides())
+            case .localOverRemote:
+                self.refreshPolicy.getSettings()
+                    .apply(completion: { settings in
+                        return settings.merging(overrideDataSource.getOverrides()) { (_, new) in new }
+                    })
+            case .remoteOverLocal:
+                self.refreshPolicy.getSettings()
+                    .apply(completion: { settings in
+                        return settings.merging(overrideDataSource.getOverrides()) { (current, _) in current }
+                    })
+            }
+        }
+
+        return self.refreshPolicy.getSettings()
     }
     
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        
+
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            return try self.parser.parseValue(for: key, json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return try self.parser.getValueFromSettings(for: key, settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
+            return defaultValue
         }
     }
     
@@ -101,16 +131,15 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
+
+        self.getSettingsAsync()
+            .apply { settings in
                 do {
-                    let result: Value = try self.parser.parseValue(for: key, json: config, user: user)
+                    let result: Value = try self.parser.getValueFromSettings(for: key, settings: settings, user: user)
                     completion(result)
                 } catch {
                     self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    let result = self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
-                    completion(result)
+                    completion(defaultValue)
                 }
             }
     }
@@ -121,8 +150,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     @objc public func getAllKeys() -> [String] {
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            return try self.parser.getAllKeys(json: config)
+            let settings = try self.getSettingsAsync().get()
+            return [String](settings.keys)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
@@ -130,15 +159,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
     
     @objc public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result = try self.parser.getAllKeys(json: config)
-                    completion(result, nil)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion([], error)
-                }
+        self.getSettingsAsync()
+            .apply { settings in
+                completion([String](settings.keys), nil)
         }
     }
 
@@ -148,8 +171,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
 
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            return try self.parser.parseVariationId(for: key, json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return try self.parser.getVariationIdFromSettings(for: key, settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return defaultVariationId
@@ -161,10 +184,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
 
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
+        self.getSettingsAsync()
+            .apply { settings in
                 do {
-                    let result: String = try self.parser.parseVariationId(for: key, json: config, user: user)
+                    let result: String = try self.parser.getVariationIdFromSettings(for: key, settings: settings, user: user)
                     completion(result)
                 } catch {
                     self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
@@ -176,8 +199,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil) -> [String] {
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            return try self.parser.getAllVariationIds(json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return self.parser.getAllVariationIdsFromSettings(settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
@@ -185,22 +208,17 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String], Error?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result = try self.parser.getAllVariationIds(json: config, user: user)
-                    completion(result, nil)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion([], error)
-                }
+        self.getSettingsAsync()
+            .apply { settings in
+                let result = self.parser.getAllVariationIdsFromSettings(settings: settings, user: user)
+                completion(result, nil)
         }
     }
 
     @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            let result = try self.parser.getKeyAndValue(for: variationId, json: config)
+            let settings = try self.getSettingsAsync().get()
+            let result = try self.parser.getKeyAndValueFromSettings(for: variationId, settings: settings)
             return KeyValue(key: result.key, value: result.value)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
@@ -209,10 +227,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
+        self.getSettingsAsync()
+            .apply { settings in
                 do {
-                    let result = try self.parser.getKeyAndValue(for: variationId, json: config)
+                    let result = try self.parser.getKeyAndValueFromSettings(for: variationId, settings: settings)
                     completion(KeyValue(key: result.key, value: result.value))
                 } catch {
                     self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
@@ -223,8 +241,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
     @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any] {
         do {
-            let config = try self.refreshPolicy.getConfiguration().get()
-            return try self.parser.getAllValues(json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return try self.parser.getAllValuesFromSettings(settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return [:]
@@ -232,10 +250,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any], Error?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
+        self.getSettingsAsync()
+            .apply { settings in
                 do {
-                    let result = try self.parser.getAllValues(json: config, user: user)
+                    let result = try self.parser.getAllValuesFromSettings(settings: settings, user: user)
                     completion(result, nil)
                 } catch {
                     self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
@@ -250,20 +268,6 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     @objc public func refreshAsync(completion: @escaping () -> ()) {
         self.refreshPolicy.refresh().accept(completion: completion)
-    }
-
-    private func getDefaultConfig<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
-        let latest = self.refreshPolicy.lastCachedConfiguration
-        return latest.isEmpty ? defaultValue : self.deserializeJson(for: key, json: latest, defaultValue: defaultValue, user: user)
-    }
-    
-    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
-        do {
-            return try self.parser.parseValue(for: key, json: json, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-            return defaultValue
-        }
     }
 }
 

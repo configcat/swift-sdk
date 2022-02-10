@@ -9,7 +9,7 @@ final class LazyLoadingPolicy : RefreshPolicy {
     fileprivate var lastRefreshTime = Date.distantPast
     fileprivate let initialized = Synced<Bool>(initValue: false)
     fileprivate let isFetching = Synced<Bool>(initValue: false)
-    fileprivate var fetching = AsyncResult<String>()
+    fileprivate var fetching = AsyncResult<Config>()
     fileprivate let initAsync = Async()
     
     /**
@@ -20,8 +20,8 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, sdkKey: String) {
-        self.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey, config: LazyLoadingMode())
+    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+        self.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey, config: LazyLoadingMode())
     }
     
     /**
@@ -36,14 +36,15 @@ final class LazyLoadingPolicy : RefreshPolicy {
     public init(cache: ConfigCache,
                 fetcher: ConfigFetcher,
                 logger: Logger,
+                configJsonCache: ConfigJsonCache,
                 sdkKey: String,
                 config: LazyLoadingMode) {
         self.cacheRefreshIntervalInSeconds = config.cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = config.useAsyncRefresh
-        super.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey)
+        super.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey)
     }
     
-    public override func getConfiguration() -> AsyncResult<String> {
+    public override func getConfiguration() -> AsyncResult<Config> {
         if self.lastRefreshTime.timeIntervalSinceNow < -self.cacheRefreshIntervalInSeconds {
             let initialized = self.initAsync.completed
             if initialized && !self.isFetching.testAndSet(expect: false, new: true) {
@@ -63,7 +64,7 @@ final class LazyLoadingPolicy : RefreshPolicy {
                     self.fetching = self.fetch()
                 }
                 return self.initAsync.apply(completion: {
-                    return super.readCache()
+                    return super.readConfigCache()
                 })
             }
         }
@@ -71,12 +72,12 @@ final class LazyLoadingPolicy : RefreshPolicy {
         return self.readCacheAsync()
     }
     
-    private func fetch() -> AsyncResult<String> {
-        return self.fetcher.getConfigurationJson()
+    private func fetch() -> AsyncResult<Config> {
+        return self.fetcher.getConfiguration()
             .apply(completion: { response in
-                let cached = super.readCache()
-                if response.isFetched() && response.body != cached {
-                    super.writeCache(value: response.body)
+                let cached = super.readConfigCache()
+                if let config = response.config, response.isFetched() && config.jsonString != cached.jsonString {
+                    super.writeConfigCache(value: config)
                 }
                 
                 if !response.isFailed() {
@@ -88,14 +89,15 @@ final class LazyLoadingPolicy : RefreshPolicy {
                 }
                 
                 self.isFetching.set(new: false)
-                
-                return response.isFetched()
-                    ? response.body
-                    : cached
+
+                if let config = response.config, response.isFetched() {
+                    return config
+                }
+                return cached
             })
     }
     
-    private func readCacheAsync() -> AsyncResult<String> {
-        return AsyncResult<String>.completed(result: self.readCache())
+    private func readCacheAsync() -> AsyncResult<Config> {
+        return AsyncResult<Config>.completed(result: self.readConfigCache())
     }
 }

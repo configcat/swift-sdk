@@ -13,11 +13,12 @@ final class ManualPollingPolicy : RefreshPolicy {
     public required init(cache: ConfigCache,
                          fetcher: ConfigFetcher,
                          logger: Logger,
+                         configJsonCache: ConfigJsonCache,
                          sdkKey: String) {
-        super.init(cache: cache, fetcher: fetcher, logger: logger, sdkKey: sdkKey)
+        super.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey)
     }
     
-    public override func getConfiguration() -> AsyncResult<String> {
-        return AsyncResult<String>.completed(result: self.readCache())
+    public override func getConfiguration() -> AsyncResult<Config> {
+        return AsyncResult<Config>.completed(result: self.readConfigCache())
     }
 }

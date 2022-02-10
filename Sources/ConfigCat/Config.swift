@@ -1,4 +1,4 @@
-enum Config {
+struct Config {
     static let value = "v"
     static let comparator = "t"
     static let comparisonAttribute = "a"
@@ -11,4 +11,14 @@ enum Config {
     static let preferencesUrl = "u"
     static let preferencesRedirect = "r"
     static let entries = "f"
+
+    let jsonString: String
+    let preferences: [String: Any]
+    let entries: [String: Any]
+
+    init(jsonString: String = "{}", preferences: [String: Any] = [:], entries: [String: Any] = [:]) {
+        self.jsonString = jsonString
+        self.preferences = preferences
+        self.entries = entries
+    }
 }
