@@ -92,14 +92,14 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         if let overrideDataSource = self.overrideDataSource {
             switch overrideDataSource.behaviour {
             case .localOnly:
-                return AsyncResult<[String:Any]>.completed(result: overrideDataSource.getOverrides())
+                return AsyncResult<[String: Any]>.completed(result: overrideDataSource.getOverrides())
             case .localOverRemote:
-                self.refreshPolicy.getSettings()
+                return self.refreshPolicy.getSettings()
                     .apply(completion: { settings in
                         return settings.merging(overrideDataSource.getOverrides()) { (_, new) in new }
                     })
             case .remoteOverLocal:
-                self.refreshPolicy.getSettings()
+                return self.refreshPolicy.getSettings()
                     .apply(completion: { settings in
                         return settings.merging(overrideDataSource.getOverrides()) { (current, _) in current }
                     })

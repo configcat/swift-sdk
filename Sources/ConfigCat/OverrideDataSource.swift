@@ -3,7 +3,7 @@ import Foundation
 public class OverrideDataSource : NSObject {
     let behaviour: OverrideBehaviour
 
-    public required init(behaviour: OverrideBehaviour) {
+    init(behaviour: OverrideBehaviour) {
         self.behaviour = behaviour
     }
 

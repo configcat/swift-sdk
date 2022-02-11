@@ -70,6 +70,9 @@
 		B4BD2B0B258CA7DF007371E2 /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
 		B4BD2B0C258CA7DF007371E2 /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE99238761BA008803E7 /* testmatrix_number.csv */; };
 		B4BD2B0D258CA7DF007371E2 /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */; };
+		C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51127B5533800D9F88A /* LocalTests.swift */; };
+		C40CF51427B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */; };
+		C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */; };
 		C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */; };
 		C4FA1B3D278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */; };
 		C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */; };
@@ -126,6 +129,8 @@
 		B4BD2B11258CA7DF007371E2 /* ConfigCat Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ConfigCat Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4BD2B64258CA9A2007371E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B4BD2C13258CB452007371E2 /* ConfigCat.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ConfigCat.xcconfig; sourceTree = "<group>"; };
+		C40CF51127B5533800D9F88A /* LocalTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalTests.swift; sourceTree = "<group>"; };
+		C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalDictionaryDataSource.swift; sourceTree = "<group>"; };
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
 		C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCatClientIntegrationTests.swift; sourceTree = "<group>"; };
@@ -204,6 +209,7 @@
 		3F880A42207BE91900087A6B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */,
 				C4FA1B6027959C1800BFA8C3 /* ConfigJsonCache.swift */,
 				C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */,
 				C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */,
@@ -234,6 +240,7 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C40CF51127B5533800D9F88A /* LocalTests.swift */,
 				C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */,
 				C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */,
 				C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */,
@@ -388,6 +395,7 @@
 				B4BD2ABC258CA6FF007371E2 /* AsyncResult.swift in Sources */,
 				B4BD2ABD258CA6FF007371E2 /* RefreshPolicy.swift in Sources */,
 				B4BD2ABE258CA6FF007371E2 /* Synced.swift in Sources */,
+				C40CF51427B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				B4BD2ABF258CA6FF007371E2 /* Version+Codable.swift in Sources */,
 				C4FA1B40278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */,
 				B4BD2AC0258CA6FF007371E2 /* ManualPollingPolicy.swift in Sources */,
@@ -406,6 +414,7 @@
 			files = (
 				B4BD2AE4258CA7DF007371E2 /* Version+Range.swift in Sources */,
 				B4BD2AE5258CA7DF007371E2 /* ManualPollingPolicy.swift in Sources */,
+				C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				B4BD2AE6258CA7DF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AE7258CA7DF007371E2 /* RolloutIntegrationTests.swift in Sources */,
 				C4FA1B6227959C1900BFA8C3 /* ConfigJsonCache.swift in Sources */,
@@ -437,6 +446,7 @@
 				B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */,
 				B4BD2B00258CA7DF007371E2 /* Mock.swift in Sources */,
 				B4BD2B01258CA7DF007371E2 /* LazyLoadingAsyncTests.swift in Sources */,
+				C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */,
 				B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */,
 				B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */,
 				C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
