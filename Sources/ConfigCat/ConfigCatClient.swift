@@ -116,7 +116,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
         do {
             let settings = try self.getSettingsAsync().get()
-            return try self.parser.getValueFromSettings(for: key, settings: settings, user: user)
+            return self.parser.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return defaultValue
@@ -134,13 +134,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
         self.getSettingsAsync()
             .apply { settings in
-                do {
-                    let result: Value = try self.parser.getValueFromSettings(for: key, settings: settings, user: user)
-                    completion(result)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion(defaultValue)
-                }
+                let result: Value = self.parser.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
+                completion(result)
             }
     }
     
@@ -158,10 +153,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
     
-    @objc public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
+    @objc public func getAllKeysAsync(completion: @escaping ([String]) -> ()) {
         self.getSettingsAsync()
             .apply { settings in
-                completion([String](settings.keys), nil)
+                completion([String](settings.keys))
         }
     }
 
@@ -172,7 +167,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
         do {
             let settings = try self.getSettingsAsync().get()
-            return try self.parser.getVariationIdFromSettings(for: key, settings: settings, user: user)
+            return self.parser.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return defaultVariationId
@@ -186,14 +181,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
         self.getSettingsAsync()
             .apply { settings in
-                do {
-                    let result: String = try self.parser.getVariationIdFromSettings(for: key, settings: settings, user: user)
-                    completion(result)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    let result = defaultVariationId
-                    completion(result)
-                }
+                completion(self.parser.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user))
         }
     }
 
@@ -207,19 +195,18 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
     }
 
-    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String], Error?) -> ()) {
+    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
         self.getSettingsAsync()
             .apply { settings in
                 let result = self.parser.getAllVariationIdsFromSettings(settings: settings, user: user)
-                completion(result, nil)
+                completion(result)
         }
     }
 
     @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
         do {
             let settings = try self.getSettingsAsync().get()
-            let result = try self.parser.getKeyAndValueFromSettings(for: variationId, settings: settings)
-            return KeyValue(key: result.key, value: result.value)
+            return self.parser.getKeyAndValueFromSettings(settings: settings, variationId: variationId)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return nil
@@ -229,36 +216,24 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     @objc public func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
         self.getSettingsAsync()
             .apply { settings in
-                do {
-                    let result = try self.parser.getKeyAndValueFromSettings(for: variationId, settings: settings)
-                    completion(KeyValue(key: result.key, value: result.value))
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion(nil)
-                }
+                completion(self.parser.getKeyAndValueFromSettings(settings: settings, variationId: variationId))
         }
     }
 
     @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any] {
         do {
             let settings = try self.getSettingsAsync().get()
-            return try self.parser.getAllValuesFromSettings(settings: settings, user: user)
+            return self.parser.getAllValuesFromSettings(settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return [:]
         }
     }
 
-    @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any], Error?) -> ()) {
+    @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
         self.getSettingsAsync()
             .apply { settings in
-                do {
-                    let result = try self.parser.getAllValuesFromSettings(settings: settings, user: user)
-                    completion(result, nil)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion([:], error)
-                }
+                completion(self.parser.getAllValuesFromSettings(settings: settings, user: user))
         }
     }
 

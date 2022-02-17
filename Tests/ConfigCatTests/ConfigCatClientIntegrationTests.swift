@@ -19,8 +19,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
     func testGetAllValuesAsync() throws {
         let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
         let allValuesResult = AsyncResult<[String: Any]>()
-        client.getAllValuesAsync() { (result, error) in
-            XCTAssertNil(error)
+        client.getAllValuesAsync() { (result) in
             allValuesResult.complete(result: result)
         }
         let allValues = try allValuesResult.get()
