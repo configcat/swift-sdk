@@ -34,6 +34,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      - Parameter sessionConfiguration: the url session configuration.
      - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
      - Parameter flagOverrides: An OverrideDataSource implementation used to override feature flags & settings.
+     - Parameter logLevel: default: warning. Internal log level.
      - Returns: A new `ConfigCatClient`.
      */
     @objc public convenience init(sdkKey: String,
