@@ -17,7 +17,7 @@ class AutoPollingTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
 
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
         
@@ -33,7 +33,7 @@ class AutoPollingTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(),dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
         
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
         
@@ -41,23 +41,7 @@ class AutoPollingTests: XCTestCase {
         
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
     }
-    
-    func testCacheFails() throws {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test"), statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test2"), statusCode: 200))
 
-        let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
-        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
-                
-        XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
-        
-        sleep(3)
-        
-        XCTAssertEqual("test2", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
-    }
-    
     func testOnConfigChanged() throws {
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test"), statusCode: 200))
         mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test2"), statusCode: 200))
@@ -68,7 +52,7 @@ class AutoPollingTests: XCTestCase {
             called = true
         })
         let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
         
         sleep(1)
         
@@ -85,7 +69,7 @@ class AutoPollingTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
 
         sleep(2)
 
@@ -103,7 +87,7 @@ class AutoPollingTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
         XCTAssertTrue(try policy.getConfiguration().get().entries.isEmpty)
 
         let endTime = Date()
@@ -112,4 +96,42 @@ class AutoPollingTests: XCTestCase {
         XCTAssert(elapsedTimeInSeconds > 1)
         XCTAssert(elapsedTimeInSeconds < 2)
     }
+
+    func testCache() throws {
+        let mockCache = InMemoryConfigCache()
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test"), statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test2"), statusCode: 200))
+
+        let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: mockCache, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+
+        XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
+        XCTAssertEqual(1, mockCache.store.count)
+        XCTAssertEqual(String(format: self.testJsonFormat, "test"), mockCache.store.values.first)
+
+        sleep(3)
+
+        XCTAssertEqual("test2", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
+        XCTAssertEqual(1, mockCache.store.count)
+        XCTAssertEqual(String(format: self.testJsonFormat, "test2"), mockCache.store.values.first)
+    }
+
+    func testCacheFails() throws {
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test"), statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "test2"), statusCode: 200))
+
+        let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: FailingCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+
+        XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
+
+        sleep(3)
+
+        XCTAssertEqual("test2", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
+    }
+
 }

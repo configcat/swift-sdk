@@ -68,3 +68,15 @@ public class FailingCache : ConfigCache {
         throw TestError.test
     }
 }
+
+public class InMemoryConfigCache : NSObject, ConfigCache {
+    public var store = [String: String]()
+
+    public func read(for key: String) throws -> String {
+        return self.store[key] ?? ""
+    }
+
+    public func write(for key: String, value: String) throws {
+        self.store[key] = value
+    }
+}

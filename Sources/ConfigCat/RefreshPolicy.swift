@@ -3,7 +3,7 @@ import Foundation
 
 /// The public interface of a refresh policy which's implementors should describe the configuration update rules.
 class RefreshPolicy : NSObject {
-    let cache: ConfigCache
+    let cache: ConfigCache?
     let fetcher: ConfigFetcher
     let log: Logger
     
@@ -12,17 +12,23 @@ class RefreshPolicy : NSObject {
     fileprivate let cacheKey: String
     
     final func writeConfigCache(value: Config) {
-        do {
-            self.inMemoryConfig = value
-            try self.cache.write(for: self.cacheKey, value: value.jsonString)
-        } catch {
-            self.log.error(message: "An error occurred during the cache write: %@", error.localizedDescription)
+        self.inMemoryConfig = value
+        if let cache = self.cache {
+            do {
+                try cache.write(for: self.cacheKey, value: value.jsonString)
+            } catch {
+                self.log.error(message: "An error occurred during the cache write: %@", error.localizedDescription)
+            }
         }
     }
     
     final func readConfigCache() -> Config {
+        guard let cache = self.cache else {
+            return inMemoryConfig
+        }
+
         do {
-            let config = try self.configJsonCache.getConfigFromJson(json: self.cache.read(for: self.cacheKey))
+            let config = try self.configJsonCache.getConfigFromJson(json: cache.read(for: self.cacheKey))
             return config ?? inMemoryConfig
         } catch {
             self.log.error(message: "An error occurred during the cache read, using in memory value: %@", error.localizedDescription)
@@ -37,7 +43,7 @@ class RefreshPolicy : NSObject {
      - Parameter fetcher: the internal config fetcher instance.
      - Returns: A new `RefreshPolicy`.
      */
-    public required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    public required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.cache = cache
         self.fetcher = fetcher
         self.log = logger

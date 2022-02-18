@@ -18,7 +18,7 @@ final class AutoPollingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.          
      - Returns: A new `AutoPollingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    public convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey, config: AutoPollingMode())
     }
     
@@ -31,7 +31,7 @@ final class AutoPollingPolicy : RefreshPolicy {
      - Parameter config: the configuration.
      - Returns: A new `AutoPollingPolicy`.
      */
-    public init(cache: ConfigCache,
+    public init(cache: ConfigCache?,
                 fetcher: ConfigFetcher,
                 logger: Logger,
                 configJsonCache: ConfigJsonCache,

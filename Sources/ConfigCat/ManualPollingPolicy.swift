@@ -10,7 +10,7 @@ final class ManualPollingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `ManualPollingPolicy`.
      */
-    public required init(cache: ConfigCache,
+    public required init(cache: ConfigCache?,
                          fetcher: ConfigFetcher,
                          logger: Logger,
                          configJsonCache: ConfigJsonCache,

@@ -22,16 +22,3 @@ import Foundation
      */
     func write(for key: String, value: String) throws
 }
-
-/// An in-memory cache implementation used to store the fetched configurations.
-internal final class InMemoryConfigCache : NSObject, ConfigCache {
-    private var store = [String: String]()
-    
-    public func read(for key: String) throws -> String {
-        return self.store[key] ?? ""
-    }
-    
-    public func write(for key: String, value: String) throws {
-        self.store[key] = value
-    }
-}

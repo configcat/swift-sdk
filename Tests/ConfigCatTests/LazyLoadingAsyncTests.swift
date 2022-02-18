@@ -17,7 +17,7 @@ class LazyLoadingAsyncTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
 
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
@@ -42,7 +42,7 @@ class LazyLoadingAsyncTests: XCTestCase {
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 5, useAsyncRefresh: true)
         let fetcher = ConfigFetcher(session: mockSession, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: mode.getPollingIdentifier(), dataGovernance: DataGovernance.global)
-        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: InMemoryConfigCache(), logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
+        let policy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: ""))
 
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
         XCTAssertEqual("test", (try policy.getConfiguration().get().entries["fakeKey"] as? [String: Any])?[Config.value] as? String)

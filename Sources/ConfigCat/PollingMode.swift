@@ -69,13 +69,13 @@ class ManualPollingMode : PollingMode {
 }
 
 class RefreshPolicyFactory : PollingModeVisitor {
-    private let cache: ConfigCache
+    private let cache: ConfigCache?
     private let fetcher: ConfigFetcher
     private let sdkKey: String
     private let logger: Logger
     private let configJsonCache: ConfigJsonCache
     
-    init(fetcher: ConfigFetcher, cache: ConfigCache, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    init(fetcher: ConfigFetcher, cache: ConfigCache? = nil, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.fetcher = fetcher
         self.cache = cache
         self.sdkKey = sdkKey

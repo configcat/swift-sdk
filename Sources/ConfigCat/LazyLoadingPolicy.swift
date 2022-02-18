@@ -20,7 +20,7 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public convenience required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    public convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey, config: LazyLoadingMode())
     }
     
@@ -33,7 +33,7 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter config: the configuration.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public init(cache: ConfigCache,
+    public init(cache: ConfigCache?,
                 fetcher: ConfigFetcher,
                 logger: Logger,
                 configJsonCache: ConfigJsonCache,

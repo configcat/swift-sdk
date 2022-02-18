@@ -18,7 +18,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(1, self.mockSession.requests.count)
@@ -32,7 +32,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(1, self.mockSession.requests.count)
@@ -46,7 +46,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(1, self.mockSession.requests.count)
@@ -62,7 +62,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(2, self.mockSession.requests.count)
@@ -79,7 +79,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(2, self.mockSession.requests.count)
@@ -97,7 +97,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(3, self.mockSession.requests.count)
@@ -116,7 +116,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher()
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(3, self.mockSession.requests.count)
@@ -132,7 +132,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher(url: self.customCdnUrl)
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(1, self.mockSession.requests.count)
@@ -148,7 +148,7 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = self.createfetcher(url: self.customCdnUrl)
 
         // Act
-        let response = try fetcher.getConfiguration().get()
+        _ = try fetcher.getConfiguration().get()
 
         // Assert
         XCTAssertEqual(2, self.mockSession.requests.count)

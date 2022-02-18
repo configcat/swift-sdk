@@ -71,7 +71,6 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.sdkKey = sdkKey
         self.overrideDataSource = flagOverrides
         self.evaluator = RolloutEvaluator(logger: self.log)
-        let cache = configCache ?? InMemoryConfigCache()
         let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
         let configJsonCache = ConfigJsonCache(logger: self.log)
         let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
@@ -82,7 +81,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                                     dataGovernance: dataGovernance,
                                     baseUrl: baseUrl)
         
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
+        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: configCache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
     }
 
     deinit {

@@ -58,12 +58,12 @@ class ConfigFetcherTests: XCTestCase {
 
         let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
         let fetcher = ConfigFetcher(session: mockSession,logger: Logger.noLogger, configJsonCache: configJsonCache, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
-        var asyncResponse = fetcher.getConfiguration()
-        var isFetching = try fetcher.isFetching()
+        let asyncResponse = fetcher.getConfiguration()
+        var isFetching = fetcher.isFetching()
         XCTAssertTrue(isFetching)
 
-        var response = try asyncResponse.get()
-        isFetching = try fetcher.isFetching()
+        _ = try asyncResponse.get()
+        isFetching = fetcher.isFetching()
         XCTAssertFalse(isFetching)
     }
 }
