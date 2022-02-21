@@ -159,7 +159,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
                                 Evaluating the variation id for the key '%@' failed.
                                 Returning defaultVariationId: %@
                                 Here are the available keys: %@
-                                """, key, "\(String(describing: defaultVariationId))", [String](settings.keys))
+                                """, key, defaultVariationId ?? "nil", [String](settings.keys))
 
         return defaultVariationId
     }
