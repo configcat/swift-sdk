@@ -17,7 +17,7 @@ extension ConfigCatClient {
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let log: Logger
     fileprivate let evaluator: RolloutEvaluator
-    fileprivate let refreshPolicy: RefreshPolicy
+    fileprivate let refreshPolicy: RefreshPolicy?
     fileprivate let sdkKey: String
     fileprivate let overrideDataSource: OverrideDataSource?
     fileprivate static var sdkKeys: Set<String> = []
@@ -30,7 +30,6 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      https://app.configcat.com/organization/data-governance
      - Parameter configCache: a cache implementation, see `ConfigCache`.
      - Parameter refreshMode: the polling mode, `autoPoll`, `lazyLoad` or `manualPoll`.
-     - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
      - Parameter sessionConfiguration: the url session configuration.
      - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
      - Parameter flagOverrides: An OverrideDataSource implementation used to override feature flags & settings.
@@ -71,17 +70,23 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         self.sdkKey = sdkKey
         self.overrideDataSource = flagOverrides
         self.evaluator = RolloutEvaluator(logger: self.log)
-        let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
-        let configJsonCache = ConfigJsonCache(logger: self.log)
-        let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
-                                    logger: self.log,
-                                    configJsonCache: configJsonCache,
-                                    sdkKey: sdkKey,
-                                    mode: mode.getPollingIdentifier(),
-                                    dataGovernance: dataGovernance,
-                                    baseUrl: baseUrl)
-        
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: configCache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
+
+        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            // RefreshPolicy is not needed in localOnly mode
+            self.refreshPolicy = nil
+        } else {
+            let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
+            let configJsonCache = ConfigJsonCache(logger: self.log)
+            let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
+                                        logger: self.log,
+                                        configJsonCache: configJsonCache,
+                                        sdkKey: sdkKey,
+                                        mode: mode.getPollingIdentifier(),
+                                        dataGovernance: dataGovernance,
+                                        baseUrl: baseUrl)
+
+            self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: configCache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
+        }
     }
 
     deinit {
@@ -89,24 +94,30 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     func getSettingsAsync() -> AsyncResult<[String: Any]> {
+        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            return AsyncResult<[String: Any]>.completed(result: overrideDataSource.getOverrides())
+        }
+
+        guard let refreshPolicy = self.refreshPolicy else {
+            return AsyncResult<[String: Any]>.completed(result:[:])
+        }
+
         if let overrideDataSource = self.overrideDataSource {
-            switch overrideDataSource.behaviour {
-            case .localOnly:
-                return AsyncResult<[String: Any]>.completed(result: overrideDataSource.getOverrides())
-            case .localOverRemote:
-                return self.refreshPolicy.getSettings()
+            if overrideDataSource.behaviour == .localOverRemote {
+                return refreshPolicy.getSettings()
                     .apply(completion: { settings in
                         return settings.merging(overrideDataSource.getOverrides()) { (_, new) in new }
                     })
-            case .remoteOverLocal:
-                return self.refreshPolicy.getSettings()
+            }
+            if overrideDataSource.behaviour == .remoteOverLocal {
+                return refreshPolicy.getSettings()
                     .apply(completion: { settings in
                         return settings.merging(overrideDataSource.getOverrides()) { (current, _) in current }
                     })
             }
         }
 
-        return self.refreshPolicy.getSettings()
+        return refreshPolicy.getSettings()
     }
 
     public func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
@@ -354,11 +365,11 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func refresh() {
-        self.refreshPolicy.refresh().wait()
+        self.refreshPolicy?.refresh().wait()
     }
-    
+
     @objc public func refreshAsync(completion: @escaping () -> ()) {
-        self.refreshPolicy.refresh().accept(completion: completion)
+        self.refreshPolicy?.refresh().accept(completion: completion)
     }
 }
 
