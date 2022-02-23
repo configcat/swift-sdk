@@ -21,4 +21,6 @@ struct Config {
         self.preferences = preferences
         self.entries = entries
     }
+
+    static let empty = Config();
 }

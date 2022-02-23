@@ -8,11 +8,10 @@ class RefreshPolicy : NSObject {
     let log: Logger
     
     fileprivate let configJsonCache: ConfigJsonCache
-    fileprivate var inMemoryConfig: Config = Config()
     fileprivate let cacheKey: String
     
     final func writeConfigCache(value: Config) {
-        self.inMemoryConfig = value
+        self.configJsonCache.config = value
         if let cache = self.cache {
             do {
                 try cache.write(for: self.cacheKey, value: value.jsonString)
@@ -24,15 +23,14 @@ class RefreshPolicy : NSObject {
     
     final func readConfigCache() -> Config {
         guard let cache = self.cache else {
-            return inMemoryConfig
+            return self.configJsonCache.config
         }
 
         do {
-            let config = try self.configJsonCache.getConfigFromJson(json: cache.read(for: self.cacheKey))
-            return config ?? inMemoryConfig
+            return try self.configJsonCache.getConfigFromJson(json: cache.read(for: self.cacheKey))
         } catch {
             self.log.error(message: "An error occurred during the cache read, using in memory value: %@", error.localizedDescription)
-            return inMemoryConfig
+            return self.configJsonCache.config
         }
     }
 
@@ -60,7 +58,7 @@ class RefreshPolicy : NSObject {
      */
     open func getConfiguration() -> AsyncResult<Config> {
         assert(false, "Method must be overridden!")
-        return AsyncResult(result: Config())
+        return AsyncResult(result: .empty)
     }
 
     open func getSettings() -> AsyncResult<[String: Any]> {
