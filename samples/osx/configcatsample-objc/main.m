@@ -10,7 +10,6 @@ int main(int argc, const char * argv[]) {
                                                           dataGovernance:DataGovernanceGlobal
                                                              configCache:nil
                                                              refreshMode:nil
-                                        maxWaitTimeForSyncCallsInSeconds:0
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                                  baseUrl:@""
                                                                 logLevel:LogLevelInfo];

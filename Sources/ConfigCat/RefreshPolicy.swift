@@ -3,35 +3,37 @@ import Foundation
 
 /// The public interface of a refresh policy which's implementors should describe the configuration update rules.
 class RefreshPolicy : NSObject {
-    let cache: ConfigCache
+    let cache: ConfigCache?
     let fetcher: ConfigFetcher
     let log: Logger
     
-    fileprivate var inMemoryValue: String = ""
+    fileprivate let configJsonCache: ConfigJsonCache
     fileprivate let cacheKey: String
     
-    final func writeCache(value: String) {
-        self.inMemoryValue = value
-        do {
-            try self.cache.write(for: self.cacheKey, value: value)
-        } catch {
-            self.log.error(message: "An error occured during the cache write: %@", error.localizedDescription)
+    final func writeConfigCache(value: Config) {
+        self.configJsonCache.config = value
+        if let cache = self.cache {
+            do {
+                try cache.write(for: self.cacheKey, value: value.jsonString)
+            } catch {
+                self.log.error(message: "An error occurred during the cache write: %@", error.localizedDescription)
+            }
         }
     }
     
-    final func readCache() -> String {
+    final func readConfigCache() -> Config {
+        guard let cache = self.cache else {
+            return self.configJsonCache.config
+        }
+
         do {
-            return try self.cache.read(for: self.cacheKey)
+            return try self.configJsonCache.getConfigFromJson(json: cache.read(for: self.cacheKey))
         } catch {
-            self.log.error(message: "An error occured during the cache read, using in memory value: %@", error.localizedDescription)
-            return self.inMemoryValue
+            self.log.error(message: "An error occurred during the cache read, using in memory value: %@", error.localizedDescription)
+            return self.configJsonCache.config
         }
     }
-    
-    var lastCachedConfiguration: String {
-        return self.inMemoryValue
-    }
-    
+
     /**
      Initializes a new `RefreshPolicy`.
      
@@ -39,10 +41,11 @@ class RefreshPolicy : NSObject {
      - Parameter fetcher: the internal config fetcher instance.
      - Returns: A new `RefreshPolicy`.
      */
-    public required init(cache: ConfigCache, fetcher: ConfigFetcher, logger: Logger, sdkKey: String) {
+    public required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.cache = cache
         self.fetcher = fetcher
         self.log = logger
+        self.configJsonCache = configJsonCache
         let keyToHash = "swift_" + sdkKey + "_" + ConfigFetcher.configJsonName
         self.cacheKey = String(keyToHash.sha1hex ?? keyToHash)
     }
@@ -53,9 +56,16 @@ class RefreshPolicy : NSObject {
      
      - Returns: the AsyncResult object which computes the configuration.
      */
-    open func getConfiguration() -> AsyncResult<String> {
-        assert(false, "Method must be overidden!")
-        return AsyncResult(result: "")
+    open func getConfiguration() -> AsyncResult<Config> {
+        assert(false, "Method must be overridden!")
+        return AsyncResult(result: .empty)
+    }
+
+    open func getSettings() -> AsyncResult<[String: Any]> {
+        self.getConfiguration()
+                .apply(completion: { config in
+                    return config.entries
+                })
     }
     
     /**
@@ -64,9 +74,9 @@ class RefreshPolicy : NSObject {
      - Returns: the Async object which executes the refresh.
      */
     public final func refresh() -> Async {
-        return self.fetcher.getConfigurationJson().accept { response in
-            if response.isFetched() {
-                self.writeCache(value: response.body)
+        return self.fetcher.getConfiguration().accept { response in
+            if let config = response.config, response.isFetched() {
+                self.writeConfigCache(value: config)
             }
         }
     }

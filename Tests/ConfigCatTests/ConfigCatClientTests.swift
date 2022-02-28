@@ -3,7 +3,8 @@ import XCTest
 
 class ConfigCatClientTests: XCTestCase {
     var mockSession = MockURLSession()
-    let testJsonFormat = "{ \"f\": { \"fakeKey\": { \"v\": %@, \"p\": [] ,\"r\": [] } } }"
+    let testJsonFormat = #"{ "f": { "fakeKey": { "v": %@, "p": [], "r": [] } } }"#
+    let testJsonMultiple = #"{ "f": { "key1": { "v": true, "i": "fakeId1", "p": [], "r": [] }, "key2": { "v": false, "i": "fakeId2", "p": [], "r": [] } } }"#
     
     override func setUp() {
         super.setUp()
@@ -155,14 +156,18 @@ class ConfigCatClientTests: XCTestCase {
         
         XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
     }
-    
-    func testGetAllKeys() {
-        let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
-        let keys = client.getAllKeys()
-        XCTAssertEqual(16, keys.count)
-        XCTAssertTrue(keys.contains("stringDefaultCat"))
+
+    func testGetAllValues() {
+        mockSession.enqueueResponse(response: Response(body: self.testJsonMultiple, statusCode: 200))
+        let client = self.createClient()
+        client.refresh()
+        let allValues = client.getAllValues()
+
+        XCTAssertEqual(2, allValues.count)
+        XCTAssertEqual(true, allValues["key1"] as! Bool)
+        XCTAssertEqual(false, allValues["key2"] as! Bool)
     }
-    
+
     private func createClient() -> ConfigCatClient {
         return ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
     }

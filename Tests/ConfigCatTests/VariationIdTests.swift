@@ -65,7 +65,7 @@ class VariationIdTests: XCTestCase {
         let client = self.createClient()
         let variationIdsResult = AsyncResult<[String]>()
         client.refresh()
-        client.getAllVariationIdsAsync() { (result, error) in
+        client.getAllVariationIdsAsync() { (result) in
             variationIdsResult.complete(result: result)
         }
         

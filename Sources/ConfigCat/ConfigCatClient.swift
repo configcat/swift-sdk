@@ -16,10 +16,12 @@ extension ConfigCatClient {
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let log: Logger
-    fileprivate let parser: ConfigParser
-    fileprivate let refreshPolicy: RefreshPolicy
-    fileprivate let maxWaitTimeForSyncCallsInSeconds: Int
-    
+    fileprivate let evaluator: RolloutEvaluator
+    fileprivate let refreshPolicy: RefreshPolicy?
+    fileprivate let sdkKey: String
+    fileprivate let overrideDataSource: OverrideDataSource?
+    fileprivate static var sdkKeys: Set<String> = []
+
     /**
      Initializes a new `ConfigCatClient`.
      
@@ -28,70 +30,223 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      https://app.configcat.com/organization/data-governance
      - Parameter configCache: a cache implementation, see `ConfigCache`.
      - Parameter refreshMode: the polling mode, `autoPoll`, `lazyLoad` or `manualPoll`.
-     - Parameter maxWaitTimeForSyncCallsInSeconds: the maximum time in seconds at most how long the synchronous calls (e.g. `client.getConfiguration(...)`) have to be blocked.
      - Parameter sessionConfiguration: the url session configuration.
      - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
+     - Parameter flagOverrides: An OverrideDataSource implementation used to override feature flags & settings.
+     - Parameter logLevel: default: warning. Internal log level.
      - Returns: A new `ConfigCatClient`.
      */
     @objc public convenience init(sdkKey: String,
                 dataGovernance: DataGovernance = DataGovernance.global,
                 configCache: ConfigCache? = nil,
                 refreshMode: PollingMode? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                 baseUrl: String = "",
+                flagOverrides: OverrideDataSource? = nil,
                 logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
-                  configCache: configCache, maxWaitTimeForSyncCallsInSeconds: maxWaitTimeForSyncCallsInSeconds,
-                  baseUrl: baseUrl, dataGovernance: dataGovernance, logLevel: logLevel)
+                  configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
     }
     
-    internal init(sdkKey: String,
+    init(sdkKey: String,
                 refreshMode: PollingMode?,
                 session: URLSession?,
                 configCache: ConfigCache? = nil,
-                maxWaitTimeForSyncCallsInSeconds: Int = 0,
                 baseUrl: String = "",
                 dataGovernance: DataGovernance = DataGovernance.global,
+                flagOverrides: OverrideDataSource? = nil,
                 logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
-        
-        if maxWaitTimeForSyncCallsInSeconds != 0 && maxWaitTimeForSyncCallsInSeconds < 2 {
-            assert(false, "maxWaitTimeForSyncCallsInSeconds cannot be less than 2")
-        }
-        
+
         self.log = Logger(level: logLevel)
-        self.parser = ConfigParser(logger: self.log, evaluator: RolloutEvaluator(logger: self.log))
-        let cache = configCache ?? InMemoryConfigCache()
-        let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 120)
-        let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
-                                    logger: self.log,
-                                    sdkKey: sdkKey,
-                                    mode: mode.getPollingIdentifier(),
-                                    dataGovernance: dataGovernance,
-                                    baseUrl: baseUrl)
-        
-        self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: cache, logger: self.log, sdkKey: sdkKey))
-        
-        self.maxWaitTimeForSyncCallsInSeconds = maxWaitTimeForSyncCallsInSeconds
+        if (!ConfigCatClient.sdkKeys.insert(sdkKey).inserted) {
+            self.log.warning(message: """
+                                      A ConfigCat Client is already initialized with sdkKey %@.
+                                      We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
+                                      """, sdkKey)
+        }
+        self.sdkKey = sdkKey
+        self.overrideDataSource = flagOverrides
+        self.evaluator = RolloutEvaluator(logger: self.log)
+
+        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            // RefreshPolicy is not needed in localOnly mode
+            self.refreshPolicy = nil
+        } else {
+            let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
+            let configJsonCache = ConfigJsonCache(logger: self.log)
+            let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
+                                        logger: self.log,
+                                        configJsonCache: configJsonCache,
+                                        sdkKey: sdkKey,
+                                        mode: mode.getPollingIdentifier(),
+                                        dataGovernance: dataGovernance,
+                                        baseUrl: baseUrl)
+
+            self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: configCache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
+        }
     }
-    
+
+    deinit {
+        ConfigCatClient.sdkKeys.remove(sdkKey)
+    }
+
+    func getSettingsAsync() -> AsyncResult<[String: Any]> {
+        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            return AsyncResult<[String: Any]>.completed(result: overrideDataSource.getOverrides())
+        }
+
+        guard let refreshPolicy = self.refreshPolicy else {
+            return AsyncResult<[String: Any]>.completed(result:[:])
+        }
+
+        if let overrideDataSource = self.overrideDataSource {
+            if overrideDataSource.behaviour == .localOverRemote {
+                return refreshPolicy.getSettings()
+                    .apply(completion: { settings in
+                        return settings.merging(overrideDataSource.getOverrides()) { (_, new) in new }
+                    })
+            }
+            if overrideDataSource.behaviour == .remoteOverLocal {
+                return refreshPolicy.getSettings()
+                    .apply(completion: { settings in
+                        return settings.merging(overrideDataSource.getOverrides()) { (current, _) in current }
+                    })
+            }
+        }
+
+        return refreshPolicy.getSettings()
+    }
+
+    public func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
+        if Value.self != String.self &&
+            Value.self != String?.self &&
+            Value.self != Int.self &&
+            Value.self != Int?.self &&
+            Value.self != Double.self &&
+            Value.self != Double?.self &&
+            Value.self != Bool.self &&
+            Value.self != Bool?.self &&
+            Value.self != Any.self &&
+            Value.self != Any?.self {
+            self.log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            return defaultValue
+        }
+
+        if settings.isEmpty {
+            self.log.error(message: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)");
+            return defaultValue
+        }
+
+        let (value, _, evaluateLog): (Value?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+        if let evaluateLog = evaluateLog {
+            self.log.info(message: "%@", evaluateLog)
+        }
+        if let value = value {
+            return value
+        }
+
+        self.log.error(message: """
+                                Evaluating the value for the key '%@' failed.
+                                Returning defaultValue: [%@].
+                                Here are the available keys: %@
+                                """, key, "\(defaultValue)", [String](settings.keys))
+
+        return defaultValue
+    }
+
+    public func getVariationIdFromSettings(settings: [String: Any], key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
+        let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+        if let evaluateLog = evaluateLog {
+            self.log.info(message: "%@", evaluateLog)
+        }
+        if let variationId = variationId {
+            return variationId
+        }
+
+        self.log.error(message: """
+                                Evaluating the variation id for the key '%@' failed.
+                                Returning defaultVariationId: %@
+                                Here are the available keys: %@
+                                """, key, defaultVariationId ?? "nil", [String](settings.keys))
+
+        return defaultVariationId
+    }
+
+    public func getAllVariationIdsFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String] {
+        var variationIds = [String]()
+        for key in settings.keys {
+            let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+            if let evaluateLog = evaluateLog {
+                self.log.info(message: "%@", evaluateLog)
+            }
+            if let variationId = variationId {
+                variationIds.append(variationId)
+            } else {
+                self.log.error(message: "Evaluating the variation id for the key '%@' failed.", key)
+            }
+        }
+        return variationIds
+    }
+
+    public func getAllValuesFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String: Any] {
+        var allValues = [String: Any]()
+        for key in settings.keys {
+            let (value, _, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+            if let evaluateLog = evaluateLog {
+                self.log.info(message: "%@", evaluateLog)
+            }
+            if let value = value {
+                allValues[key] = value
+            } else {
+                self.log.error(message: "Evaluating the value for the key '%@' failed.", key)
+            }
+        }
+        return allValues
+    }
+
+    public func getKeyAndValueFromSettings(settings: [String: Any], variationId: String) -> KeyValue? {
+        for (key, json) in settings {
+            if let json = json as? [String: Any], let value = json[Config.value] {
+                if variationId == json[Config.variationId] as? String {
+                    return KeyValue(key: key, value: value)
+                }
+
+                let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
+                for rule in rolloutRules {
+                    if variationId == rule[Config.variationId] as? String, let value = json[Config.value]  {
+                        return KeyValue(key: key, value: value)
+                    }
+                }
+
+                let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
+                for rule in rolloutPercentageItems {
+                    if variationId == rule[Config.variationId] as? String, let value = json[Config.value] {
+                        return KeyValue(key: key, value: value)
+                    }
+                }
+            }
+        }
+
+        self.log.error(message: "Could not find the setting for the given variationId: '%@'", variationId);
+        return nil
+    }
+
+    // MARK: ConfigCatClientProtocol
+
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        
+
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            
-            return try self.parser.parseValue(for: key, json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
+            return defaultValue
         }
     }
     
@@ -103,17 +258,11 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result: Value = try self.parser.parseValue(for: key, json: config, user: user)
-                    completion(result)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    let result = self.getDefaultConfig(for: key, defaultValue: defaultValue, user: user)
-                    completion(result)
-                }
+
+        self.getSettingsAsync()
+            .apply { settings in
+                let result: Value = self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
+                completion(result)
             }
     }
     
@@ -123,27 +272,18 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     
     @objc public func getAllKeys() -> [String] {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                ? try self.refreshPolicy.getConfiguration().get()
-                : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            
-            return try self.parser.getAllKeys(json: config)
+            let settings = try self.getSettingsAsync().get()
+            return [String](settings.keys)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
         }
     }
     
-    @objc public func getAllKeysAsync(completion: @escaping ([String], Error?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result = try self.parser.getAllKeys(json: config)
-                    completion(result, nil)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion([], error)
-                }
+    @objc public func getAllKeysAsync(completion: @escaping ([String]) -> ()) {
+        self.getSettingsAsync()
+            .apply { settings in
+                completion([String](settings.keys))
         }
     }
 
@@ -153,11 +293,8 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
 
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
-            return try self.parser.parseVariationId(for: key, json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return defaultVariationId
@@ -169,53 +306,34 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
 
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result: String = try self.parser.parseVariationId(for: key, json: config, user: user)
-                    completion(result)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    let result = defaultVariationId
-                    completion(result)
-                }
+        self.getSettingsAsync()
+            .apply { settings in
+                completion(self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user))
         }
     }
 
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil) -> [String] {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
-            return try self.parser.getAllVariationIds(json: config, user: user)
+            let settings = try self.getSettingsAsync().get()
+            return self.getAllVariationIdsFromSettings(settings: settings, user: user)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return []
         }
     }
 
-    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String], Error?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result = try self.parser.getAllVariationIds(json: config, user: user)
-                    completion(result, nil)
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion([], error)
-                }
+    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
+        self.getSettingsAsync()
+            .apply { settings in
+                let result = self.getAllVariationIdsFromSettings(settings: settings, user: user)
+                completion(result)
         }
     }
 
     @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
         do {
-            let config = self.maxWaitTimeForSyncCallsInSeconds == 0
-                    ? try self.refreshPolicy.getConfiguration().get()
-                    : try self.refreshPolicy.getConfiguration().get(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-
-            let result = try self.parser.getKeyAndValue(for: variationId, json: config)
-            return KeyValue(key: result.key, value: result.value)
+            let settings = try self.getSettingsAsync().get()
+            return self.getKeyAndValueFromSettings(settings: settings, variationId: variationId)
         } catch {
             self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
             return nil
@@ -223,46 +341,35 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     }
 
     @objc public func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
-        self.refreshPolicy.getConfiguration()
-            .apply { config in
-                do {
-                    let result = try self.parser.getKeyAndValue(for: variationId, json: config)
-                    completion(KeyValue(key: result.key, value: result.value))
-                } catch {
-                    self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-                    completion(nil)
-                }
+        self.getSettingsAsync()
+            .apply { settings in
+                completion(self.getKeyAndValueFromSettings(settings: settings, variationId: variationId))
+        }
+    }
+
+    @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any] {
+        do {
+            let settings = try self.getSettingsAsync().get()
+            return self.getAllValuesFromSettings(settings: settings, user: user)
+        } catch {
+            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
+            return [:]
+        }
+    }
+
+    @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
+        self.getSettingsAsync()
+            .apply { settings in
+                completion(self.getAllValuesFromSettings(settings: settings, user: user))
         }
     }
 
     @objc public func refresh() {
-        do {
-            if self.maxWaitTimeForSyncCallsInSeconds == 0 {
-                self.refreshPolicy.refresh().wait()
-            } else {
-                try self.refreshPolicy.refresh().wait(timeout: self.maxWaitTimeForSyncCallsInSeconds)
-            }
-        } catch {
-            self.log.error(message: "An error occurred during refresh. %@", error.localizedDescription)
-        }
-    }
-    
-    @objc public func refreshAsync(completion: @escaping () -> ()) {
-        self.refreshPolicy.refresh().accept(completion: completion)
+        self.refreshPolicy?.refresh().wait()
     }
 
-    private func getDefaultConfig<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
-        let latest = self.refreshPolicy.lastCachedConfiguration
-        return latest.isEmpty ? defaultValue : self.deserializeJson(for: key, json: latest, defaultValue: defaultValue, user: user)
-    }
-    
-    private func deserializeJson<Value>(for key: String, json: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
-        do {
-            return try self.parser.parseValue(for: key, json: json, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during deserializaton. %@", error.localizedDescription)
-            return defaultValue
-        }
+    @objc public func refreshAsync(completion: @escaping () -> ()) {
+        self.refreshPolicy?.refresh().accept(completion: completion)
     }
 }
 

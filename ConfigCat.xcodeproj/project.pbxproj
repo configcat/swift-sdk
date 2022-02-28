@@ -27,7 +27,6 @@
 		B4BD2AC1258CA6FF007371E2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		B4BD2AC2258CA6FF007371E2 /* Version+Range.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65478223A511E300EA53B8 /* Version+Range.swift */; };
 		B4BD2AC3258CA6FF007371E2 /* ConfigCatClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */; };
-		B4BD2AC4258CA6FF007371E2 /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
 		B4BD2AC5258CA6FF007371E2 /* ConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA1207BF1B100087A6B /* ConfigCache.swift */; };
 		B4BD2AC6258CA6FF007371E2 /* Version+Foundation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A65478423A511E300EA53B8 /* Version+Foundation.swift */; };
 		B4BD2AC9258CA6FF007371E2 /* ConfigCat.h in Headers */ = {isa = PBXBuildFile; fileRef = 3F880A2C207BE8F000087A6B /* ConfigCat.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -57,7 +56,6 @@
 		B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		B4BD2AFC258CA7DF007371E2 /* AutoPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */; };
 		B4BD2AFD258CA7DF007371E2 /* LazyLoadingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */; };
-		B4BD2AFE258CA7DF007371E2 /* ConfigParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880A9B207BF1B100087A6B /* ConfigParser.swift */; };
 		B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
 		B4BD2B00258CA7DF007371E2 /* Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F029E89207EB3BD0019942F /* Mock.swift */; };
 		B4BD2B01258CA7DF007371E2 /* LazyLoadingAsyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F36F53C2083DA3600949B8F /* LazyLoadingAsyncTests.swift */; };
@@ -70,6 +68,16 @@
 		B4BD2B0B258CA7DF007371E2 /* testmatrix.csv in Resources */ = {isa = PBXBuildFile; fileRef = F15F9B122169738100F490CD /* testmatrix.csv */; };
 		B4BD2B0C258CA7DF007371E2 /* testmatrix_number.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE99238761BA008803E7 /* testmatrix_number.csv */; };
 		B4BD2B0D258CA7DF007371E2 /* testmatrix_semantic.csv in Resources */ = {isa = PBXBuildFile; fileRef = 1AEDBE98238761BA008803E7 /* testmatrix_semantic.csv */; };
+		C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51127B5533800D9F88A /* LocalTests.swift */; };
+		C40CF51427B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */; };
+		C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */; };
+		C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */; };
+		C4FA1B3D278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */; };
+		C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */; };
+		C4FA1B40278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */; };
+		C4FA1B41278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */; };
+		C4FA1B6127959C1900BFA8C3 /* ConfigJsonCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B6027959C1800BFA8C3 /* ConfigJsonCache.swift */; };
+		C4FA1B6227959C1900BFA8C3 /* ConfigJsonCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4FA1B6027959C1800BFA8C3 /* ConfigJsonCache.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -101,7 +109,6 @@
 		3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigFetcherTests.swift; sourceTree = "<group>"; };
 		3F880A2C207BE8F000087A6B /* ConfigCat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConfigCat.h; sourceTree = "<group>"; };
 		3F880A39207BE8F000087A6B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resources/Info.plist; sourceTree = "<group>"; };
-		3F880A9B207BF1B100087A6B /* ConfigParser.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigParser.swift; sourceTree = "<group>"; };
 		3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LazyLoadingPolicy.swift; sourceTree = "<group>"; };
 		3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RefreshPolicy.swift; sourceTree = "<group>"; };
 		3F880A9E207BF1B100087A6B /* AsyncResult.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncResult.swift; sourceTree = "<group>"; };
@@ -119,9 +126,15 @@
 		B4BD2B11258CA7DF007371E2 /* ConfigCat Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "ConfigCat Tests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B4BD2B64258CA9A2007371E2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B4BD2C13258CB452007371E2 /* ConfigCat.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = ConfigCat.xcconfig; sourceTree = "<group>"; };
+		C40CF51127B5533800D9F88A /* LocalTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalTests.swift; sourceTree = "<group>"; };
+		C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LocalDictionaryDataSource.swift; sourceTree = "<group>"; };
 		C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VariationIdTests.swift; sourceTree = "<group>"; };
 		C45414AE24AF2BF2004E66E0 /* KeyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyValue.swift; sourceTree = "<group>"; };
+		C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCatClientIntegrationTests.swift; sourceTree = "<group>"; };
 		C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_variationId.csv; path = Resources/testmatrix_variationId.csv; sourceTree = "<group>"; };
+		C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverrideDataSource.swift; sourceTree = "<group>"; };
+		C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverrideBehaviour.swift; sourceTree = "<group>"; };
+		C4FA1B6027959C1800BFA8C3 /* ConfigJsonCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigJsonCache.swift; sourceTree = "<group>"; };
 		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* ConfigCatUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatUser.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
@@ -193,13 +206,16 @@
 		3F880A42207BE91900087A6B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				C40CF51327B557EE00D9F88A /* LocalDictionaryDataSource.swift */,
+				C4FA1B6027959C1800BFA8C3 /* ConfigJsonCache.swift */,
+				C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */,
+				C4FA1B3C278D919900BFA8C3 /* OverrideDataSource.swift */,
 				C45414AE24AF2BF2004E66E0 /* KeyValue.swift */,
 				1AEDBE8223876064008803E7 /* Config.swift */,
 				3F880A9E207BF1B100087A6B /* AsyncResult.swift */,
 				3F880AA0207BF1B100087A6B /* AutoPollingPolicy.swift */,
 				3F880AA1207BF1B100087A6B /* ConfigCache.swift */,
 				3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */,
-				3F880A9B207BF1B100087A6B /* ConfigParser.swift */,
 				3F880A9C207BF1B100087A6B /* LazyLoadingPolicy.swift */,
 				3F880A9D207BF1B100087A6B /* RefreshPolicy.swift */,
 				3F880AA2207BF1B100087A6B /* Synced.swift */,
@@ -220,6 +236,8 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				C40CF51127B5533800D9F88A /* LocalTests.swift */,
+				C480E82B2768144400916320 /* ConfigCatClientIntegrationTests.swift */,
 				C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */,
 				C4D34D3A249B6F2900908D76 /* testmatrix_variationId.csv */,
 				1A92102224030C7F0059B111 /* testmatrix_sensitive.csv */,
@@ -358,10 +376,12 @@
 			files = (
 				B4BD2AB0258CA6FF007371E2 /* ConfigCatClient.swift in Sources */,
 				B4BD2AB1258CA6FF007371E2 /* Version.swift in Sources */,
+				C4FA1B6127959C1900BFA8C3 /* ConfigJsonCache.swift in Sources */,
 				B4BD2AB2258CA6FF007371E2 /* PollingModes.swift in Sources */,
 				B4BD2AB3258CA6FF007371E2 /* PollingMode.swift in Sources */,
 				B4BD2AB4258CA6FF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AB5258CA6FF007371E2 /* Version+Comparable.swift in Sources */,
+				C4FA1B3D278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
 				B4BD2AB6258CA6FF007371E2 /* Log.swift in Sources */,
 				B4BD2AB7258CA6FF007371E2 /* LazyLoadingPolicy.swift in Sources */,
 				B4BD2AB8258CA6FF007371E2 /* KeyValue.swift in Sources */,
@@ -371,12 +391,13 @@
 				B4BD2ABC258CA6FF007371E2 /* AsyncResult.swift in Sources */,
 				B4BD2ABD258CA6FF007371E2 /* RefreshPolicy.swift in Sources */,
 				B4BD2ABE258CA6FF007371E2 /* Synced.swift in Sources */,
+				C40CF51427B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				B4BD2ABF258CA6FF007371E2 /* Version+Codable.swift in Sources */,
+				C4FA1B40278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */,
 				B4BD2AC0258CA6FF007371E2 /* ManualPollingPolicy.swift in Sources */,
 				B4BD2AC1258CA6FF007371E2 /* ConfigCatUser.swift in Sources */,
 				B4BD2AC2258CA6FF007371E2 /* Version+Range.swift in Sources */,
 				B4BD2AC3258CA6FF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
-				B4BD2AC4258CA6FF007371E2 /* ConfigParser.swift in Sources */,
 				B4BD2AC5258CA6FF007371E2 /* ConfigCache.swift in Sources */,
 				B4BD2AC6258CA6FF007371E2 /* Version+Foundation.swift in Sources */,
 			);
@@ -388,8 +409,10 @@
 			files = (
 				B4BD2AE4258CA7DF007371E2 /* Version+Range.swift in Sources */,
 				B4BD2AE5258CA7DF007371E2 /* ManualPollingPolicy.swift in Sources */,
+				C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				B4BD2AE6258CA7DF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AE7258CA7DF007371E2 /* RolloutIntegrationTests.swift in Sources */,
+				C4FA1B6227959C1900BFA8C3 /* ConfigJsonCache.swift in Sources */,
 				B4BD2AE8258CA7DF007371E2 /* Config.swift in Sources */,
 				B4BD2AE9258CA7DF007371E2 /* Version+Codable.swift in Sources */,
 				B4BD2AEA258CA7DF007371E2 /* RefreshPolicy.swift in Sources */,
@@ -397,6 +420,7 @@
 				B4BD2AEC258CA7DF007371E2 /* ConfigFetcherTests.swift in Sources */,
 				B4BD2AED258CA7DF007371E2 /* DataGovernanceTests.swift in Sources */,
 				B4BD2AEE258CA7DF007371E2 /* PollingMode.swift in Sources */,
+				C4FA1B41278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */,
 				B4BD2AEF258CA7DF007371E2 /* ConfigCache.swift in Sources */,
 				B4BD2AF0258CA7DF007371E2 /* AutoPollingPolicy.swift in Sources */,
 				B4BD2AF1258CA7DF007371E2 /* Version+Comparable.swift in Sources */,
@@ -410,14 +434,16 @@
 				B4BD2AF9258CA7DF007371E2 /* ConfigCatClient.swift in Sources */,
 				B4BD2AFA258CA7DF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
 				B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */,
+				C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */,
 				B4BD2AFC258CA7DF007371E2 /* AutoPollingTests.swift in Sources */,
 				B4BD2AFD258CA7DF007371E2 /* LazyLoadingPolicy.swift in Sources */,
-				B4BD2AFE258CA7DF007371E2 /* ConfigParser.swift in Sources */,
 				B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */,
 				B4BD2B00258CA7DF007371E2 /* Mock.swift in Sources */,
 				B4BD2B01258CA7DF007371E2 /* LazyLoadingAsyncTests.swift in Sources */,
+				C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */,
 				B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */,
 				B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */,
+				C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
 				B4BD2B04258CA7DF007371E2 /* ConfigCatUser.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

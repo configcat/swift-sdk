@@ -21,10 +21,12 @@ protocol PollingModeVisitor {
 
 class AutoPollingMode : PollingMode {
     let autoPollIntervalInSeconds: Double
+    let maxInitWaitTimeInSeconds: Int
     let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
-    
-    init(autoPollIntervalInSeconds: Double = 120, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
+
+    init(autoPollIntervalInSeconds: Double = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds
+        self.maxInitWaitTimeInSeconds = maxInitWaitTimeInSeconds
         self.onConfigChanged = onConfigChanged
     }
     
@@ -41,7 +43,7 @@ class LazyLoadingMode : PollingMode {
     let cacheRefreshIntervalInSeconds: Double
     let useAsyncRefresh: Bool
     
-    init(cacheRefreshIntervalInSeconds: Double = 120, useAsyncRefresh: Bool = false) {
+    init(cacheRefreshIntervalInSeconds: Double = 60, useAsyncRefresh: Bool = false) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = useAsyncRefresh
     }
@@ -67,28 +69,29 @@ class ManualPollingMode : PollingMode {
 }
 
 class RefreshPolicyFactory : PollingModeVisitor {
-    private let cache: ConfigCache
+    private let cache: ConfigCache?
     private let fetcher: ConfigFetcher
     private let sdkKey: String
     private let logger: Logger
+    private let configJsonCache: ConfigJsonCache
     
-    init(fetcher: ConfigFetcher, cache: ConfigCache, logger: Logger, sdkKey: String) {
+    init(fetcher: ConfigFetcher, cache: ConfigCache? = nil, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.fetcher = fetcher
         self.cache = cache
         self.sdkKey = sdkKey
         self.logger = logger
+        self.configJsonCache = configJsonCache
     }
     
     func visit(pollingMode: AutoPollingMode) -> RefreshPolicy {
-        return AutoPollingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, sdkKey: self.sdkKey, config: pollingMode)
+        return AutoPollingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, configJsonCache: self.configJsonCache, sdkKey: self.sdkKey, config: pollingMode)
     }
     
     func visit(pollingMode: ManualPollingMode) -> RefreshPolicy {
-        return ManualPollingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, sdkKey: self.sdkKey)
+        return ManualPollingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, configJsonCache: self.configJsonCache, sdkKey: self.sdkKey)
     }
     
     func visit(pollingMode: LazyLoadingMode) -> RefreshPolicy {
-        return LazyLoadingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, sdkKey: self.sdkKey, config: pollingMode)
-        
+        return LazyLoadingPolicy(cache: self.cache, fetcher: self.fetcher, logger: self.logger, configJsonCache: self.configJsonCache, sdkKey: self.sdkKey, config: pollingMode)
     }
 }
