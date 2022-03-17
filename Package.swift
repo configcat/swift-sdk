@@ -11,10 +11,8 @@ let package = Package(
         .macOS(.v10_12)
     ],
     products: [
-        .library(name: "ConfigCat", targets: ["ConfigCat"]),
-        .library(name: "ConfigCatDynamic", type: .dynamic, targets: ["ConfigCat"])
+      .library(name: "ConfigCat", targets: ["ConfigCat"])
     ],
-    dependencies: [],
     targets: [
         .target(name: "Version",
                 exclude: ["LICENSE" , "version.txt"]),
