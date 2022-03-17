@@ -3,7 +3,48 @@ import XCTest
 
 class VariationIdTests: XCTestCase {
     var mockSession = MockURLSession()
-    let testJsonFormat = "{ \"f\": { \"key1\": { \"v\": true, \"i\": \"fakeId1\", \"p\": [], \"r\": [] }, \"key2\": { \"v\": false, \"i\": \"fakeId2\", \"p\": [], \"r\": [] } } }"
+    let testJson = #"""
+                   {"f":{
+                       "key1":{
+                           "v":true,
+                           "i":"fakeId1",
+                           "p":[
+                               {
+                                   "v":true,
+                                   "p":50,
+                                   "i":"percentageId1"
+                               },
+                               {
+                                   "v":false,
+                                   "p":50,
+                                   "i":"percentageId2"
+                               }
+                           ],
+                           "r":[
+                               {
+                                   "a":"Email",
+                                   "t":2,
+                                   "c":"@configcat.com",
+                                   "v":true,
+                                   "i":"rolloutId1"
+                               },
+                               {
+                                   "a":"Email",
+                                   "t":2,
+                                   "c":"@test.com",
+                                   "v":false,
+                                   "i":"rolloutId2"
+                               }
+                           ]
+                       },
+                       "key2":{
+                           "v":false,
+                           "i":"fakeId2",
+                           "p":[],
+                           "r":[]
+                       }
+                   }}
+                   """#
     
     override func setUp() {
         super.setUp()
@@ -11,7 +52,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetVariationId() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         client.refresh()
         let variationId = client.getVariationId(for: "key1", defaultVariationId: nil)
@@ -20,7 +61,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetVariationIdAsync() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         let variationId = AsyncResult<String?>()
         client.refresh()
@@ -32,7 +73,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetVariationIdNotFound() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         client.refresh()
         let variationId = client.getVariationId(for: "nonexisting", defaultVariationId: "defaultId")
@@ -41,7 +82,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetAllVariationIds() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         client.refresh()
         let variationIds = client.getAllVariationIds()
@@ -61,7 +102,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetAllVariationIdsAsync() throws {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         let variationIdsResult = AsyncResult<[String]>()
         client.refresh()
@@ -76,7 +117,7 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetKeyAndValue() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         client.refresh()
         if let result = client.getKeyAndValue(for: "fakeId2") {
@@ -85,10 +126,24 @@ class VariationIdTests: XCTestCase {
         } else {
             XCTFail()
         }
+
+        if let result = client.getKeyAndValue(for: "percentageId2") {
+            XCTAssertEqual("key1", result.key);
+            XCTAssertFalse(result.value as! Bool);
+        } else {
+            XCTFail()
+        }
+
+        if let result = client.getKeyAndValue(for: "rolloutId2") {
+            XCTAssertEqual("key1", result.key);
+            XCTAssertFalse(result.value as! Bool);
+        } else {
+            XCTFail()
+        }
     }
 
     func testGetKeyAndValueAsync() throws {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonFormat, statusCode: 200))
+        mockSession.enqueueResponse(response: Response(body: self.testJson, statusCode: 200))
         let client = self.createClient()
         let keyValueResult = AsyncResult<KeyValue>()
         client.refresh()
