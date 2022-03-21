@@ -11,7 +11,7 @@ let package = Package(
         .macOS(.v10_12)
     ],
     products: [
-      .library(name: "ConfigCat", targets: ["ConfigCat"])
+        .library(name: "ConfigCat", targets: ["ConfigCat"])
     ],
     targets: [
         .target(name: "Version",
