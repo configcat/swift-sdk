@@ -1,6 +1,4 @@
 import Foundation
-import Dispatch
-import os.log
 
 /// Describes a `RefreshPolicy` which uses an expiring cache to maintain the internally stored configuration.
 final class LazyLoadingPolicy : RefreshPolicy {
@@ -20,7 +18,7 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey, config: LazyLoadingMode())
     }
     
@@ -33,18 +31,18 @@ final class LazyLoadingPolicy : RefreshPolicy {
      - Parameter config: the configuration.
      - Returns: A new `LazyLoadingPolicy`.
      */
-    public init(cache: ConfigCache?,
-                fetcher: ConfigFetcher,
-                logger: Logger,
-                configJsonCache: ConfigJsonCache,
-                sdkKey: String,
-                config: LazyLoadingMode) {
+    init(cache: ConfigCache?,
+         fetcher: ConfigFetcher,
+         logger: Logger,
+         configJsonCache: ConfigJsonCache,
+         sdkKey: String,
+         config: LazyLoadingMode) {
         self.cacheRefreshIntervalInSeconds = config.cacheRefreshIntervalInSeconds
         self.useAsyncRefresh = config.useAsyncRefresh
         super.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey)
     }
     
-    public override func getConfiguration() -> AsyncResult<Config> {
+    override func getConfiguration() -> AsyncResult<Config> {
         if self.lastRefreshTime.timeIntervalSinceNow < -self.cacheRefreshIntervalInSeconds {
             let initialized = self.initAsync.completed
             if initialized && !self.isFetching.testAndSet(expect: false, new: true) {
