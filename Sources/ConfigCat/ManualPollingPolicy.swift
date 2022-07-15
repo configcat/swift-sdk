@@ -10,7 +10,7 @@ final class ManualPollingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.
      - Returns: A new `ManualPollingPolicy`.
      */
-    public required init(cache: ConfigCache?,
+    required init(cache: ConfigCache?,
                          fetcher: ConfigFetcher,
                          logger: Logger,
                          configJsonCache: ConfigJsonCache,
@@ -18,7 +18,7 @@ final class ManualPollingPolicy : RefreshPolicy {
         super.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey)
     }
     
-    public override func getConfiguration() -> AsyncResult<Config> {
+    override func getConfiguration() -> AsyncResult<Config> {
         return AsyncResult<Config>.completed(result: self.readConfigCache())
     }
 }
