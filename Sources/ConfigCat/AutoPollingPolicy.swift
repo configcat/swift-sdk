@@ -1,5 +1,4 @@
 import Foundation
-import os.log
 
 /// Describes a `RefreshPolicy` which polls the latest configuration over HTTP and updates the local cache repeatedly.
 final class AutoPollingPolicy : RefreshPolicy {
@@ -18,7 +17,7 @@ final class AutoPollingPolicy : RefreshPolicy {
      - Parameter sdkKey: the sdk key.          
      - Returns: A new `AutoPollingPolicy`.
      */
-    public convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    convenience required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey, config: AutoPollingMode())
     }
     
@@ -31,12 +30,12 @@ final class AutoPollingPolicy : RefreshPolicy {
      - Parameter config: the configuration.
      - Returns: A new `AutoPollingPolicy`.
      */
-    public init(cache: ConfigCache?,
-                fetcher: ConfigFetcher,
-                logger: Logger,
-                configJsonCache: ConfigJsonCache,
-                sdkKey: String,
-                config: AutoPollingMode) {
+    init(cache: ConfigCache?,
+         fetcher: ConfigFetcher,
+         logger: Logger,
+         configJsonCache: ConfigJsonCache,
+         sdkKey: String,
+         config: AutoPollingMode) {
         self.autoPollIntervalInSeconds = config.autoPollIntervalInSeconds
         self.onConfigChanged = config.onConfigChanged
         super.init(cache: cache, fetcher: fetcher, logger: logger, configJsonCache: configJsonCache, sdkKey: sdkKey)
@@ -86,7 +85,7 @@ final class AutoPollingPolicy : RefreshPolicy {
         self.initTimer.cancel()
     }
     
-    public override func getConfiguration() -> AsyncResult<Config> {
+    override func getConfiguration() -> AsyncResult<Config> {
         if self.initResult.completed {
             return self.readCacheAsync()
         }
