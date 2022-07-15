@@ -11,27 +11,27 @@ import Foundation
 }
 
 class Logger {
-    public static let noLogger: Logger = Logger(level: .nolog)
+    static let noLogger: Logger = Logger(level: .nolog)
     fileprivate static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
     fileprivate let level: LogLevel
     
-    public init(level: LogLevel) {
+    init(level: LogLevel) {
         self.level = level
     }
     
-    public func debug(message: StaticString, _ args: CVarArg...) {
+    func debug(message: StaticString, _ args: CVarArg...) {
         self.log(message: message, currentLevel: .debug, args: args)
     }
     
-    public func warning(message: StaticString, _ args: CVarArg...) {
+    func warning(message: StaticString, _ args: CVarArg...) {
         self.log(message: message, currentLevel: .warning, args: args)
     }
     
-    public func info(message: StaticString, _ args: CVarArg...) {
+    func info(message: StaticString, _ args: CVarArg...) {
         self.log(message: message, currentLevel: .info, args: args)
     }
     
-    public func error(message: StaticString, _ args: CVarArg...) {
+    func error(message: StaticString, _ args: CVarArg...) {
         self.log(message: message, currentLevel: .error, args: args)
     }
     
