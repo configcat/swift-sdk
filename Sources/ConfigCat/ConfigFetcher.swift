@@ -1,4 +1,3 @@
-import os.log
 import Foundation
 
 enum Status {
@@ -23,14 +22,14 @@ struct FetchResponse {
      
      - Returns: the fetched config.
      */
-    public let config: Config?
+    let config: Config?
 
     /**
      Gets whether a new configuration value was fetched or not.
      
      - Returns: true if a new configuration value was fetched, otherwise false.
      */
-    public func isFetched() -> Bool {
+    func isFetched() -> Bool {
         return self.status == .fetched
     }
     
@@ -39,7 +38,7 @@ struct FetchResponse {
      
      - Returns: true if the fetch resulted a '304 Not Modified' code, otherwise false.
      */
-    public func isNotModified() -> Bool {
+    func isNotModified() -> Bool {
         return self.status == .notModified
     }
     
@@ -48,7 +47,7 @@ struct FetchResponse {
      
      - Returns: true if the fetch is failed, otherwise false.
      */
-    public func isFailed() -> Bool {
+    func isFailed() -> Bool {
         return self.status == .failure
     }
 }
@@ -70,7 +69,7 @@ class ConfigFetcher : NSObject {
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
 
-    public init(session: URLSession, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String, mode: String,
+    init(session: URLSession, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String, mode: String,
                 dataGovernance: DataGovernance, baseUrl: String = "") {
         self.log = logger
         self.configJsonCache = configJsonCache
@@ -86,12 +85,12 @@ class ConfigFetcher : NSObject {
         self.mode = mode
     }
 
-    public func isFetching() -> Bool {
+    func isFetching() -> Bool {
         guard let fetchingRequest = fetchingRequest else {return false}
         return !fetchingRequest.completed
     }
     
-    public func getConfiguration() -> AsyncResult<FetchResponse> {
+    func getConfiguration() -> AsyncResult<FetchResponse> {
         return self.executeFetch(executionCount: 2)
     }
     
