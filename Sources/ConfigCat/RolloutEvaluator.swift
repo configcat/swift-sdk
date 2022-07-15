@@ -30,7 +30,7 @@ class RolloutEvaluator {
     fileprivate let log: Logger;
     
     
-    public init(logger: Logger) {
+    init(logger: Logger) {
         self.log = logger
     }
     
