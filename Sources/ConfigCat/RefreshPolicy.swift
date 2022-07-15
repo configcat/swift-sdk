@@ -41,7 +41,7 @@ class RefreshPolicy : NSObject {
      - Parameter fetcher: the internal config fetcher instance.
      - Returns: A new `RefreshPolicy`.
      */
-    public required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
+    required init(cache: ConfigCache?, fetcher: ConfigFetcher, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String) {
         self.cache = cache
         self.fetcher = fetcher
         self.log = logger
@@ -56,12 +56,12 @@ class RefreshPolicy : NSObject {
      
      - Returns: the AsyncResult object which computes the configuration.
      */
-    open func getConfiguration() -> AsyncResult<Config> {
+    func getConfiguration() -> AsyncResult<Config> {
         assert(false, "Method must be overridden!")
         return AsyncResult(result: .empty)
     }
 
-    open func getSettings() -> AsyncResult<[String: Any]> {
+    func getSettings() -> AsyncResult<[String: Any]> {
         self.getConfiguration()
                 .apply(completion: { config in
                     return config.entries
@@ -73,7 +73,7 @@ class RefreshPolicy : NSObject {
      
      - Returns: the Async object which executes the refresh.
      */
-    public final func refresh() -> Async {
+    final func refresh() -> Async {
         return self.fetcher.getConfiguration().accept { response in
             if let config = response.config, response.isFetched() {
                 self.writeConfigCache(value: config)
