@@ -1,5 +1,4 @@
 import Foundation
-import Dispatch
 
 enum AsyncError: Error {
     case timedOut
@@ -10,11 +9,11 @@ enum AsyncState {
     case pending
     case completed
     
-    public func isCompleted() -> Bool {
+    func isCompleted() -> Bool {
         return self == .completed
     }
     
-    public func isPending() -> Bool {
+    func isPending() -> Bool {
         return self == .pending
     }
 }
@@ -29,7 +28,7 @@ class Async {
         return self.state.get().isCompleted()
     }
     
-    public func complete() {
+    func complete() {
         self.queue.async {
             if(self.state.get().isPending()) {
                 self.state.set(new: .completed)
@@ -42,19 +41,19 @@ class Async {
         }
     }
     
-    public func wait(timeout: Int) throws {
+    func wait(timeout: Int) throws {
         _ = self.semaphore.wait(timeout: DispatchTime.now() + DispatchTimeInterval.seconds(timeout))
         if(self.state.get().isPending()) {
             throw AsyncError.timedOut
         }
     }
     
-    public func wait() {
+    func wait() {
         self.semaphore.wait()
     }
     
     @discardableResult
-    public func accept(completion: @escaping () -> Void) -> Async {
+    func accept(completion: @escaping () -> Void) -> Async {
         self.queue.async {
             if self.state.get().isCompleted() {
                 completion()
@@ -67,7 +66,7 @@ class Async {
     }
     
     @discardableResult
-    public func apply<NewValue>(completion: @escaping () -> NewValue) -> AsyncResult<NewValue> {
+    func apply<NewValue>(completion: @escaping () -> NewValue) -> AsyncResult<NewValue> {
         let result = AsyncResult<NewValue>()
         self.accept {
             let newResult = completion()
@@ -81,7 +80,7 @@ class Async {
 final class AsyncResult<Value> : Async {
     fileprivate var result: Value?
     
-    public override init() {
+    override init() {
         super.init()
     }
     
@@ -92,12 +91,12 @@ final class AsyncResult<Value> : Async {
         self.semaphore.signal()
     }
     
-    public func complete(result: Value) {
+    func complete(result: Value) {
         self.result = result
         super.complete()
     }
     
-    public func get(timeout: Int) throws -> Value {
+    func get(timeout: Int) throws -> Value {
         try super.wait(timeout: timeout)
         guard let result = self.result else {
             throw AsyncError.timedOut
@@ -106,7 +105,7 @@ final class AsyncResult<Value> : Async {
         return result
     }
     
-    public func get() throws -> Value {
+    func get() throws -> Value {
         super.wait()
         guard let result = self.result else {
             throw AsyncError.resultNotPresent
@@ -116,7 +115,7 @@ final class AsyncResult<Value> : Async {
     }
     
     @discardableResult
-    public func apply(completion: @escaping (Value) -> Void) -> AsyncResult<Value> {
+    func apply(completion: @escaping (Value) -> Void) -> AsyncResult<Value> {
         self.queue.async {
             if self.state.get().isCompleted() {
                 guard let result = self.result else {
@@ -141,7 +140,7 @@ final class AsyncResult<Value> : Async {
     }
     
     @discardableResult
-    public func apply<NewValue>(completion: @escaping (Value) -> NewValue) -> AsyncResult<NewValue> {
+    func apply<NewValue>(completion: @escaping (Value) -> NewValue) -> AsyncResult<NewValue> {
         let result = AsyncResult<NewValue>()
         self.accept { value in
             let newResult = completion(value)
@@ -152,11 +151,11 @@ final class AsyncResult<Value> : Async {
     }
     
     @discardableResult
-    public func accept(completion: @escaping (Value) -> Void) -> Async {
+    func accept(completion: @escaping (Value) -> Void) -> Async {
         return self.apply(completion: completion)
     }
     
-    public func compose(completion: @escaping (Value) -> AsyncResult) -> AsyncResult {
+    func compose(completion: @escaping (Value) -> AsyncResult) -> AsyncResult {
         let result = AsyncResult()
         self.accept { value in
             let newResult = completion(value)
@@ -168,7 +167,7 @@ final class AsyncResult<Value> : Async {
         return result
     }
     
-    public class func completed(result: Value) -> AsyncResult<Value> {
+    class func completed(result: Value) -> AsyncResult<Value> {
         return AsyncResult<Value>(result: result)
     }
 }

@@ -2,14 +2,14 @@ import Foundation
 import os.log
 
 class ConfigJsonCache {
-    public var config: Config = .empty
+    var config: Config = .empty
     private let log: Logger
 
-    public init(logger: Logger) {
+    init(logger: Logger) {
         self.log = logger
     }
 
-    public func getConfigFromJson(json: String) -> Config {
+    func getConfigFromJson(json: String) -> Config {
         if json.isEmpty {
             return .empty
         }
