@@ -7,7 +7,7 @@ import Darwin
 import Foundation
 
 class Mutex {
-    fileprivate let mutex: UnsafeMutablePointer<pthread_mutex_t> = UnsafeMutablePointer.allocate(capacity: 1)
+    private let mutex: UnsafeMutablePointer<pthread_mutex_t> = UnsafeMutablePointer.allocate(capacity: 1)
 
     init(recursive: Bool = false) {
         var attr = pthread_mutexattr_t()

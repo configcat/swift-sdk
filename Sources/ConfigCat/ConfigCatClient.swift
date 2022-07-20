@@ -15,12 +15,12 @@ extension ConfigCatClient {
 
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
-    fileprivate let log: Logger
-    fileprivate let evaluator: RolloutEvaluator
-    fileprivate let configService: ConfigService?
-    fileprivate let sdkKey: String
-    fileprivate let overrideDataSource: OverrideDataSource?
-    fileprivate static var sdkKeys: Set<String> = []
+    private let log: Logger
+    private let evaluator: RolloutEvaluator
+    private let configService: ConfigService?
+    private let sdkKey: String
+    private let overrideDataSource: OverrideDataSource?
+    private static var sdkKeys: Set<String> = []
 
     /**
      Initializes a new `ConfigCatClient`.

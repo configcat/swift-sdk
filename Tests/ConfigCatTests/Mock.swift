@@ -2,7 +2,7 @@ import Foundation
 @testable import ConfigCat
 
 class MockHTTP {
-    fileprivate static var responses = [Response]()
+    private static var responses = [Response]()
     static var requests = [URLRequest]()
 
     static func enqueueResponse(response: Response) {

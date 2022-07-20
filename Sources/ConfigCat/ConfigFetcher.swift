@@ -33,12 +33,12 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
 }
 
 class ConfigFetcher : NSObject {
-    fileprivate let log: Logger
-    fileprivate let session: URLSession
-    fileprivate let url: Synced<String>
-    fileprivate let mode: String
-    fileprivate let sdkKey: String
-    fileprivate let urlIsCustom: Bool
+    private let log: Logger
+    private let session: URLSession
+    private let url: Synced<String>
+    private let mode: String
+    private let sdkKey: String
+    private let urlIsCustom: Bool
 
     init(session: URLSession, logger: Logger, sdkKey: String, mode: String,
                 dataGovernance: DataGovernance, baseUrl: String = "") {

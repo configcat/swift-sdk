@@ -12,42 +12,42 @@ import Foundation
 
 class Logger {
     static let noLogger: Logger = Logger(level: .nolog)
-    fileprivate static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
-    fileprivate let level: LogLevel
+    private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
+    private let level: LogLevel
     
     init(level: LogLevel) {
         self.level = level
     }
     
     func debug(message: StaticString, _ args: CVarArg...) {
-        self.log(message: message, currentLevel: .debug, args: args)
+        log(message: message, currentLevel: .debug, args: args)
     }
     
     func warning(message: StaticString, _ args: CVarArg...) {
-        self.log(message: message, currentLevel: .warning, args: args)
+        log(message: message, currentLevel: .warning, args: args)
     }
     
     func info(message: StaticString, _ args: CVarArg...) {
-        self.log(message: message, currentLevel: .info, args: args)
+        log(message: message, currentLevel: .info, args: args)
     }
     
     func error(message: StaticString, _ args: CVarArg...) {
-        self.log(message: message, currentLevel: .error, args: args)
+        log(message: message, currentLevel: .error, args: args)
     }
     
     func log(message: StaticString, currentLevel: LogLevel, args: Array<CVarArg>) {
-        if currentLevel.rawValue >= self.level.rawValue {
+        if currentLevel.rawValue >= level.rawValue {
             switch args.count {
             case 0:
-                os_log(message, log: Logger.log, type: self.getLogType(level: currentLevel))
+                os_log(message, log: Logger.log, type: getLogType(level: currentLevel))
             case 1:
-                os_log(message, log: Logger.log, type: self.getLogType(level: currentLevel), args[0])
+                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0])
             case 2:
-                os_log(message, log: Logger.log, type: self.getLogType(level: currentLevel), args[0], args[1])
+                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0], args[1])
             case 3:
-                os_log(message, log: Logger.log, type: self.getLogType(level: currentLevel), args[0], args[1], args[2])
+                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0], args[1], args[2])
             default:
-                os_log(message, log: Logger.log, type: self.getLogType(level: currentLevel))
+                os_log(message, log: Logger.log, type: getLogType(level: currentLevel))
             }
             
         }

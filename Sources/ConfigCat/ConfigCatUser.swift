@@ -2,8 +2,8 @@ import Foundation
 
 /// An object containing attributes to properly identify a given user for rollout evaluation.
 public final class ConfigCatUser : NSObject {
-    fileprivate var attributes: [String: String]
-    fileprivate(set) var identifier: String
+    private var attributes: [String: String]
+    private(set) var identifier: String
     
     /**
      Initializes a new `User`.

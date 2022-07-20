@@ -1,7 +1,7 @@
 import Foundation
 
 class MutableQueue<T> {
-    var store = [T]()
+    private var store = [T]()
 
     func enqueue(item: T) {
         store.append(item)

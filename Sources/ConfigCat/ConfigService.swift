@@ -1,17 +1,17 @@
 import Foundation
 
 class ConfigService {
-    fileprivate let log: Logger
-    fileprivate let fetcher: ConfigFetcher
-    fileprivate let mutex: Mutex = Mutex(recursive: true)
-    fileprivate let cache: ConfigCache?
-    fileprivate let pollingMode: PollingMode
-    fileprivate let cacheKey: String
-    fileprivate let initialized: Synced<Bool>
-    fileprivate var completions: MutableQueue<(Config) -> Void>?
-    fileprivate var cachedEntry: ConfigEntry = .empty
-    fileprivate var polltimer: DispatchSourceTimer? = nil
-    fileprivate var initTimer: DispatchSourceTimer? = nil
+    private let log: Logger
+    private let fetcher: ConfigFetcher
+    private let mutex: Mutex = Mutex(recursive: true)
+    private let cache: ConfigCache?
+    private let pollingMode: PollingMode
+    private let cacheKey: String
+    private let initialized: Synced<Bool>
+    private var completions: MutableQueue<(Config) -> Void>?
+    private var cachedEntry: ConfigEntry = .empty
+    private var polltimer: DispatchSourceTimer? = nil
+    private var initTimer: DispatchSourceTimer? = nil
 
     init(log: Logger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, sdkKey: String) {
         self.log = log

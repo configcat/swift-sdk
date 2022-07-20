@@ -7,7 +7,7 @@ import Version
 #endif
 
 class RolloutEvaluator {
-    fileprivate static let comparatorTexts = [
+    private static let comparatorTexts = [
         "IS ONE OF",
         "IS NOT ONE OF",
         "CONTAINS",
@@ -27,7 +27,7 @@ class RolloutEvaluator {
         "IS ONE OF (Sensitive)",
         "IS NOT ONE OF (Sensitive)",
     ]
-    fileprivate let log: Logger;
+    private let log: Logger;
     
     
     init(logger: Logger) {

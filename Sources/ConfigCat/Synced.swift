@@ -1,8 +1,8 @@
 import Foundation
 
-class Synced<Value: Equatable> {    
-    fileprivate let mutex = Mutex()
-    fileprivate var value: Value
+class Synced<Value: Equatable> {
+    private let mutex = Mutex()
+    private var value: Value
     
     init(initValue: Value) {
         value = initValue
