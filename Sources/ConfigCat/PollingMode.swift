@@ -10,7 +10,7 @@ class AutoPollingMode : PollingMode {
     let maxInitWaitTimeInSeconds: Int
     let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
 
-    init(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
+    init(autoPollIntervalInSeconds: Int, maxInitWaitTimeInSeconds: Int, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds < 1
                 ? 1
                 : autoPollIntervalInSeconds
@@ -26,7 +26,7 @@ class AutoPollingMode : PollingMode {
 class LazyLoadingMode : PollingMode {
     let cacheRefreshIntervalInSeconds: Int
     
-    init(cacheRefreshIntervalInSeconds: Int = 60) {
+    init(cacheRefreshIntervalInSeconds: Int) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds < 1
                 ? 1
                 : cacheRefreshIntervalInSeconds

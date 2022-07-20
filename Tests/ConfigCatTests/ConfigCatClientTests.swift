@@ -37,7 +37,7 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testGetIntValueFailedInvalidJson() {
-        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: "{", statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
         client.refresh {
@@ -220,6 +220,61 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation1], timeout: 2)
     }
 
+    func testRequestTimeout() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"test\""), statusCode: 200, delay: 3))
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest = 1
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session(config: config))
+        let expectation1 = self.expectation(description: "wait for response")
+        let start = Date()
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("", value)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let endTime = Date()
+        let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
+        XCTAssert(elapsedTimeInSeconds > 1)
+        XCTAssert(elapsedTimeInSeconds < 2)
+    }
+
+    func testFromCacheOnly() throws {
+        let cache = InMemoryConfigCache()
+        let sdkKey = "test"
+        let keyToHash = "swift_" + sdkKey + "_" + Constants.configJsonName
+        let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\""))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+
+        let client = ConfigCatClient(sdkKey: sdkKey, refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session(), configCache: cache)
+        let expectation = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("fake", value)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+    }
+
+    func testFromCacheOnlyRefresh() throws {
+        let cache = InMemoryConfigCache()
+        let sdkKey = "test"
+        let keyToHash = "swift_" + sdkKey + "_" + Constants.configJsonName
+        let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\""))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+
+        let client = ConfigCatClient(sdkKey: sdkKey, refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session(), configCache: cache)
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("fake", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
+    }
+
     func testFailingAutoPollRefresh() {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session())
@@ -257,6 +312,48 @@ class ConfigCatClientTests: XCTestCase {
             }
         }
         wait(for: [expectation1], timeout: 2)
+    }
+
+    func testAutoPollUserAgentHeader() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("fake", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
+        XCTAssertEqual("ConfigCat-Swift/a-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
+    }
+
+    func testLazyUserAgentHeader() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(), session: MockHTTP.session())
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("fake", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
+        XCTAssertEqual("ConfigCat-Swift/l-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
+    }
+
+    func testManualPollUserAgentHeader() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("fake", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
+        XCTAssertEqual("ConfigCat-Swift/m-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
     private func createClient() -> ConfigCatClient {

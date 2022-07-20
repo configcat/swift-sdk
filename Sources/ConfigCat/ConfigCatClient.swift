@@ -75,7 +75,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             // configService is not needed in localOnly mode
             configService = nil
         } else {
-            let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
+            let mode = refreshMode ?? PollingModes.autoPoll()
             let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
                                         logger: log,
                                         sdkKey: sdkKey,

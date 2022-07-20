@@ -10,7 +10,7 @@ public final class PollingModes {
     - Parameter onConfigChanged: the configuration changed event handler.
     - Returns: A new `AutoPollingMode`.
     */
-    public class func autoPoll(autoPollIntervalInSeconds: Int, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
+    public class func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
         AutoPollingMode(autoPollIntervalInSeconds: autoPollIntervalInSeconds, maxInitWaitTimeInSeconds: maxInitWaitTimeInSeconds, onConfigChanged: onConfigChanged)
     }
     /**
@@ -19,7 +19,7 @@ public final class PollingModes {
     - Parameter cacheRefreshIntervalInSeconds: sets how long the cache will store its value before fetching the latest from the network again.
     - Returns: A new `LazyLoadingMode`.
     */
-    public class func lazyLoad(cacheRefreshIntervalInSeconds: Int) -> PollingMode {
+    public class func lazyLoad(cacheRefreshIntervalInSeconds: Int = 60) -> PollingMode {
         LazyLoadingMode(cacheRefreshIntervalInSeconds: cacheRefreshIntervalInSeconds)
     }
     /**

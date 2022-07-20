@@ -71,7 +71,6 @@ class ConfigFetcherTests: XCTestCase {
             notModifiedExpectation.fulfill()
         }
         wait(for: [notModifiedExpectation], timeout: 2)
-
         XCTAssertEqual(etag, MockHTTP.requests.last?.value(forHTTPHeaderField: "If-None-Match"))
     }
 }
