@@ -43,7 +43,7 @@ public final class ConfigCatUser : NSObject {
             assert(false, "key cannot be empty")
         }
         
-        if let value = self.attributes[key] {
+        if let value = attributes[key] {
             return value
         }
         

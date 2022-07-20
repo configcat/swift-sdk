@@ -2,173 +2,264 @@ import XCTest
 @testable import ConfigCat
 
 class ConfigCatClientTests: XCTestCase {
-    var mockSession = MockURLSession()
     let testJsonFormat = #"{ "f": { "fakeKey": { "v": %@, "p": [], "r": [] } } }"#
     let testJsonMultiple = #"{ "f": { "key1": { "v": true, "i": "fakeId1", "p": [], "r": [] }, "key2": { "v": false, "i": "fakeId2", "p": [], "r": [] } } }"#
-    
+
     override func setUp() {
         super.setUp()
-        self.mockSession = MockURLSession()
+        MockHTTP.reset()
     }
 
     func testGetIntValue() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "43"), statusCode: 200))
-        let client = self.createClient()
-        client.refresh()
-        let config = client.getValue(for: "fakeKey", defaultValue: 10)
-        
-        XCTAssertEqual(43, config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "43"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 10) { value in
+                XCTAssertEqual(43, value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetIntValueFailed() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "fake"), statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: 10)
-        
-        XCTAssertEqual(10, config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 10) { value in
+                XCTAssertEqual(10, value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetIntValueFailedInvalidJson() {
-        mockSession.enqueueResponse(response: Response(body: "", statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: 10)
-        
-        XCTAssertEqual(10, config)
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 10) { value in
+                XCTAssertEqual(10, value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetStringValue() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"fake\""), statusCode: 200))
-        let client = self.createClient()
-        client.refresh()
-        let config = client.getValue(for: "fakeKey", defaultValue: "def")
-        
-        XCTAssertEqual("fake", config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "def") { value in
+                XCTAssertEqual("fake", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetStringValueFailed() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "33"), statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: "def")
-        
-        XCTAssertEqual("def", config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "33"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "def") { value in
+                XCTAssertEqual("def", value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetDoubleValue() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "43.56"), statusCode: 200))
-        let client = self.createClient()
-        client.refresh()
-        let config = client.getValue(for: "fakeKey", defaultValue: 34.23)
-        
-        XCTAssertEqual(43.56, config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "43.56"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 3.14) { value in
+                XCTAssertEqual(43.56, value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetDoubleValueFailed() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "fake"), statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: 23.54)
-        
-        XCTAssertEqual(23.54, config)
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 404, error: TestError.test))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 3.14) { value in
+                XCTAssertEqual(3.14, value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetBoolValue() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "true"), statusCode: 200))
-        let client = self.createClient()
-        client.refresh()
-        let config = client.getValue(for: "fakeKey", defaultValue: false)
-        
-        XCTAssertTrue(config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "true"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: false) { value in
+                XCTAssertTrue(value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetBoolValueFailed() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "fake"), statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: true)
-        
-        XCTAssertTrue(config)
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 404, error: TestError.test))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: false) { value in
+                XCTAssertFalse(value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetValueWithInvalidTypeFailed() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "fake"), statusCode: 200))
-        let client = self.createClient()
-        let config = client.getValue(for: "fakeKey", defaultValue: Float(55))
-        
-        XCTAssertEqual(Float(55), config)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: Float(55)) { value in
+                XCTAssertEqual(Float(55), value)
+                expectation.fulfill()
+            }
+        }
+        wait(for: [expectation], timeout: 2)
     }
-    
+
     func testGetLatestOnFail() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "55"), statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = self.createClient()
-        client.refresh()
-        var config = client.getValue(for: "fakeKey", defaultValue: 0)
-        XCTAssertEqual(55, config)
-        client.refresh()
-        config = client.getValue(for: "fakeKey", defaultValue: 0)
-        XCTAssertEqual(55, config)
-    }
-    
-    func testGetLatestOnFailAsync() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "55"), statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = self.createClient()
-        let config = AsyncResult<Int>()
-        client.refresh()
-        client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
-            config.complete(result: result)
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "55"), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = createClient()
+        let expectation1 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 0) { value in
+                XCTAssertEqual(55, value)
+                expectation1.fulfill()
+            }
         }
-        
-        XCTAssertEqual(55, try config.get())
-        
-        client.refresh()
-        let config2 = AsyncResult<Int>()
-        client.getValueAsync(for: "fakeKey", defaultValue: 0) { (result) in
-            config2.complete(result: result)
+        wait(for: [expectation1], timeout: 2)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: 0) { value in
+                XCTAssertEqual(55, value)
+                expectation2.fulfill()
+            }
         }
-        
-        XCTAssertEqual(55, try config2.get())
+        wait(for: [expectation2], timeout: 2)
     }
-    
-    func testForceRefresh() {
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test\""), statusCode: 200))
-        mockSession.enqueueResponse(response: Response(body: String(format: self.testJsonFormat, "\"test2\""), statusCode: 200))
-        
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
-        
-        XCTAssertEqual("test", client.getValue(for: "fakeKey", defaultValue: "def"))
-        
-        client.refresh()
-        
-        XCTAssertEqual("test2", client.getValue(for: "fakeKey", defaultValue: "def"))
+
+    func testForceRefreshLazy() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"test\""), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"test2\""), statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: MockHTTP.session())
+
+        let expectation1 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("test", value)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("test2", value)
+                expectation2.fulfill()
+            }
+        }
+        wait(for: [expectation2], timeout: 2)
     }
-    
+
+    func testForceRefreshAuto() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"test\""), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"test2\""), statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session())
+
+        let expectation1 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("test", value)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("test2", value)
+                expectation2.fulfill()
+            }
+        }
+        wait(for: [expectation2], timeout: 2)
+    }
+
     func testFailingAutoPoll() {
-        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: self.mockSession)
-        
-        XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session())
+        let expectation1 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("", value)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
     }
-    
+
+    func testFailingAutoPollRefresh() {
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session())
+        let expectation1 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getValue(for: "fakeKey", defaultValue: "") { value in
+                XCTAssertEqual("", value)
+                expectation1.fulfill()
+            }
+        }
+        wait(for: [expectation1], timeout: 2)
+    }
+
     func testFailingExpiringCache() {
-        mockSession.enqueueResponse(response: Response(body: "", statusCode: 500))
-        
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: self.mockSession)
-        
-        XCTAssertEqual("def", client.getValue(for: "fakeKey", defaultValue: "def"))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), session: MockHTTP.session())
+        let expectation1 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("", value)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
     }
 
     func testGetAllValues() {
-        mockSession.enqueueResponse(response: Response(body: self.testJsonMultiple, statusCode: 200))
-        let client = self.createClient()
-        client.refresh()
-        let allValues = client.getAllValues()
-
-        XCTAssertEqual(2, allValues.count)
-        XCTAssertEqual(true, allValues["key1"] as! Bool)
-        XCTAssertEqual(false, allValues["key2"] as! Bool)
+        MockHTTP.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = createClient()
+        let expectation1 = self.expectation(description: "wait for response")
+        client.refresh {
+            client.getAllValues { allValues in
+                XCTAssertEqual(2, allValues.count)
+                XCTAssertEqual(true, allValues["key1"] as! Bool)
+                XCTAssertEqual(false, allValues["key2"] as! Bool)
+                expectation1.fulfill()
+            }
+        }
+        wait(for: [expectation1], timeout: 2)
     }
 
     private func createClient() -> ConfigCatClient {
-        return ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: self.mockSession)
+        ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
     }
 }

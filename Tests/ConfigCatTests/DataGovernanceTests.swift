@@ -4,166 +4,217 @@ import XCTest
 class DataGovernanceTests: XCTestCase {
     private let jsonTemplate: String = #"{ "p": { "u": "%@", "r": %@ }, "f": {} }"#
     private let customCdnUrl: String = "https://custom-cdn.configcat.com"
-    private var mockSession = MockURLSession()
 
     override func setUp() {
         super.setUp()
-        self.mockSession = MockURLSession()
+        MockHTTP.reset()
     }
 
     func testShouldStayOnServer() throws {
         // Arrange
-        let body = String(format: self.jsonTemplate, "https://fakeUrl", "0")
-        self.mockSession.enqueueResponse(response: Response(body: body, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let body = String(format: jsonTemplate, "https://fakeUrl", "0")
+        MockHTTP.enqueueResponse(response: Response(body: body, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(1, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests.last?.url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests.last?.url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     func testShouldStayOnSameUrl() throws {
         // Arrange
-        let body = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "1")
-        self.mockSession.enqueueResponse(response: Response(body: body, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let body = String(format: jsonTemplate, Constants.globalBaseUrl, "1")
+        MockHTTP.enqueueResponse(response: Response(body: body, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(1, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests.last?.url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests.last?.url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     func testShouldStayOnSameUrlEvenWithForce() throws {
         // Arrange
-        let body = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "2")
-        self.mockSession.enqueueResponse(response: Response(body: body, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let body = String(format: jsonTemplate, Constants.globalBaseUrl, "2")
+        MockHTTP.enqueueResponse(response: Response(body: body, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(1, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests.last?.url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests.last?.url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     func testShouldRedirectToAnotherServer() throws {
         // Arrange
-        let firstBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "1")
-        let secondBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "0")
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let firstBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "1")
+        let secondBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "0")
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(2, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests[0].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[1].url?.absoluteString.starts(with: ConfigFetcher.euOnlyBaseUrl) ?? false)
+        XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests[0].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[1].url?.absoluteString.starts(with: Constants.euOnlyBaseUrl) ?? false)
     }
 
     func testShouldRedirectToAnotherServerWhenForced() throws {
         // Arrange
-        let firstBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "2")
-        let secondBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "0")
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let firstBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "2")
+        let secondBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "0")
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(2, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests[0].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[1].url?.absoluteString.starts(with: ConfigFetcher.euOnlyBaseUrl) ?? false)
+        XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests[0].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[1].url?.absoluteString.starts(with: Constants.euOnlyBaseUrl) ?? false)
     }
 
     func testShouldBreakRedirectLoop() throws {
         // Arrange
-        let firstBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "1")
-        let secondBody = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "1")
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let firstBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "1")
+        let secondBody = String(format: jsonTemplate, Constants.globalBaseUrl, "1")
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(3, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests[0].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[1].url?.absoluteString.starts(with: ConfigFetcher.euOnlyBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[2].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(3, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests[0].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[1].url?.absoluteString.starts(with: Constants.euOnlyBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[2].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     func testShouldBreakRedirectLoopWhenForced() throws {
         // Arrange
-        let firstBody = String(format: self.jsonTemplate, ConfigFetcher.euOnlyBaseUrl, "2")
-        let secondBody = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "2")
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        let fetcher = self.createfetcher()
+        let firstBody = String(format: jsonTemplate, Constants.euOnlyBaseUrl, "2")
+        let secondBody = String(format: jsonTemplate, Constants.globalBaseUrl, "2")
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        let fetcher = createFetcher()
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(3, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests[0].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[1].url?.absoluteString.starts(with: ConfigFetcher.euOnlyBaseUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[2].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(3, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests[0].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[1].url?.absoluteString.starts(with: Constants.euOnlyBaseUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[2].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     func testShouldRespectCustomUrlWhenNotForced() throws {
         // Arrange
-        let body = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "1")
-        self.mockSession.enqueueResponse(response: Response(body: body, statusCode: 200))
-        let fetcher = self.createfetcher(url: self.customCdnUrl)
+        let body = String(format: jsonTemplate, Constants.globalBaseUrl, "1")
+        MockHTTP.enqueueResponse(response: Response(body: body, statusCode: 200))
+        let fetcher = createFetcher(url: customCdnUrl)
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(1, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests.last?.url?.absoluteString.starts(with: self.customCdnUrl) ?? false)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests.last?.url?.absoluteString.starts(with: customCdnUrl) ?? false)
     }
 
     func testShouldNotRespectCustomUrlWhenForced() throws {
         // Arrange
-        let firstBody = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "2")
-        let secondBody = String(format: self.jsonTemplate, ConfigFetcher.globalBaseUrl, "0")
-        self.mockSession.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
-        self.mockSession.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
-        let fetcher = self.createfetcher(url: self.customCdnUrl)
+        let firstBody = String(format: jsonTemplate, Constants.globalBaseUrl, "2")
+        let secondBody = String(format: jsonTemplate, Constants.globalBaseUrl, "0")
+        MockHTTP.enqueueResponse(response: Response(body: firstBody, statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: secondBody, statusCode: 200))
+        let fetcher = createFetcher(url: customCdnUrl)
 
         // Act
-        _ = try fetcher.getConfiguration().get()
+        let expectation = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
 
         // Assert
-        XCTAssertEqual(2, self.mockSession.requests.count)
-        XCTAssertTrue(self.mockSession.requests[0].url?.absoluteString.starts(with: self.customCdnUrl) ?? false)
-        XCTAssertTrue(self.mockSession.requests[1].url?.absoluteString.starts(with: ConfigFetcher.globalBaseUrl) ?? false)
+        XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertTrue(MockHTTP.requests[0].url?.absoluteString.starts(with: customCdnUrl) ?? false)
+        XCTAssertTrue(MockHTTP.requests[1].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
-    private func createfetcher(url: String = "") -> ConfigFetcher {
-        let configJsonCache = ConfigJsonCache(logger: Logger.noLogger)
-        return ConfigFetcher(session: self.mockSession,
-                             logger: Logger.noLogger,
-                             configJsonCache: configJsonCache,
-                             sdkKey: "",
-                             mode: "",
-                             dataGovernance: DataGovernance.global,
-                             baseUrl: url)
+    private func createFetcher(url: String = "") -> ConfigFetcher {
+        ConfigFetcher(session: MockHTTP.session(),
+                logger: Logger.noLogger,
+                sdkKey: "",
+                mode: "",
+                dataGovernance: DataGovernance.global,
+                baseUrl: url)
     }
 }

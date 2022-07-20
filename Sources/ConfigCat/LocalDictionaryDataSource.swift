@@ -11,6 +11,6 @@ public class LocalDictionaryDataSource: OverrideDataSource {
     }
 
     public override func getOverrides() -> [String: Any] {
-        return settings
+        settings
     }
 }

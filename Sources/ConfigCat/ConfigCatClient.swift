@@ -17,7 +17,7 @@ extension ConfigCatClient {
 public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
     fileprivate let log: Logger
     fileprivate let evaluator: RolloutEvaluator
-    fileprivate let refreshPolicy: RefreshPolicy?
+    fileprivate let configService: ConfigService?
     fileprivate let sdkKey: String
     fileprivate let overrideDataSource: OverrideDataSource?
     fileprivate static var sdkKeys: Set<String> = []
@@ -60,32 +60,30 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             assert(false, "projectSecret cannot be empty")
         }
 
-        self.log = Logger(level: logLevel)
+        log = Logger(level: logLevel)
         if (!ConfigCatClient.sdkKeys.insert(sdkKey).inserted) {
-            self.log.warning(message: """
+            log.warning(message: """
                                       A ConfigCat Client is already initialized with sdkKey %@.
                                       We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
                                       """, sdkKey)
         }
         self.sdkKey = sdkKey
-        self.overrideDataSource = flagOverrides
-        self.evaluator = RolloutEvaluator(logger: self.log)
+        overrideDataSource = flagOverrides
+        evaluator = RolloutEvaluator(logger: log)
 
-        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            // RefreshPolicy is not needed in localOnly mode
-            self.refreshPolicy = nil
+        if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            // configService is not needed in localOnly mode
+            configService = nil
         } else {
             let mode = refreshMode ?? PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
-            let configJsonCache = ConfigJsonCache(logger: self.log)
             let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
-                                        logger: self.log,
-                                        configJsonCache: configJsonCache,
+                                        logger: log,
                                         sdkKey: sdkKey,
-                                        mode: mode.getPollingIdentifier(),
+                                        mode: mode.identifier,
                                         dataGovernance: dataGovernance,
                                         baseUrl: baseUrl)
 
-            self.refreshPolicy = mode.accept(visitor: RefreshPolicyFactory(fetcher: fetcher, cache: configCache, logger: self.log, configJsonCache: configJsonCache, sdkKey: sdkKey))
+            configService = ConfigService(log: log, fetcher: fetcher, cache: configCache, pollingMode: mode, sdkKey: sdkKey)
         }
     }
 
@@ -93,34 +91,86 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         ConfigCatClient.sdkKeys.remove(sdkKey)
     }
 
-    func getSettingsAsync() -> AsyncResult<[String: Any]> {
-        if let overrideDataSource = self.overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            return AsyncResult<[String: Any]>.completed(result: overrideDataSource.getOverrides())
-        }
+    // MARK: ConfigCatClientProtocol
 
-        guard let refreshPolicy = self.refreshPolicy else {
-            return AsyncResult<[String: Any]>.completed(result:[:])
+    public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
         }
-
-        if let overrideDataSource = self.overrideDataSource {
-            if overrideDataSource.behaviour == .localOverRemote {
-                return refreshPolicy.getSettings()
-                    .apply(completion: { settings in
-                        return settings.merging(overrideDataSource.getOverrides()) { (_, new) in new }
-                    })
-            }
-            if overrideDataSource.behaviour == .remoteOverLocal {
-                return refreshPolicy.getSettings()
-                    .apply(completion: { settings in
-                        return settings.merging(overrideDataSource.getOverrides()) { (current, _) in current }
-                    })
-            }
+        getSettings { settings in
+            completion(self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user))
         }
-
-        return refreshPolicy.getSettings()
     }
 
-    public func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
+    @objc public func getAllKeys(completion: @escaping ([String]) -> ()) {
+        getSettings { settings in
+            completion([String](settings.keys))
+        }
+    }
+
+    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil, completion: @escaping (String?) -> ()) {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
+        }
+        getSettings { settings in
+            completion(self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user))
+        }
+    }
+
+    @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
+        getSettings { settings in
+            completion(self.getAllVariationIdsFromSettings(settings: settings, user: user))
+        }
+    }
+
+    @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
+        getSettings { settings in
+            completion(self.getKeyAndValueFromSettings(settings: settings, variationId: variationId))
+        }
+    }
+
+    @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
+        getSettings { settings in
+            completion(self.getAllValuesFromSettings(settings: settings, user: user))
+        }
+    }
+
+    @objc public func refresh(completion: @escaping () -> ()) {
+        if let configService = configService {
+            configService.refresh(completion: completion)
+        } else {
+            log.warning(message: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect.")
+            completion()
+        }
+    }
+
+    func getSettings(completion: @escaping ([String: Any]) -> Void) {
+        if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            completion(overrideDataSource.getOverrides())
+            return
+        }
+        guard let configService = configService else {
+            completion([:])
+            return
+        }
+        if let overrideDataSource = overrideDataSource {
+            if overrideDataSource.behaviour == .localOverRemote {
+                configService.settings { settings in
+                    completion(settings.merging(overrideDataSource.getOverrides()) { (_, new) in new })
+                }
+                return
+            }
+            if overrideDataSource.behaviour == .remoteOverLocal {
+                configService.settings { settings in
+                    completion(settings.merging(overrideDataSource.getOverrides()) { (current, _) in current })
+                }
+                return
+            }
+        }
+        configService.settings { settings in completion(settings) }
+    }
+
+    func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
         if Value.self != String.self &&
             Value.self != String?.self &&
             Value.self != Int.self &&
@@ -131,24 +181,23 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             Value.self != Bool?.self &&
             Value.self != Any.self &&
             Value.self != Any?.self {
-            self.log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
             return defaultValue
         }
-
         if settings.isEmpty {
-            self.log.error(message: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)");
+            log.error(message: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)");
             return defaultValue
         }
 
-        let (value, _, evaluateLog): (Value?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+        let (value, _, evaluateLog): (Value?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
         if let evaluateLog = evaluateLog {
-            self.log.info(message: "%@", evaluateLog)
+            log.info(message: "%@", evaluateLog)
         }
         if let value = value {
             return value
         }
 
-        self.log.error(message: """
+        log.error(message: """
                                 Evaluating the value for the key '%@' failed.
                                 Returning defaultValue: [%@].
                                 Here are the available keys: %@
@@ -157,16 +206,16 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         return defaultValue
     }
 
-    public func getVariationIdFromSettings(settings: [String: Any], key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
-        let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+    func getVariationIdFromSettings(settings: [String: Any], key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
+        let (_, variationId, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
         if let evaluateLog = evaluateLog {
-            self.log.info(message: "%@", evaluateLog)
+            log.info(message: "%@", evaluateLog)
         }
         if let variationId = variationId {
             return variationId
         }
 
-        self.log.error(message: """
+        log.error(message: """
                                 Evaluating the variation id for the key '%@' failed.
                                 Returning defaultVariationId: %@
                                 Here are the available keys: %@
@@ -175,39 +224,39 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         return defaultVariationId
     }
 
-    public func getAllVariationIdsFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String] {
+    func getAllVariationIdsFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String] {
         var variationIds = [String]()
         for key in settings.keys {
-            let (_, variationId, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+            let (_, variationId, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
             if let evaluateLog = evaluateLog {
-                self.log.info(message: "%@", evaluateLog)
+                log.info(message: "%@", evaluateLog)
             }
             if let variationId = variationId {
                 variationIds.append(variationId)
             } else {
-                self.log.error(message: "Evaluating the variation id for the key '%@' failed.", key)
+                log.error(message: "Evaluating the variation id for the key '%@' failed.", key)
             }
         }
         return variationIds
     }
 
-    public func getAllValuesFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String: Any] {
+    func getAllValuesFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String: Any] {
         var allValues = [String: Any]()
         for key in settings.keys {
-            let (value, _, evaluateLog): (Any?, String?, String?) = self.evaluator.evaluate(json: settings[key], key: key, user: user)
+            let (value, _, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
             if let evaluateLog = evaluateLog {
-                self.log.info(message: "%@", evaluateLog)
+                log.info(message: "%@", evaluateLog)
             }
             if let value = value {
                 allValues[key] = value
             } else {
-                self.log.error(message: "Evaluating the value for the key '%@' failed.", key)
+                log.error(message: "Evaluating the value for the key '%@' failed.", key)
             }
         }
         return allValues
     }
 
-    public func getKeyAndValueFromSettings(settings: [String: Any], variationId: String) -> KeyValue? {
+    func getKeyAndValueFromSettings(settings: [String: Any], variationId: String) -> KeyValue? {
         for (key, json) in settings {
             if let json = json as? [String: Any], let value = json[Config.value] {
                 if variationId == json[Config.variationId] as? String {
@@ -230,213 +279,27 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
             }
         }
 
-        self.log.error(message: "Could not find the setting for the given variationId: '%@'", variationId);
+        log.error(message: "Could not find the setting for the given variationId: '%@'", variationId);
         return nil
-    }
-
-    // MARK: ConfigCatClientProtocol
-
-    public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) -> Value {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return defaultValue
-        }
-    }
-    
-    public func getValue<Value>(for key: String, defaultValue: Value) -> Value {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-    
-    public func getValueAsync<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ()) {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-
-        self.getSettingsAsync()
-            .apply { settings in
-                let result: Value = self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user)
-                completion(result)
-            }
-    }
-    
-    public func getValueAsync<Value>(for key: String, defaultValue: Value, completion: @escaping (Value) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: nil, completion: completion)
-    }
-    
-    @objc public func getAllKeys() -> [String] {
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return [String](settings.keys)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return []
-        }
-    }
-    
-    @objc public func getAllKeysAsync(completion: @escaping ([String]) -> ()) {
-        self.getSettingsAsync()
-            .apply { settings in
-                completion([String](settings.keys))
-        }
-    }
-
-    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return defaultVariationId
-        }
-    }
-
-    @objc public func getVariationIdAsync(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil, completion: @escaping (String?) -> ()) {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-
-        self.getSettingsAsync()
-            .apply { settings in
-                completion(self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user))
-        }
-    }
-
-    @objc public func getAllVariationIds(user: ConfigCatUser? = nil) -> [String] {
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return self.getAllVariationIdsFromSettings(settings: settings, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return []
-        }
-    }
-
-    @objc public func getAllVariationIdsAsync(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
-        self.getSettingsAsync()
-            .apply { settings in
-                let result = self.getAllVariationIdsFromSettings(settings: settings, user: user)
-                completion(result)
-        }
-    }
-
-    @objc public func getKeyAndValue(for variationId: String) -> KeyValue? {
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return self.getKeyAndValueFromSettings(settings: settings, variationId: variationId)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return nil
-        }
-    }
-
-    @objc public func getKeyAndValueAsync(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
-        self.getSettingsAsync()
-            .apply { settings in
-                completion(self.getKeyAndValueFromSettings(settings: settings, variationId: variationId))
-        }
-    }
-
-    @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any] {
-        do {
-            let settings = try self.getSettingsAsync().get()
-            return self.getAllValuesFromSettings(settings: settings, user: user)
-        } catch {
-            self.log.error(message: "An error occurred during reading the configuration. %@", error.localizedDescription)
-            return [:]
-        }
-    }
-
-    @objc public func getAllValuesAsync(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
-        self.getSettingsAsync()
-            .apply { settings in
-                completion(self.getAllValuesFromSettings(settings: settings, user: user))
-        }
-    }
-
-    @objc public func refresh() {
-        self.refreshPolicy?.refresh().wait()
-    }
-
-    @objc public func refreshAsync(completion: @escaping () -> ()) {
-        self.refreshPolicy?.refresh().accept(completion: completion)
     }
 }
 
-/// Objectiv-C interface extension.
-/// Generic parameters are not available in Objectiv-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)
+/// Objective-C interface extension.
+/// Generic parameters are not available in Objective-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)
 extension ConfigCatClient {
-    @objc public func getStringValue(for key: String, defaultValue: String) -> String {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-    @objc public func getIntValue(for key: String, defaultValue: Int) -> Int {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-    @objc public func getDoubleValue(for key: String, defaultValue: Double) -> Double {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-    @objc public func getBoolValue(for key: String, defaultValue: Bool) -> Bool {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-    @objc public func getAnyValue(for key: String, defaultValue: Any) -> Any {
-        return getValue(for: key, defaultValue: defaultValue, user: nil)
-    }
-
-    @objc public func getStringValue(for key: String, defaultValue: String, user: ConfigCatUser?) -> String {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
-    }
-    @objc public func getIntValue(for key: String, defaultValue: Int, user: ConfigCatUser?) -> Int {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
-    }
-    @objc public func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?) -> Double {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
-    }
-    @objc public func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?) -> Bool {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
-    }
-    @objc public func getAnyValue(for key: String, defaultValue: Any, user: ConfigCatUser?) -> Any {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
-    }
-
-    @objc public func getStringValueAsync(for key: String, defaultValue: String, completion: @escaping (String) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
-    }
-    @objc public func getIntValueAsync(for key: String, defaultValue: Int, completion: @escaping (Int) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
-    }
-    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, completion: @escaping (Double) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
-    }
-    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, completion: @escaping (Bool) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
-    }
-    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, completion: @escaping (Any) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, completion: completion)
-    }
-
     @objc public func getStringValueAsync(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
     @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
     @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
     @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
     @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ()) {
-        return getValueAsync(for: key, defaultValue: defaultValue, user: user, completion: completion)
+        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
 }
