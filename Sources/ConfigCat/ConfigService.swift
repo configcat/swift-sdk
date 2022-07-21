@@ -109,11 +109,12 @@ class ConfigService {
             completion(cachedEntry.config)
             return
         }
-        // An ongoing fetch is running, save the callback for later notification.
+        // There's an ongoing fetch, save the callback to call it later when the fetch succeeds.
         if completions != nil {
             completions?.enqueue(item: completion)
             return
         }
+        // No fetch is running, initiate a new one.
         completions = MutableQueue<(Config) -> Void>()
         completions?.enqueue(item: completion)
         fetcher.fetch(eTag: cachedEntry.eTag) { response in
