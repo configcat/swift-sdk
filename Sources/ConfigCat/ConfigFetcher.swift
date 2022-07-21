@@ -21,7 +21,7 @@ enum FetchResponse: Equatable {
     }
 }
 
-func == (lhs: FetchResponse, rhs: FetchResponse) -> Bool {
+func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     switch (lhs, rhs) {
     case (.fetched(_), .fetched(_)),
          (.notModified, .notModified),
@@ -70,11 +70,7 @@ class ConfigFetcher: NSObject {
                 completion(response)
                 return
             }
-            guard let newUrl = entry.config.preferences[Config.preferencesUrl] as? String else {
-                completion(response)
-                return
-            }
-            if newUrl.isEmpty || newUrl == url {
+            guard let newUrl = entry.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty, newUrl != url else {
                 completion(response)
                 return
             }

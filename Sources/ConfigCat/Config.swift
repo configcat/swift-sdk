@@ -1,7 +1,7 @@
 import Foundation
 
 struct ConfigEntry: Equatable {
-    static func == (lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
+    static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
         lhs.jsonString == rhs.jsonString && lhs.eTag == rhs.eTag
     }
 
