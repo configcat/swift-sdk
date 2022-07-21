@@ -11,7 +11,7 @@ import Foundation
      - Throws: Exception if unable to read the cache.
      */
     func read(for key: String) throws -> String
-    
+
     /**
      Child classes has to implement this method, the `ConfigCatClient`
      uses it to set the actual cached value.

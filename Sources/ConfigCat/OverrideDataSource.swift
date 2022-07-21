@@ -1,6 +1,6 @@
 import Foundation
 
-public class OverrideDataSource : NSObject {
+public class OverrideDataSource: NSObject {
     let behaviour: OverrideBehaviour
 
     init(behaviour: OverrideBehaviour) {

@@ -13,6 +13,7 @@ public final class PollingModes {
     public class func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
         AutoPollingMode(autoPollIntervalInSeconds: autoPollIntervalInSeconds, maxInitWaitTimeInSeconds: maxInitWaitTimeInSeconds, onConfigChanged: onConfigChanged)
     }
+
     /**
     Creates a new `LazyLoadingMode`.
     
@@ -22,6 +23,7 @@ public final class PollingModes {
     public class func lazyLoad(cacheRefreshIntervalInSeconds: Int = 60) -> PollingMode {
         LazyLoadingMode(cacheRefreshIntervalInSeconds: cacheRefreshIntervalInSeconds)
     }
+
     /**
     Creates a new `ManualPollingMode`.
     

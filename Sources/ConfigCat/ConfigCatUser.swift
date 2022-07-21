@@ -1,10 +1,10 @@
 import Foundation
 
 /// An object containing attributes to properly identify a given user for rollout evaluation.
-public final class ConfigCatUser : NSObject {
+public final class ConfigCatUser: NSObject {
     private var attributes: [String: String]
     private(set) var identifier: String
-    
+
     /**
      Initializes a new `User`.
      
@@ -22,34 +22,34 @@ public final class ConfigCatUser : NSObject {
         attributes = [:]
         self.identifier = identifier
         attributes["Identifier"] = identifier
-        
+
         if let email = email {
             attributes["Email"] = email
         }
-        
+
         if let country = country {
             attributes["Country"] = country
         }
-        
+
         if let custom = custom {
             for (key, value) in custom {
                 attributes[key] = value
             }
         }
     }
-    
+
     func getAttribute(for key: String) -> String? {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        
+
         if let value = attributes[key] {
             return value
         }
-        
+
         return nil
     }
-    
+
     public override var description: String {
         let jsonEncoder = JSONEncoder()
         jsonEncoder.outputFormatting = .prettyPrinted

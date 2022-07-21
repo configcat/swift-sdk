@@ -6,7 +6,7 @@ extension ConfigCatClient {
 }
 
 /// Describes the location of your feature flag and setting data within the ConfigCat CDN.
-@objc public enum DataGovernance : Int {
+@objc public enum DataGovernance: Int {
     /// Select this if your feature flags are published to all global CDN nodes.
     case global
     /// Select this if your feature flags are published to CDN nodes only in the EU.
@@ -14,7 +14,7 @@ extension ConfigCatClient {
 }
 
 /// A client for handling configurations provided by ConfigCat.
-public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
+public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let log: Logger
     private let evaluator: RolloutEvaluator
     private let configService: ConfigService?
@@ -37,25 +37,25 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
      - Returns: A new `ConfigCatClient`.
      */
     @objc public convenience init(sdkKey: String,
-                dataGovernance: DataGovernance = DataGovernance.global,
-                configCache: ConfigCache? = nil,
-                refreshMode: PollingMode? = nil,
-                sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
-                baseUrl: String = "",
-                flagOverrides: OverrideDataSource? = nil,
-                logLevel: LogLevel = .warning) {
+                                  dataGovernance: DataGovernance = DataGovernance.global,
+                                  configCache: ConfigCache? = nil,
+                                  refreshMode: PollingMode? = nil,
+                                  sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
+                                  baseUrl: String = "",
+                                  flagOverrides: OverrideDataSource? = nil,
+                                  logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, refreshMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
-                  configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
+                configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
     }
-    
+
     init(sdkKey: String,
-                refreshMode: PollingMode?,
-                session: URLSession?,
-                configCache: ConfigCache? = nil,
-                baseUrl: String = "",
-                dataGovernance: DataGovernance = DataGovernance.global,
-                flagOverrides: OverrideDataSource? = nil,
-                logLevel: LogLevel = .warning) {
+         refreshMode: PollingMode?,
+         session: URLSession?,
+         configCache: ConfigCache? = nil,
+         baseUrl: String = "",
+         dataGovernance: DataGovernance = DataGovernance.global,
+         flagOverrides: OverrideDataSource? = nil,
+         logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "projectSecret cannot be empty")
         }
@@ -63,9 +63,9 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         log = Logger(level: logLevel)
         if (!ConfigCatClient.sdkKeys.insert(sdkKey).inserted) {
             log.warning(message: """
-                                      A ConfigCat Client is already initialized with sdkKey %@.
-                                      We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
-                                      """, sdkKey)
+                                 A ConfigCat Client is already initialized with sdkKey %@.
+                                 We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
+                                 """, sdkKey)
         }
         self.sdkKey = sdkKey
         overrideDataSource = flagOverrides
@@ -77,11 +77,11 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         } else {
             let mode = refreshMode ?? PollingModes.autoPoll()
             let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
-                                        logger: log,
-                                        sdkKey: sdkKey,
-                                        mode: mode.identifier,
-                                        dataGovernance: dataGovernance,
-                                        baseUrl: baseUrl)
+                    logger: log,
+                    sdkKey: sdkKey,
+                    mode: mode.identifier,
+                    dataGovernance: dataGovernance,
+                    baseUrl: baseUrl)
 
             configService = ConfigService(log: log, fetcher: fetcher, cache: configCache, pollingMode: mode, sdkKey: sdkKey)
         }
@@ -156,31 +156,37 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
                 configService.settings { settings in
-                    completion(settings.merging(overrideDataSource.getOverrides()) { (_, new) in new })
+                    completion(settings.merging(overrideDataSource.getOverrides()) { (_, new) in
+                        new
+                    })
                 }
                 return
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
                 configService.settings { settings in
-                    completion(settings.merging(overrideDataSource.getOverrides()) { (current, _) in current })
+                    completion(settings.merging(overrideDataSource.getOverrides()) { (current, _) in
+                        current
+                    })
                 }
                 return
             }
         }
-        configService.settings { settings in completion(settings) }
+        configService.settings { settings in
+            completion(settings)
+        }
     }
 
     func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
         if Value.self != String.self &&
-            Value.self != String?.self &&
-            Value.self != Int.self &&
-            Value.self != Int?.self &&
-            Value.self != Double.self &&
-            Value.self != Double?.self &&
-            Value.self != Bool.self &&
-            Value.self != Bool?.self &&
-            Value.self != Any.self &&
-            Value.self != Any?.self {
+                   Value.self != String?.self &&
+                   Value.self != Int.self &&
+                   Value.self != Int?.self &&
+                   Value.self != Double.self &&
+                   Value.self != Double?.self &&
+                   Value.self != Bool.self &&
+                   Value.self != Bool?.self &&
+                   Value.self != Any.self &&
+                   Value.self != Any?.self {
             log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
             return defaultValue
         }
@@ -198,10 +204,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
 
         log.error(message: """
-                                Evaluating the value for the key '%@' failed.
-                                Returning defaultValue: [%@].
-                                Here are the available keys: %@
-                                """, key, "\(defaultValue)", [String](settings.keys))
+                           Evaluating the value for the key '%@' failed.
+                           Returning defaultValue: [%@].
+                           Here are the available keys: %@
+                           """, key, "\(defaultValue)", [String](settings.keys))
 
         return defaultValue
     }
@@ -216,10 +222,10 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
         }
 
         log.error(message: """
-                                Evaluating the variation id for the key '%@' failed.
-                                Returning defaultVariationId: %@
-                                Here are the available keys: %@
-                                """, key, defaultVariationId ?? "nil", [String](settings.keys))
+                           Evaluating the variation id for the key '%@' failed.
+                           Returning defaultVariationId: %@
+                           Here are the available keys: %@
+                           """, key, defaultVariationId ?? "nil", [String](settings.keys))
 
         return defaultVariationId
     }
@@ -265,7 +271,7 @@ public final class ConfigCatClient : NSObject, ConfigCatClientProtocol {
 
                 let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
                 for rule in rolloutRules {
-                    if variationId == rule[Config.variationId] as? String, let value = rule[Config.value]  {
+                    if variationId == rule[Config.variationId] as? String, let value = rule[Config.value] {
                         return KeyValue(key: key, value: value)
                     }
                 }
@@ -290,15 +296,19 @@ extension ConfigCatClient {
     @objc public func getStringValueAsync(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ()) {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
+
     @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ()) {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
+
     @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ()) {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
+
     @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ()) {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
+
     @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ()) {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }

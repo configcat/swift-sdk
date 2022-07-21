@@ -1,7 +1,7 @@
 import Foundation
 
-struct ConfigEntry : Equatable {
-    static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
+struct ConfigEntry: Equatable {
+    static func == (lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
         lhs.jsonString == rhs.jsonString && lhs.eTag == rhs.eTag
     }
 
@@ -21,7 +21,11 @@ struct ConfigEntry : Equatable {
         ConfigEntry(jsonString: jsonString, config: config, eTag: eTag, fetchTime: time)
     }
 
-    var isEmpty: Bool { get { self == .empty } }
+    var isEmpty: Bool {
+        get {
+            self == .empty
+        }
+    }
 
     static let empty = ConfigEntry()
 }
@@ -48,6 +52,10 @@ struct Config {
         self.entries = entries
     }
 
-    var isEmpty: Bool { get { entries.isEmpty && preferences.isEmpty } }
+    var isEmpty: Bool {
+        get {
+            entries.isEmpty && preferences.isEmpty
+        }
+    }
     static let empty = Config()
 }

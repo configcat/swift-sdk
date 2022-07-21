@@ -26,10 +26,12 @@ class ConfigService {
             polltimer = DispatchSource.makeTimerSource()
             polltimer?.schedule(deadline: .now(), repeating: .seconds(autoPoll.autoPollIntervalInSeconds))
             polltimer?.setEventHandler(handler: { [weak self] in
-                guard let `self` = self else {
+                guard let this = self else {
                     return
                 }
-                self.fetchIfOlder(time: Date.distantFuture) { _ in }
+                this.fetchIfOlder(time: Date.distantFuture) { _ in
+                    // we don't have to do anything with the result in the timer ticks.
+                }
             })
             polltimer?.resume()
 
@@ -39,11 +41,11 @@ class ConfigService {
             initTimer = DispatchSource.makeTimerSource()
             initTimer?.schedule(deadline: .now() + .seconds(autoPoll.maxInitWaitTimeInSeconds))
             initTimer?.setEventHandler(handler: { [weak self] in
-                guard let `self` = self else {
+                guard let this = self else {
                     return
                 }
-                if !self.initialized.getAndSet(new: true) {
-                    self.processResponse(response: .failure)
+                if !this.initialized.getAndSet(new: true) {
+                    this.processResponse(response: .failure)
                 }
             })
             initTimer?.resume()

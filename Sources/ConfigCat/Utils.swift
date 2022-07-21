@@ -1,20 +1,28 @@
 import Foundation
 
-struct ParseError : Error, CustomStringConvertible {
+struct ParseError: Error, CustomStringConvertible {
     private let message: String
+
     init(message: String) {
         self.message = message
     }
+
     var description: String {
-        get { message }
+        get {
+            message
+        }
     }
 }
 
 extension String {
     func parseConfigFromJson() -> Result<Config, Error> {
         do {
-            guard let data = data(using: .utf8) else {return .failure(ParseError(message: "Decode to utf8 data failed."))}
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {return .failure(ParseError(message: "Convert to [String: Any] map failed."))}
+            guard let data = data(using: .utf8) else {
+                return .failure(ParseError(message: "Decode to utf8 data failed."))
+            }
+            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
+            }
             return .success(Config(preferences: jsonObject[Config.preferences] as? [String: Any] ?? [:], entries: jsonObject[Config.entries] as? [String: Any] ?? [:]))
         } catch {
             return .failure(error)

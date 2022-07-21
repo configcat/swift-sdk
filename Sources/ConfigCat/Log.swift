@@ -14,27 +14,27 @@ class Logger {
     static let noLogger: Logger = Logger(level: .nolog)
     private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
     private let level: LogLevel
-    
+
     init(level: LogLevel) {
         self.level = level
     }
-    
+
     func debug(message: StaticString, _ args: CVarArg...) {
         log(message: message, currentLevel: .debug, args: args)
     }
-    
+
     func warning(message: StaticString, _ args: CVarArg...) {
         log(message: message, currentLevel: .warning, args: args)
     }
-    
+
     func info(message: StaticString, _ args: CVarArg...) {
         log(message: message, currentLevel: .info, args: args)
     }
-    
+
     func error(message: StaticString, _ args: CVarArg...) {
         log(message: message, currentLevel: .error, args: args)
     }
-    
+
     func log(message: StaticString, currentLevel: LogLevel, args: Array<CVarArg>) {
         if currentLevel.rawValue >= level.rawValue {
             switch args.count {
@@ -49,10 +49,10 @@ class Logger {
             default:
                 os_log(message, log: Logger.log, type: getLogType(level: currentLevel))
             }
-            
+
         }
     }
-    
+
     func getLogType(level: LogLevel) -> OSLogType {
         switch level {
         case .debug:

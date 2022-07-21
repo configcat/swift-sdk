@@ -2,10 +2,10 @@ import Foundation
 
 /// Describes a polling mode.
 @objc public protocol PollingMode {
-    var identifier: String {get}
+    var identifier: String { get }
 }
 
-class AutoPollingMode : PollingMode {
+class AutoPollingMode: PollingMode {
     let autoPollIntervalInSeconds: Int
     let maxInitWaitTimeInSeconds: Int
     let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
@@ -19,22 +19,34 @@ class AutoPollingMode : PollingMode {
                 : maxInitWaitTimeInSeconds
         self.onConfigChanged = onConfigChanged
     }
-    
-    var identifier: String { get { "a" } }
+
+    var identifier: String {
+        get {
+            "a"
+        }
+    }
 }
 
-class LazyLoadingMode : PollingMode {
+class LazyLoadingMode: PollingMode {
     let cacheRefreshIntervalInSeconds: Int
-    
+
     init(cacheRefreshIntervalInSeconds: Int) {
         self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds < 1
                 ? 1
                 : cacheRefreshIntervalInSeconds
     }
 
-    var identifier: String { get { "l" } }
+    var identifier: String {
+        get {
+            "l"
+        }
+    }
 }
 
-class ManualPollingMode : PollingMode {
-    var identifier: String { get { "m" } }
+class ManualPollingMode: PollingMode {
+    var identifier: String {
+        get {
+            "m"
+        }
+    }
 }

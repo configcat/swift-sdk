@@ -1,12 +1,12 @@
 import Foundation
 
-enum RedirectMode : Int {
+enum RedirectMode: Int {
     case noRedirect
     case shouldRedirect
     case forceRedirect
 }
 
-enum FetchResponse : Equatable {
+enum FetchResponse: Equatable {
     case fetched(ConfigEntry)
     case notModified
     case failure
@@ -21,7 +21,7 @@ enum FetchResponse : Equatable {
     }
 }
 
-func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
+func == (lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     switch (lhs, rhs) {
     case (.fetched(_), .fetched(_)),
          (.notModified, .notModified),
@@ -32,53 +32,45 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     }
 }
 
-class ConfigFetcher : NSObject {
+class ConfigFetcher: NSObject {
     private let log: Logger
     private let session: URLSession
-    private let url: Synced<String>
+    private let baseUrl: Synced<String>
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
 
     init(session: URLSession, logger: Logger, sdkKey: String, mode: String,
-                dataGovernance: DataGovernance, baseUrl: String = "") {
+         dataGovernance: DataGovernance, baseUrl: String = "") {
         log = logger
         self.session = session
         self.sdkKey = sdkKey
         urlIsCustom = !baseUrl.isEmpty
-        url = Synced(initValue: baseUrl.isEmpty
-            ? dataGovernance == DataGovernance.euOnly
+        self.baseUrl = Synced(initValue: baseUrl.isEmpty
+                ? dataGovernance == DataGovernance.euOnly
                 ? Constants.euOnlyBaseUrl
                 : Constants.globalBaseUrl
-            : baseUrl)
+                : baseUrl)
         self.mode = mode
     }
 
     func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
-        let url = url.get()
-        executeFetch(url: url, eTag: eTag, executionCount: 2) { response in
-            if let newUrl = response.entry?.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty && newUrl != url {
-                _ = self.url.testAndSet(expect: url, new: newUrl)
+        let cachedUrl = baseUrl.get()
+        executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
+            if let newUrl = response.entry?.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty && newUrl != cachedUrl {
+                _ = self.baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
             }
             completion(response)
         }
     }
-    
+
     private func executeFetch(url: String, eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
         sendFetchRequest(url: url, eTag: eTag, completion: { response in
-            guard case .fetched(_) = response else {
+            guard case .fetched(let entry) = response, !entry.config.preferences.isEmpty else {
                 completion(response)
                 return
             }
-            guard let config = response.entry?.config else {
-                completion(response)
-                return
-            }
-            guard !config.preferences.isEmpty else {
-                completion(response)
-                return
-            }
-            guard let newUrl = config.preferences[Config.preferencesUrl] as? String else {
+            guard let newUrl = entry.config.preferences[Config.preferencesUrl] as? String else {
                 completion(response)
                 return
             }
@@ -86,7 +78,7 @@ class ConfigFetcher : NSObject {
                 completion(response)
                 return
             }
-            guard let redirect = config.preferences[Config.preferencesRedirect] as? Int else {
+            guard let redirect = entry.config.preferences[Config.preferencesRedirect] as? Int else {
                 completion(response)
                 return
             }
@@ -114,44 +106,45 @@ class ConfigFetcher : NSObject {
             completion(response)
         })
     }
-    
+
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let request = getRequest(url: url, eTag: eTag)
         session.dataTask(with: request) { data, resp, error in
-            if let error = error {
-                var extraInfo = ""
-                if error._code == NSURLErrorTimedOut {
-                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
-                }
-                self.log.error(message: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
-                completion(.failure)
-            } else {
-                let response = resp as! HTTPURLResponse
-                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
-                    self.log.debug(message: "Fetch was successful: new config fetched")
-                    let etag = response.allHeaderFields["Etag"] as? String ?? ""
-                    let jsonString = String(data: data, encoding: .utf8) ?? ""
-                    let configResult = jsonString.parseConfigFromJson()
-                    switch configResult {
-                    case .success(let config):
-                        completion(.fetched(ConfigEntry(jsonString: jsonString, config: config, eTag: etag, fetchTime: Date())))
-                    case .failure(let error):
-                        self.log.error(message: "An error occurred during JSON deserialization. %@", error.localizedDescription)
+                    if let error = error {
+                        var extraInfo = ""
+                        if error._code == NSURLErrorTimedOut {
+                            extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
+                        }
+                        self.log.error(message: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
                         completion(.failure)
+                    } else {
+                        let response = resp as! HTTPURLResponse
+                        if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                            self.log.debug(message: "Fetch was successful: new config fetched")
+                            let etag = response.allHeaderFields["Etag"] as? String ?? ""
+                            let jsonString = String(data: data, encoding: .utf8) ?? ""
+                            let configResult = jsonString.parseConfigFromJson()
+                            switch configResult {
+                            case .success(let config):
+                                completion(.fetched(ConfigEntry(jsonString: jsonString, config: config, eTag: etag, fetchTime: Date())))
+                            case .failure(let error):
+                                self.log.error(message: "An error occurred during JSON deserialization. %@", error.localizedDescription)
+                                completion(.failure)
+                            }
+                        } else if response.statusCode == 304 {
+                            self.log.debug(message: "Fetch was successful: not modified")
+                            completion(.notModified)
+                        } else {
+                            self.log.error(message: """
+                                                    Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                                    """, String(response.statusCode))
+                            completion(.failure)
+                        }
                     }
-                } else if response.statusCode == 304 {
-                    self.log.debug(message: "Fetch was successful: not modified")
-                    completion(.notModified)
-                } else {
-                    self.log.error(message: """
-                        Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                        """, String(response.statusCode))
-                    completion(.failure)
                 }
-            }
-        }.resume()
+                .resume()
     }
-    
+
     private func getRequest(url: String, eTag: String) -> URLRequest {
         var request = URLRequest(url: URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName + ".json")!)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData

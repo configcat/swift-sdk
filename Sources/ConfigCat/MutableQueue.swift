@@ -11,5 +11,9 @@ class MutableQueue<T> {
         store.isEmpty ? nil : store.removeFirst()
     }
 
-    var isEmpty: Bool { get{ store.isEmpty } }
+    var isEmpty: Bool {
+        get {
+            store.isEmpty
+        }
+    }
 }
