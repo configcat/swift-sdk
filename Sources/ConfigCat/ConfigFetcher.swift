@@ -105,7 +105,7 @@ class ConfigFetcher: NSObject {
 
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let request = getRequest(url: url, eTag: eTag)
-        session.dataTask(with: request) { data, resp, error in
+        session.dataTask(with: request) { (data, resp, error) in
                     if let error = error {
                         var extraInfo = ""
                         if error._code == NSURLErrorTimedOut {

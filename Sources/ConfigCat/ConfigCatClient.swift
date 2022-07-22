@@ -289,27 +289,3 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         return nil
     }
 }
-
-/// Objective-C interface extension.
-/// Generic parameters are not available in Objective-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)
-extension ConfigCatClient {
-    @objc public func getStringValueAsync(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ()) {
-        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
-    }
-
-    @objc public func getIntValueAsync(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ()) {
-        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
-    }
-
-    @objc public func getDoubleValueAsync(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ()) {
-        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
-    }
-
-    @objc public func getBoolValueAsync(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ()) {
-        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
-    }
-
-    @objc public func getAnyValueAsync(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ()) {
-        return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
-    }
-}
