@@ -11,21 +11,21 @@ class AsyncAwaitTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetValue() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let value = await client.getValue(for: "key1", defaultValue: false)
         XCTAssertTrue(value)
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetVariationId() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = await client.getVariationId(for: "key1", defaultVariationId: "")
         XCTAssertEqual("fakeId1", id)
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetKeyValue() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = await client.getKeyAndValue(for: "fakeId1")
@@ -33,21 +33,21 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertEqual("key1", id?.key)
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetAllKeys() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let keys = await client.getAllKeys()
         XCTAssertEqual(2, keys.count)
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetAllValues() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let values = await client.getAllValues()
         XCTAssertEqual(2, values.count)
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testRefresh() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
         await client.refresh()

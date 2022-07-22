@@ -22,7 +22,7 @@ extension ConfigCatClient {
     }
 
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
         await withCheckedContinuation { continuation in
             getValue(for: key, defaultValue: defaultValue) { value in
@@ -31,7 +31,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllKeys() async -> [String] {
         await withCheckedContinuation { continuation in
             getAllKeys { keys in
@@ -40,7 +40,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) async -> String? {
         await withCheckedContinuation { continuation in
             getVariationId(for: key, defaultVariationId: defaultVariationId) { variationId in
@@ -49,7 +49,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllVariationIds(user: ConfigCatUser? = nil) async -> [String] {
         await withCheckedContinuation { continuation in
             getAllVariationIds { variationIds in
@@ -58,7 +58,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getKeyAndValue(for variationId: String) async -> KeyValue? {
         await withCheckedContinuation { continuation in
             getKeyAndValue(for: variationId) { value in
@@ -67,7 +67,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllValues(user: ConfigCatUser? = nil) async -> [String: Any] {
         await withCheckedContinuation { continuation in
             getAllValues(user: user) { values in
@@ -76,7 +76,7 @@ extension ConfigCatClient {
         }
     }
 
-    @available(macOS 10.15, iOS 13, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func refresh() async {
         await withCheckedContinuation { continuation in
             refresh {
