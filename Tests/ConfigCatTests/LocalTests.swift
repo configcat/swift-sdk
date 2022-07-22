@@ -5,7 +5,7 @@ class LocalTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "v": %@, "p": [], "r": [] } } }"#
 
     func testDictionary() throws {
-        let dictionary:[String: Any] = [
+        let dictionary: [String: Any] = [
             "enabledFeature": true,
             "disabledFeature": false,
             "intSetting": 5,
@@ -29,7 +29,7 @@ class LocalTests: XCTestCase {
         MockHTTP.reset()
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
 
-        let dictionary:[String: Any] = [
+        let dictionary: [String: Any] = [
             "fakeKey": true,
             "nonexisting": true
         ]
@@ -47,7 +47,7 @@ class LocalTests: XCTestCase {
         MockHTTP.reset()
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
 
-        let dictionary:[String: Any] = [
+        let dictionary: [String: Any] = [
             "fakeKey": true,
             "nonexisting": true
         ]

@@ -9,9 +9,9 @@ class RolloutIntegrationTests: XCTestCase {
 
     lazy var testBundle: Bundle = {
         #if SWIFT_PACKAGE
-            return Bundle.module
+        return Bundle.module
         #else
-            return Bundle(for: type(of: self))
+        return Bundle(for: type(of: self))
         #endif
     }()
 
@@ -72,20 +72,26 @@ class RolloutIntegrationTests: XCTestCase {
         }
 
         let rows = content.components(separatedBy: "\n")
-            .map{ row in row.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                .map { row in
+                    row.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                }
 
         let header = rows[0].components(separatedBy: ";")
 
         let customKey = header[3]
 
         let settingKeys = header
-            .map{ key in key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
-            .skip(count: 4)
+                .map { key in
+                    key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                }
+                .skip(count: 4)
 
         var errors: [String] = []
         for i in 1..<rows.count {
             let testObjects = rows[i].components(separatedBy: ";")
-                .map{ key in key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)}
+                    .map { key in
+                        key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
+                    }
 
             if testObjects.count == 1 {
                 continue
@@ -121,7 +127,7 @@ class RolloutIntegrationTests: XCTestCase {
                 if type == .value {
                     client.getValue(for: settingKey, defaultValue: nil, user: user) { (anyValue: Any?) in
                         if let boolValue = anyValue as? Bool,
-                            let expectedValue = Bool(testObjects[i + 4].lowercased()) {
+                           let expectedValue = Bool(testObjects[i + 4].lowercased()) {
                             if boolValue != expectedValue {
                                 errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, boolValue))
                             }
@@ -130,7 +136,7 @@ class RolloutIntegrationTests: XCTestCase {
                         }
 
                         if let intValue = anyValue as? Int,
-                            let expectedValue = Int(testObjects[i + 4]) {
+                           let expectedValue = Int(testObjects[i + 4]) {
                             if intValue != expectedValue {
                                 errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, intValue))
                             }
@@ -139,7 +145,7 @@ class RolloutIntegrationTests: XCTestCase {
                         }
 
                         if let doubleValue = anyValue as? Double,
-                            let expectedValue = Double(testObjects[i + 4]) {
+                           let expectedValue = Double(testObjects[i + 4]) {
                             if doubleValue != expectedValue {
                                 errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, doubleValue))
                             }
@@ -175,5 +181,7 @@ class RolloutIntegrationTests: XCTestCase {
 }
 
 extension Array {
-    func skip(count:Int) -> [Element] { [Element](self[count..<self.count]) }
+    func skip(count: Int) -> [Element] {
+        [Element](self[count..<self.count])
+    }
 }

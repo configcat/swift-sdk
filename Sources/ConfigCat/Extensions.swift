@@ -21,7 +21,7 @@ extension ConfigCatClient {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
 
-#if compiler(>=5.5) && canImport(_Concurrency)
+    #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
         await withCheckedContinuation { continuation in
@@ -84,7 +84,7 @@ extension ConfigCatClient {
             }
         }
     }
-#endif
+    #endif
 
     // Synchronous extensions
 

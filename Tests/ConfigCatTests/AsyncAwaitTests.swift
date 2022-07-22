@@ -2,7 +2,7 @@ import XCTest
 @testable import ConfigCat
 
 class AsyncAwaitTests: XCTestCase {
-#if compiler(>=5.5) && canImport(_Concurrency)
+    #if compiler(>=5.5) && canImport(_Concurrency)
     let testJsonMultiple = #"{ "f": { "key1": { "v": true, "i": "fakeId1", "p": [], "r": [] }, "key2": { "v": false, "i": "fakeId2", "p": [], "r": [] } } }"#
 
     override func setUp() {
@@ -17,7 +17,7 @@ class AsyncAwaitTests: XCTestCase {
         let value = await client.getValue(for: "key1", defaultValue: false)
         XCTAssertTrue(value)
     }
-    
+
     @available(macOS 10.15, iOS 13, *)
     func testGetVariationId() async {
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
@@ -55,5 +55,5 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertFalse(value)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
-#endif
+    #endif
 }

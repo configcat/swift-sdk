@@ -35,7 +35,7 @@ public protocol ConfigCatClientProtocol {
     func refresh(completion: @escaping () -> ())
 
     /// Async/await interface
-#if compiler(>=5.5) && canImport(_Concurrency)
+    #if compiler(>=5.5) && canImport(_Concurrency)
     /**
      Gets a value asynchronously as `Value` from the configuration identified by the given `key`.
 
@@ -69,7 +69,7 @@ public protocol ConfigCatClientProtocol {
     // Initiates a force refresh asynchronously on the cached configuration.
     @available(macOS 10.15, iOS 13, *)
     func refresh() async
-#endif
+    #endif
 
     /// Objective-C interface
     /// Generic parameters are not available in Objective-C (getValue<Value>, getValueAsync<Value> cannot be marked @objc)

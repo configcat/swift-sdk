@@ -14,7 +14,7 @@ class ManualPollingTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(),logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, sdkKey: "")
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -41,7 +41,7 @@ class ManualPollingTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(),logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, sdkKey: "")
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -69,7 +69,7 @@ class ManualPollingTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(),logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, sdkKey: "")
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -102,7 +102,7 @@ class ManualPollingTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(),logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, sdkKey: "")
 
         let expectation1 = self.expectation(description: "wait for response")

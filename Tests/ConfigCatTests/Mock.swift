@@ -44,7 +44,9 @@ class MockURLProtocol: URLProtocol {
         }
 
         requestJob = DispatchWorkItem(block: { [weak self] in
-            guard let self = self else { return }
+            guard let self = self else {
+                return
+            }
             self.finish(response: response)
         })
 
@@ -72,7 +74,7 @@ struct Response {
     let httpResponse: HTTPURLResponse
     let error: Error?
     let delay: Int
-    
+
     init(body: String, statusCode: Int, error: Error? = nil, headers: [String: String]? = nil, delay: Int = 0) {
         data = body.data(using: .utf8)
         httpResponse = HTTPURLResponse(url: URL(string: "url")!, statusCode: statusCode, httpVersion: nil, headerFields: headers)!
@@ -81,21 +83,21 @@ struct Response {
     }
 }
 
-enum TestError : Error {
+enum TestError: Error {
     case test
 }
 
-public class FailingCache : ConfigCache {
+public class FailingCache: ConfigCache {
     public func read(for key: String) throws -> String {
         throw TestError.test
     }
-    
+
     public func write(for key: String, value: String) throws {
         throw TestError.test
     }
 }
 
-public class InMemoryConfigCache : NSObject, ConfigCache {
+public class InMemoryConfigCache: NSObject, ConfigCache {
     public var store = [String: String]()
 
     public func read(for key: String) throws -> String {
