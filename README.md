@@ -69,11 +69,19 @@ let client = ConfigCatClient(sdkKey: "#YOUR-SDK-KEY#")
 ### 5. Get your setting value
 ```swift
 client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false) { isMyAwesomeFeatureEnabled in
-    if(isMyAwesomeFeatureEnabled) {
+    if isMyAwesomeFeatureEnabled {
         doTheNewThing()
     } else {
         doTheOldThing()
     }
+}
+
+// or with async/await
+let isMyAwesomeFeatureEnabled = await client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false)
+if isMyAwesomeFeatureEnabled {
+    doTheNewThing()
+} else {
+    doTheOldThing()
 }
 ```
 
@@ -85,7 +93,7 @@ Read more about [Targeting here](https://configcat.com/docs/advanced/targeting/)
 ```swift
 let user = ConfigCatUser(identifier: "#USER-IDENTIFIER#")
 client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false, user: user) { isMyAwesomeFeatureEnabled in
-    if(isMyAwesomeFeatureEnabled) {
+    if isMyAwesomeFeatureEnabled {
         doTheNewThing()
     } else {
         doTheOldThing()
