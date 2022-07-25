@@ -123,4 +123,21 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 2)
     }
+
+    func testEmptyCacheDoesNotInitiateHTTP() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, sdkKey: "")
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.settings { settings in
+            XCTAssertTrue(settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+    }
 }

@@ -72,7 +72,7 @@ class ConfigService {
                 completion(config.entries)
             }
         default:
-            fetchIfOlder(time: Date.distantPast) { config in
+            fetchIfOlder(time: Date.distantPast, preferCache: true) { config in
                 completion(config.entries)
             }
         }
