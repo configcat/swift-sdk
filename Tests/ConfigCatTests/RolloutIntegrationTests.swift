@@ -87,8 +87,8 @@ class RolloutIntegrationTests: XCTestCase {
                 .skip(count: 4)
 
         var errors: [String] = []
-        for i in 1..<rows.count {
-            let testObjects = rows[i].components(separatedBy: ";")
+        for k in 1..<rows.count {
+            let testObjects = rows[k].components(separatedBy: ";")
                     .map { key in
                         key.trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
                     }

@@ -7,7 +7,7 @@ class ConfigService {
     private let cache: ConfigCache?
     private let pollingMode: PollingMode
     private let cacheKey: String
-    private let initialized: Synced<Bool>
+    private var initialized: Bool
     private var completions: MutableQueue<(Config) -> Void>?
     private var cachedEntry: ConfigEntry = .empty
     private var polltimer: DispatchSourceTimer? = nil
@@ -22,7 +22,7 @@ class ConfigService {
         cacheKey = String(keyToHash.sha1hex ?? keyToHash)
 
         if let autoPoll = pollingMode as? AutoPollingMode {
-            initialized = Synced<Bool>(initValue: false)
+            initialized = false
             polltimer = DispatchSource.makeTimerSource()
             polltimer?.schedule(deadline: .now(), repeating: .seconds(autoPoll.autoPollIntervalInSeconds))
             polltimer?.setEventHandler(handler: { [weak self] in
@@ -44,13 +44,18 @@ class ConfigService {
                 guard let this = self else {
                     return
                 }
-                if !this.initialized.getAndSet(new: true) {
-                    this.processResponse(response: .failure)
+                this.mutex.lock()
+                defer { this.mutex.unlock() }
+                // Max wait time expired without result, notify subscribers with the cached config.
+                if !this.initialized {
+                    this.initialized = true
+                    this.callCompletions(config: this.cachedEntry.config)
+                    this.completions = nil
                 }
             })
             initTimer?.resume()
         } else {
-            initialized = Synced<Bool>(initValue: true)
+            initialized = true
         }
     }
 
@@ -89,6 +94,7 @@ class ConfigService {
         defer {
             mutex.unlock()
         }
+        // Sync up with the cache and use it when it's not expired.
         if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
             let json = readConfigCache()
             if !json.isEmpty && json != cachedEntry.jsonString {
@@ -105,11 +111,14 @@ class ConfigService {
                 return
             }
         }
-        if preferCache && initialized.get() {
+        // Use cache anyway (get calls on auto & manual poll must not initiate fetch).
+        // The initialized check ensures that we subscribe for the ongoing fetch during the
+        // max init wait time window in case of auto poll.
+        if preferCache && initialized {
             completion(cachedEntry.config)
             return
         }
-        // There's an ongoing fetch, save the callback to call it later when the fetch succeeds.
+        // There's an ongoing fetch running, save the callback to call it later when the ongoing fetch finishes.
         if completions != nil {
             completions?.enqueue(item: completion)
             return
@@ -127,9 +136,9 @@ class ConfigService {
         defer {
             mutex.unlock()
         }
+        initialized = true
         switch response {
         case .fetched(let entry) where entry != cachedEntry:
-            _ = initialized.testAndSet(expect: false, new: true)
             cachedEntry = entry
             writeConfigCache(json: entry.jsonString)
             if let auto = pollingMode as? AutoPollingMode {
