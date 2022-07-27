@@ -46,6 +46,7 @@ class ConfigService {
                 }
                 this.mutex.lock()
                 defer { this.mutex.unlock() }
+
                 // Max wait time expired without result, notify subscribers with the cached config.
                 if !this.initialized {
                     this.initialized = true
@@ -61,9 +62,8 @@ class ConfigService {
 
     deinit {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
+
         callCompletions(config: cachedEntry.config)
         completions = nil
         polltimer?.cancel()
@@ -91,9 +91,8 @@ class ConfigService {
 
     private func fetchIfOlder(time: Date, preferCache: Bool = false, completion: @escaping (Config) -> Void) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
+
         // Sync up with the cache and use it when it's not expired.
         if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
             let json = readConfigCache()
@@ -133,9 +132,8 @@ class ConfigService {
 
     private func processResponse(response: FetchResponse) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
+        
         initialized = true
         switch response {
         case .fetched(let entry) where entry != cachedEntry:
