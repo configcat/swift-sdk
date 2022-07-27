@@ -57,7 +57,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          flagOverrides: OverrideDataSource? = nil,
          logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
-            assert(false, "projectSecret cannot be empty")
+            assert(false, "sdkKey cannot be empty")
         }
 
         log = Logger(level: logLevel)

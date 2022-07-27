@@ -17,16 +17,19 @@ class Mutex {
         } else {
             pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL)
         }
-        pthread_mutex_init(mutex, &attr)
+        let result = pthread_mutex_init(mutex, &attr)
+        assert(result == 0, "Failed to init mutex.")
     }
 
     deinit {
-        pthread_mutex_destroy(mutex)
+        let result = pthread_mutex_destroy(mutex)
+        assert(result == 0, "Failed to destroy mutex.")
         mutex.deallocate()
     }
 
     func lock() {
-        pthread_mutex_lock(mutex)
+        let result = pthread_mutex_lock(mutex)
+        assert(result == 0, "Failed to lock mutex.")
     }
 
     func tryLock() -> Bool {
@@ -34,6 +37,7 @@ class Mutex {
     }
 
     func unlock() {
-        pthread_mutex_unlock(mutex)
+        let result = pthread_mutex_unlock(mutex)
+        assert(result == 0, "Failed to unlock mutex.")
     }
 }
