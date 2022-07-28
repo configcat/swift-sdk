@@ -49,7 +49,7 @@ If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) 
 
 ``` swift
 dependencies: [
-  .package(url: "https://github.com/configcat/swift-sdk", from: "8.0.1")
+  .package(url: "https://github.com/configcat/swift-sdk", from: "9.0.0")
 ]
 ```
 
