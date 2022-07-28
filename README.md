@@ -49,7 +49,7 @@ If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) 
 
 ``` swift
 dependencies: [
-  .package(url: "https://github.com/configcat/swift-sdk", from: "8.0.1")
+  .package(url: "https://github.com/configcat/swift-sdk", from: "9.0.0")
 ]
 ```
 
@@ -68,22 +68,21 @@ let client = ConfigCatClient(sdkKey: "#YOUR-SDK-KEY#")
 
 ### 5. Get your setting value
 ```swift
-let isMyAwesomeFeatureEnabled = client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false)
-if(isMyAwesomeFeatureEnabled) {
+client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false) { isMyAwesomeFeatureEnabled in
+    if isMyAwesomeFeatureEnabled {
+        doTheNewThing()
+    } else {
+        doTheOldThing()
+    }
+}
+
+// or with async/await
+let isMyAwesomeFeatureEnabled = await client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false)
+if isMyAwesomeFeatureEnabled {
     doTheNewThing()
 } else {
     doTheOldThing()
 }
-```
-Or use the async APIs:
-```swift
-client.getValueAsync(for: "isMyAwesomeFeatureEnabled", defaultValue: false, completion: { isMyAwesomeFeatureEnabled in
-        if(isMyAwesomeFeatureEnabled) {
-            doTheNewThing()
-        } else {
-            doTheOldThing()
-        }
-    })
 ```
 
 ## Getting user specific setting values with Targeting
@@ -93,11 +92,12 @@ Read more about [Targeting here](https://configcat.com/docs/advanced/targeting/)
 
 ```swift
 let user = ConfigCatUser(identifier: "#USER-IDENTIFIER#")
-let isMyAwesomeFeatureEnabled = client.getValue(for: "isMyAwesomeFeatureEnabled", user: user, defaultValue: false)
-if(isMyAwesomeFeatureEnabled) {
-    doTheNewThing()
-} else {
-    doTheOldThing()
+client.getValue(for: "isMyAwesomeFeatureEnabled", defaultValue: false, user: user) { isMyAwesomeFeatureEnabled in
+    if isMyAwesomeFeatureEnabled {
+        doTheNewThing()
+    } else {
+        doTheOldThing()
+    }
 }
 ```
 

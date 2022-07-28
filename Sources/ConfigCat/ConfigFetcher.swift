@@ -1,195 +1,152 @@
 import Foundation
 
-enum Status {
-    case fetched
-    case notModified
-    case failure
-}
-
 enum RedirectMode: Int {
     case noRedirect
     case shouldRedirect
     case forceRedirect
 }
 
-/// Represents a fetch response.
-struct FetchResponse {
-    fileprivate let status: Status
+enum FetchResponse: Equatable {
+    case fetched(ConfigEntry)
+    case notModified
+    case failure
 
-    /**
-     Gets the fetched configuration value, should be used when the response
-     has a `FETCHED` status code.
-     
-     - Returns: the fetched config.
-     */
-    let config: Config?
-
-    /**
-     Gets whether a new configuration value was fetched or not.
-     
-     - Returns: true if a new configuration value was fetched, otherwise false.
-     */
-    func isFetched() -> Bool {
-        return self.status == .fetched
-    }
-    
-    /**
-     Gets whether the fetch resulted a '304 Not Modified' or not.
-     
-     - Returns: true if the fetch resulted a '304 Not Modified' code, otherwise false.
-     */
-    func isNotModified() -> Bool {
-        return self.status == .notModified
-    }
-    
-    /**
-     Gets whether the fetch failed or not.
-     
-     - Returns: true if the fetch is failed, otherwise false.
-     */
-    func isFailed() -> Bool {
-        return self.status == .failure
+    public var entry: ConfigEntry? {
+        switch self {
+        case .fetched(let entry):
+            return entry
+        default:
+            return nil
+        }
     }
 }
 
-class ConfigFetcher : NSObject {
-    private static let version: String = "8.0.1"
-    fileprivate let log: Logger
-    fileprivate let session: URLSession
-    fileprivate var url: String
-    fileprivate var etag: String
-    fileprivate let mode: String
-    fileprivate let sdkKey: String
-    fileprivate let urlIsCustom: Bool
-    fileprivate let configJsonCache: ConfigJsonCache
-    fileprivate var fetchingRequest: AsyncResult<FetchResponse>?
+func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
+    switch (lhs, rhs) {
+    case (.fetched(_), .fetched(_)),
+         (.notModified, .notModified),
+         (.failure, .failure):
+        return true
+    default:
+        return false
+    }
+}
 
-    static let configJsonName: String = "config_v5"
-    
-    static let globalBaseUrl: String = "https://cdn-global.configcat.com"
-    static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
+class ConfigFetcher: NSObject {
+    private let log: Logger
+    private let session: URLSession
+    private let baseUrl: Synced<String>
+    private let mode: String
+    private let sdkKey: String
+    private let urlIsCustom: Bool
 
-    init(session: URLSession, logger: Logger, configJsonCache: ConfigJsonCache, sdkKey: String, mode: String,
-                dataGovernance: DataGovernance, baseUrl: String = "") {
-        self.log = logger
-        self.configJsonCache = configJsonCache
+    init(session: URLSession, logger: Logger, sdkKey: String, mode: String,
+         dataGovernance: DataGovernance, baseUrl: String = "") {
+        log = logger
         self.session = session
         self.sdkKey = sdkKey
-        self.urlIsCustom = !baseUrl.isEmpty
-        self.url = baseUrl.isEmpty
-            ? dataGovernance == DataGovernance.euOnly
-                ? ConfigFetcher.euOnlyBaseUrl
-                : ConfigFetcher.globalBaseUrl
-            : baseUrl
-        self.etag = ""
+        urlIsCustom = !baseUrl.isEmpty
+        self.baseUrl = Synced(initValue: baseUrl.isEmpty
+                ? dataGovernance == DataGovernance.euOnly
+                ? Constants.euOnlyBaseUrl
+                : Constants.globalBaseUrl
+                : baseUrl)
         self.mode = mode
     }
 
-    func isFetching() -> Bool {
-        guard let fetchingRequest = fetchingRequest else {return false}
-        return !fetchingRequest.completed
-    }
-    
-    func getConfiguration() -> AsyncResult<FetchResponse> {
-        return self.executeFetch(executionCount: 2)
-    }
-    
-    private func executeFetch(executionCount: Int) -> AsyncResult<FetchResponse> {
-        return self.sendFetchRequest().compose { response in
-            if !response.isFetched() {
-                return AsyncResult.completed(result: response)
+    func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
+        let cachedUrl = baseUrl.get()
+        executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
+            if let newUrl = response.entry?.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty && newUrl != cachedUrl {
+                _ = self.baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
             }
-            
-            guard let config = response.config else {return AsyncResult.completed(result: response)}
-            guard !config.preferences.isEmpty else {return AsyncResult.completed(result: response)}
-            guard let newUrl = config.preferences[Config.preferencesUrl] as? String else {return AsyncResult.completed(result: response)}
+            completion(response)
+        }
+    }
 
-            if newUrl.isEmpty || newUrl == self.url {
-                return AsyncResult.completed(result: response)
+    private func executeFetch(url: String, eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
+        sendFetchRequest(url: url, eTag: eTag, completion: { response in
+            guard case .fetched(let entry) = response, !entry.config.preferences.isEmpty else {
+                completion(response)
+                return
             }
-
-            guard let redirect = config.preferences[Config.preferencesRedirect] as? Int else {return AsyncResult.completed(result: response)}
-
+            guard let newUrl = entry.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty, newUrl != url else {
+                completion(response)
+                return
+            }
+            guard let redirect = entry.config.preferences[Config.preferencesRedirect] as? Int else {
+                completion(response)
+                return
+            }
             if self.urlIsCustom && redirect != RedirectMode.forceRedirect.rawValue {
-                return AsyncResult.completed(result: response)
+                completion(response)
+                return
             }
-
-            self.url = newUrl
-
             if redirect == RedirectMode.noRedirect.rawValue {
-                return AsyncResult.completed(result: response)
+                completion(response)
+                return
             }
-
             if redirect == RedirectMode.shouldRedirect.rawValue {
                 self.log.warning(message: """
-                       Your dataGovernance parameter at ConfigCatClient
-                       initialization is not in sync with your preferences on the ConfigCat
-                       Dashboard: https://app.configcat.com/organization/data-governance.
-                       Only Organization Admins can access this preference.
-                       """)
+                                          Your dataGovernance parameter at ConfigCatClient
+                                          initialization is not in sync with your preferences on the ConfigCat
+                                          Dashboard: https://app.configcat.com/organization/data-governance.
+                                          Only Organization Admins can access this preference.
+                                          """)
             }
-
             if executionCount > 0 {
-                return self.executeFetch(executionCount: executionCount - 1)
+                self.executeFetch(url: newUrl, eTag: eTag, executionCount: executionCount - 1, completion: completion)
+                return
             }
-            
             self.log.error(message: "Redirect loop during config.json fetch. Please contact support@configcat.com.")
-            return AsyncResult.completed(result: response)
-        }
+            completion(response)
+        })
     }
-    
-    private func sendFetchRequest() -> AsyncResult<FetchResponse> {
-        if let fetchingRequest = fetchingRequest {
-            if !fetchingRequest.completed {
-                self.log.debug(message: "Config fetching is skipped because there is an ongoing fetch request")
-                return fetchingRequest
-            }
-        }
 
-        let request = self.getRequest()
-        let result = AsyncResult<FetchResponse>()
-        
-        self.session.dataTask(with: request) { data, resp, error in
+    private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
+        let request = getRequest(url: url, eTag: eTag)
+        session.dataTask(with: request) { (data, resp, error) in
             if let error = error {
                 var extraInfo = ""
                 if error._code == NSURLErrorTimedOut {
                     extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
                 }
                 self.log.error(message: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
-                result.complete(result: FetchResponse(status: .failure, config: nil))
+                completion(.failure)
             } else {
                 let response = resp as! HTTPURLResponse
                 if response.statusCode >= 200 && response.statusCode < 300, let data = data {
                     self.log.debug(message: "Fetch was successful: new config fetched")
-                    if let etag = response.allHeaderFields["Etag"] as? String {
-                        self.etag = etag
+                    let etag = response.allHeaderFields["Etag"] as? String ?? ""
+                    let jsonString = String(data: data, encoding: .utf8) ?? ""
+                    let configResult = jsonString.parseConfigFromJson()
+                    switch configResult {
+                    case .success(let config):
+                        completion(.fetched(ConfigEntry(jsonString: jsonString, config: config, eTag: etag, fetchTime: Date())))
+                    case .failure(let error):
+                        self.log.error(message: "An error occurred during JSON deserialization. %@", error.localizedDescription)
+                        completion(.failure)
                     }
-                    result.complete(result: FetchResponse(status: .fetched, config: self.configJsonCache.getConfigFromJson(json: String(data: data, encoding: .utf8)!)))
                 } else if response.statusCode == 304 {
                     self.log.debug(message: "Fetch was successful: not modified")
-                    result.complete(result: FetchResponse(status: .notModified, config: nil))
+                    completion(.notModified)
                 } else {
                     self.log.error(message: """
-                        Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                        """, String(response.statusCode))
-                    result.complete(result: FetchResponse(status: .failure, config: nil))
+                                            Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                            """, String(response.statusCode))
+                    completion(.failure)
                 }
             }
         }.resume()
-
-        fetchingRequest = result
-        return result
     }
-    
-    private func getRequest() -> URLRequest {
-        var request = URLRequest(url: URL(string: self.url + "/configuration-files/" + sdkKey + "/" + ConfigFetcher.configJsonName + ".json")!)
+
+    private func getRequest(url: String, eTag: String) -> URLRequest {
+        var request = URLRequest(url: URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName + ".json")!)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-        request.addValue("ConfigCat-Swift/" + self.mode + "-" + ConfigFetcher.version, forHTTPHeaderField: "X-ConfigCat-UserAgent")
-        
-        if !self.etag.isEmpty {
-            request.addValue(self.etag, forHTTPHeaderField: "If-None-Match")
+        request.addValue("ConfigCat-Swift/" + mode + "-" + Constants.version, forHTTPHeaderField: "X-ConfigCat-UserAgent")
+        if !eTag.isEmpty {
+            request.addValue(eTag, forHTTPHeaderField: "If-None-Match")
         }
-        
         return request
     }
 }

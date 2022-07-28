@@ -1,3 +1,35 @@
+import Foundation
+
+struct ConfigEntry: Equatable {
+    static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
+        lhs.jsonString == rhs.jsonString && lhs.eTag == rhs.eTag
+    }
+
+    let jsonString: String
+    let config: Config
+    let eTag: String
+    let fetchTime: Date
+
+    init(jsonString: String = "", config: Config = Config.empty, eTag: String = "", fetchTime: Date = Date.distantPast) {
+        self.jsonString = jsonString
+        self.config = config
+        self.eTag = eTag
+        self.fetchTime = fetchTime
+    }
+
+    func withFetchTime(time: Date) -> ConfigEntry {
+        ConfigEntry(jsonString: jsonString, config: config, eTag: eTag, fetchTime: time)
+    }
+
+    var isEmpty: Bool {
+        get {
+            self == .empty
+        }
+    }
+
+    static let empty = ConfigEntry()
+}
+
 struct Config {
     static let value = "v"
     static let comparator = "t"
@@ -12,15 +44,18 @@ struct Config {
     static let preferencesRedirect = "r"
     static let entries = "f"
 
-    let jsonString: String
     let preferences: [String: Any]
     let entries: [String: Any]
 
-    init(jsonString: String = "{}", preferences: [String: Any] = [:], entries: [String: Any] = [:]) {
-        self.jsonString = jsonString
+    init(preferences: [String: Any] = [:], entries: [String: Any] = [:]) {
         self.preferences = preferences
         self.entries = entries
     }
 
-    static let empty = Config();
+    var isEmpty: Bool {
+        get {
+            entries.isEmpty && preferences.isEmpty
+        }
+    }
+    static let empty = Config()
 }

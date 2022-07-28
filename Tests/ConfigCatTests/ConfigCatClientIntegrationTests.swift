@@ -4,26 +4,23 @@ import XCTest
 class ConfigCatClientIntegrationTests: XCTestCase {
     func testGetAllKeys() {
         let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
-        let keys = client.getAllKeys()
-        XCTAssertEqual(16, keys.count)
-        XCTAssertTrue(keys.contains("stringDefaultCat"))
+        let expectation = expectation(description: "wait for all keys")
+        client.getAllKeys { keys in
+            XCTAssertEqual(16, keys.count)
+            XCTAssertTrue(keys.contains("stringDefaultCat"))
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
     }
 
     func testGetAllValues() {
         let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
-        let allValues = client.getAllValues()
-        XCTAssertEqual(16, allValues.count)
-        XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
-    }
-
-    func testGetAllValuesAsync() throws {
-        let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
-        let allValuesResult = AsyncResult<[String: Any]>()
-        client.getAllValuesAsync() { (result) in
-            allValuesResult.complete(result: result)
+        let expectation = expectation(description: "wait for all values")
+        client.getAllValues { allValues in
+            XCTAssertEqual(16, allValues.count)
+            XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
+            expectation.fulfill()
         }
-        let allValues = try allValuesResult.get()
-        XCTAssertEqual(16, allValues.count)
-        XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
+        wait(for: [expectation], timeout: 2)
     }
 }
