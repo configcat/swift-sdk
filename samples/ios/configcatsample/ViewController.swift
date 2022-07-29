@@ -30,8 +30,10 @@ class ViewController: UIViewController {
     }
 
     func configChanged() {
-        DispatchQueue.main.sync {
-            self.label.text = self.client?.getValue(for: "string25Cat25Dog25Falcon25Horse", defaultValue: "", user: self.user)
+        self.client?.getValue(for: "string25Cat25Dog25Falcon25Horse", defaultValue: "", user: self.user) { value in
+            DispatchQueue.main.sync {
+                self.label.text = value
+            }
         }
     }
 }

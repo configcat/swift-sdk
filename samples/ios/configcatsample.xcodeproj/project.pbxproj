@@ -165,16 +165,11 @@
 			files = (
 			);
 			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-configcatsample/Pods-configcatsample-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/ConfigCat/ConfigCat.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-configcatsample/Pods-configcatsample-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
-			);
-			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ConfigCat.framework",
+				"${PODS_ROOT}/Target Support Files/Pods-configcatsample/Pods-configcatsample-frameworks-${CONFIGURATION}-output-files.xcfilelist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

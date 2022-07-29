@@ -12,6 +12,7 @@ int main(int argc, const char * argv[]) {
                                                              refreshMode:nil
                                                     sessionConfiguration:[NSURLSessionConfiguration defaultSessionConfiguration]
                                                                  baseUrl:@""
+                                                           flagOverrides:nil
                                                                 logLevel:LogLevelInfo];
 
         // Creating a user object to identify your user (optional).
@@ -21,7 +22,7 @@ int main(int argc, const char * argv[]) {
                                                     custom:@{@"version": @"1.0.0"}];
         
         NSString *featureName = @"isPOCFeatureEnabled";
-        BOOL value = [client getBoolValueFor:featureName defaultValue:false user:userObject];
+        BOOL value = [client getBoolValueSyncFor:featureName defaultValue:false user:userObject];
         NSLog(@"%@: %@", featureName, value ? @"Yes" : @"No");
     }
     return 0;
