@@ -25,7 +25,7 @@ extension ConfigCatClient {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
         await withCheckedContinuation { continuation in
-            getValue(for: key, defaultValue: defaultValue) { value in
+            getValue(for: key, defaultValue: defaultValue, user: user) { value in
                 continuation.resume(returning: value)
             }
         }
@@ -43,7 +43,7 @@ extension ConfigCatClient {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) async -> String? {
         await withCheckedContinuation { continuation in
-            getVariationId(for: key, defaultVariationId: defaultVariationId) { variationId in
+            getVariationId(for: key, defaultVariationId: defaultVariationId, user: user) { variationId in
                 continuation.resume(returning: variationId)
             }
         }
@@ -52,7 +52,7 @@ extension ConfigCatClient {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllVariationIds(user: ConfigCatUser? = nil) async -> [String] {
         await withCheckedContinuation { continuation in
-            getAllVariationIds { variationIds in
+            getAllVariationIds(user: user) { variationIds in
                 continuation.resume(returning: variationIds)
             }
         }
@@ -91,7 +91,7 @@ extension ConfigCatClient {
     public func getValueSync<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
         let semaphore = DispatchSemaphore(value: 0)
         var result: Value?
-        getValue(for: key, defaultValue: defaultValue) { value in
+        getValue(for: key, defaultValue: defaultValue, user: user) { value in
             result = value
             semaphore.signal()
         }
@@ -113,7 +113,7 @@ extension ConfigCatClient {
     @objc public func getVariationIdSync(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
         let semaphore = DispatchSemaphore(value: 0)
         var result: String?
-        getVariationId(for: key, defaultVariationId: defaultVariationId) { variationId in
+        getVariationId(for: key, defaultVariationId: defaultVariationId, user: user) { variationId in
             result = variationId
             semaphore.signal()
         }
