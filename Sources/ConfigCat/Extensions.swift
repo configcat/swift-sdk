@@ -21,6 +21,20 @@ extension ConfigCatClient {
         return getValue(for: key, defaultValue: defaultValue, user: user, completion: completion)
     }
 
+    @objc public func getAnyValueDetails(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (EvaluationDetails) -> ()) {
+        return getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+            completion(EvaluationDetails(key: details.key,
+                    value: details.value,
+                    variationId: details.variationId,
+                    fetchTime: details.fetchTime,
+                    user: user,
+                    isDefaultValue: details.isDefaultValue,
+                    error: details.error,
+                    matchedEvaluationRule: details.matchedEvaluationRule,
+                    matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule))
+        }
+    }
+
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
@@ -77,10 +91,20 @@ extension ConfigCatClient {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "Use `forceRefresh()` instead")
     public func refresh() async {
         await withCheckedContinuation { continuation in
-            refresh {
+            forceRefresh { _ in
                 continuation.resume()
+            }
+        }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func forceRefresh() async -> RefreshResult {
+        await withCheckedContinuation { continuation in
+            forceRefresh { result in
+                continuation.resume(returning: result)
             }
         }
     }
@@ -154,12 +178,24 @@ extension ConfigCatClient {
         return result
     }
 
+    @available(*, deprecated, message: "Use `forceRefreshSync()` instead")
     @objc public func refreshSync() {
         let semaphore = DispatchSemaphore(value: 0)
-        refresh {
+        forceRefresh { _ in
             semaphore.signal()
         }
         semaphore.wait()
+    }
+
+    @objc public func forceRefreshSync() -> RefreshResult {
+        let semaphore = DispatchSemaphore(value: 0)
+        var refreshResult: RefreshResult?
+        forceRefresh { result in
+            refreshResult = result
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return refreshResult ?? RefreshResult(success: false)
     }
 
     @objc public func getStringValueSync(for key: String, defaultValue: String, user: ConfigCatUser?) -> String {

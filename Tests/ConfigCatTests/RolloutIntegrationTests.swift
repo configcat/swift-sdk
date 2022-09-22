@@ -64,7 +64,8 @@ class RolloutIntegrationTests: XCTestCase {
     }
 
     func testRolloutMatrix(url: URL, sdkKey: String, type: TestType) throws {
-        let client: ConfigCatClient = ConfigCatClient(sdkKey: sdkKey)
+        let client: ConfigCatClient = ConfigCatClient.get(sdkKey: sdkKey)
+        defer { client.close() }
 
         guard let matrixData = try? Data(contentsOf: url), let content = String(bytes: matrixData, encoding: .utf8) else {
             XCTFail()

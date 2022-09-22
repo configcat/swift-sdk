@@ -10,8 +10,21 @@ public final class PollingModes {
     - Parameter onConfigChanged: the configuration changed event handler.
     - Returns: A new `AutoPollingMode`.
     */
-    public class func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
+    @available(*, deprecated, message: "For subscribing the `onConfigChanged` event, use the `hooks` property of `ConfigCatClient`")
+    @objc public static func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
         AutoPollingMode(autoPollIntervalInSeconds: autoPollIntervalInSeconds, maxInitWaitTimeInSeconds: maxInitWaitTimeInSeconds, onConfigChanged: onConfigChanged)
+    }
+
+    /**
+    Creates a new `AutoPollingMode`.
+
+    - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
+    - Parameter maxInitWaitTimeInSeconds: maximum waiting time between initialization and the first config acquisition in seconds.
+    - Parameter onConfigChanged: the configuration changed event handler.
+    - Returns: A new `AutoPollingMode`.
+    */
+    @objc public static func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5) -> PollingMode {
+        AutoPollingMode(autoPollIntervalInSeconds: autoPollIntervalInSeconds, maxInitWaitTimeInSeconds: maxInitWaitTimeInSeconds)
     }
 
     /**
@@ -20,7 +33,7 @@ public final class PollingModes {
     - Parameter cacheRefreshIntervalInSeconds: sets how long the cache will store its value before fetching the latest from the network again.
     - Returns: A new `LazyLoadingMode`.
     */
-    public class func lazyLoad(cacheRefreshIntervalInSeconds: Int = 60) -> PollingMode {
+    @objc public static func lazyLoad(cacheRefreshIntervalInSeconds: Int = 60) -> PollingMode {
         LazyLoadingMode(cacheRefreshIntervalInSeconds: cacheRefreshIntervalInSeconds)
     }
 
@@ -29,7 +42,7 @@ public final class PollingModes {
     
     - Returns: A new `ManualPollingMode`.
     */
-    public class func manualPoll() -> PollingMode {
+    @objc public static func manualPoll() -> PollingMode {
         ManualPollingMode()
     }
 }

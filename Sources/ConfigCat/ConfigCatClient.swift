@@ -20,7 +20,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
-    private static var sdkKeys: Set<String> = []
+    private var closed: Bool = false
+    private var defaultUser: ConfigCatUser?
+
+    private static let mutex = Mutex()
+    private static var instances: [String: ConfigCatClient] = [:]
 
     /**
      Initializes a new `ConfigCatClient`.
@@ -36,10 +40,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      - Parameter logLevel: default: warning. Internal log level.
      - Returns: A new `ConfigCatClient`.
      */
+    @available(*, deprecated, message: "Use `ConfigCatClient.get()` instead")
     @objc public convenience init(sdkKey: String,
                                   dataGovernance: DataGovernance = DataGovernance.global,
                                   configCache: ConfigCache? = nil,
-                                  refreshMode: PollingMode? = nil,
+                                  refreshMode: PollingMode = PollingModes.autoPoll(),
                                   sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
                                   baseUrl: String = "",
                                   flagOverrides: OverrideDataSource? = nil,
@@ -49,25 +54,23 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     init(sdkKey: String,
-         refreshMode: PollingMode?,
+         refreshMode: PollingMode,
          session: URLSession?,
+         hooks: Hooks? = nil,
          configCache: ConfigCache? = nil,
          baseUrl: String = "",
          dataGovernance: DataGovernance = DataGovernance.global,
          flagOverrides: OverrideDataSource? = nil,
+         defaultUser: ConfigCatUser? = nil,
          logLevel: LogLevel = .warning) {
         if sdkKey.isEmpty {
             assert(false, "sdkKey cannot be empty")
         }
 
-        log = Logger(level: logLevel)
-        if (!ConfigCatClient.sdkKeys.insert(sdkKey).inserted) {
-            log.warning(message: """
-                                 A ConfigCat Client is already initialized with sdkKey %@.
-                                 We strongly recommend you to use the ConfigCat Client as a Singleton object in your application.
-                                 """, sdkKey)
-        }
         self.sdkKey = sdkKey
+        self.hooks = hooks ?? Hooks()
+        self.defaultUser = defaultUser
+        log = Logger(level: logLevel, hooks: self.hooks)
         overrideDataSource = flagOverrides
         evaluator = RolloutEvaluator(logger: log)
 
@@ -75,98 +78,216 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             // configService is not needed in localOnly mode
             configService = nil
         } else {
-            let mode = refreshMode ?? PollingModes.autoPoll()
             let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
                     logger: log,
                     sdkKey: sdkKey,
-                    mode: mode.identifier,
+                    mode: refreshMode.identifier,
                     dataGovernance: dataGovernance,
                     baseUrl: baseUrl)
 
-            configService = ConfigService(log: log, fetcher: fetcher, cache: configCache, pollingMode: mode, sdkKey: sdkKey)
+            configService = ConfigService(log: log,
+                    fetcher: fetcher,
+                    cache: configCache,
+                    pollingMode: refreshMode,
+                    hooks: self.hooks,
+                    sdkKey: sdkKey)
+        }
+    }
+
+    /**
+     Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
+
+     - Parameters:
+       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
+       - options: the configuration options.
+     - Returns: the ConfigCatClient instance.
+     */
+    @objc public static func get(sdkKey: String, options: ClientOptions = ClientOptions.default) -> ConfigCatClient {
+        mutex.lock()
+        defer { mutex.unlock() }
+        if let client = instances[sdkKey] {
+            if options != ClientOptions.default {
+                client.log.warning(message: """
+                                            Client for '%{public}@' is already created and will be reused; options passed are being ignored.
+                                            """, sdkKey)
+            }
+            return client
+        }
+        let client = ConfigCatClient(sdkKey: sdkKey,
+                refreshMode: options.refreshMode,
+                session: URLSession(configuration: options.sessionConfiguration),
+                hooks: options.hooks,
+                configCache: options.configCache,
+                baseUrl: options.baseUrl,
+                dataGovernance: options.dataGovernance,
+                flagOverrides: options.flagOverrides,
+                defaultUser: options.defaultUser,
+                logLevel: options.logLevel)
+        instances[sdkKey] = client
+        return client
+    }
+
+    /// Closes all ConfigCatClient instances.
+    @objc public static func closeAll() {
+        mutex.lock()
+        defer { mutex.unlock() }
+        for item in instances {
+            item.value.closeResources()
+        }
+        instances.removeAll()
+    }
+
+    /// Hooks for subscribing events.
+    @objc public let hooks: Hooks
+
+    /// Closes the underlying resources.
+    @objc public func close() {
+        ConfigCatClient.mutex.lock()
+        defer { ConfigCatClient.mutex.unlock() }
+        closeResources()
+        ConfigCatClient.instances.removeValue(forKey: sdkKey)
+    }
+
+    func closeResources() {
+        if !closed {
+            configService?.close()
+            hooks.clear()
+            closed = true
         }
     }
 
     deinit {
-        ConfigCatClient.sdkKeys.remove(sdkKey)
+        close()
     }
 
     // MARK: ConfigCatClientProtocol
 
+    /**
+     Gets the value of a feature flag or setting identified by the given `key`.
+
+     - Parameter key: the identifier of the feature flag or setting.
+     - Parameter defaultValue: in case of any failure, this value will be returned.
+     - Parameter user: the user object to identify the caller.
+     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     */
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        getSettings { settings in
-            completion(self.getValueFromSettings(settings: settings, key: key, defaultValue: defaultValue, user: user))
+        getSettings { result in
+            completion(self.getValueFromSettings(result: result, key: key, defaultValue: defaultValue, user: user ?? self.defaultUser))
         }
     }
 
+    /**
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+
+     - Parameter key: the identifier of the feature flag or setting.
+     - Parameter defaultValue: in case of any failure, this value will be returned.
+     - Parameter user: the user object to identify the caller.
+     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     */
+    public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
+        if key.isEmpty {
+            assert(false, "key cannot be empty")
+        }
+        getSettings { result in
+            completion(self.getValueDetailsFromSettings(result: result, key: key, defaultValue: defaultValue))
+        }
+    }
+
+    /// Gets all the setting keys asynchronously.
     @objc public func getAllKeys(completion: @escaping ([String]) -> ()) {
-        getSettings { settings in
-            completion([String](settings.keys))
+        getSettings { result in
+            completion([String](result.settings.keys))
         }
     }
 
+    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
     @objc public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil, completion: @escaping (String?) -> ()) {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-        getSettings { settings in
-            completion(self.getVariationIdFromSettings(settings: settings, key: key, defaultVariationId: defaultVariationId, user: user))
+        getSettings { result in
+            completion(self.getVariationIdFromSettings(result: result, key: key, defaultVariationId: defaultVariationId, user: user ?? self.defaultUser))
         }
     }
 
+    /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
-        getSettings { settings in
-            completion(self.getAllVariationIdsFromSettings(settings: settings, user: user))
+        getSettings { result in
+            completion(self.getAllVariationIdsFromSettings(result: result, user: user ?? self.defaultUser))
         }
     }
 
+    /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
-        getSettings { settings in
-            completion(self.getKeyAndValueFromSettings(settings: settings, variationId: variationId))
+        getSettings { result in
+            completion(self.getKeyAndValueFromSettings(result: result, variationId: variationId))
         }
     }
 
+    /// Gets the values of all feature flags or settings asynchronously.
     @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
-        getSettings { settings in
-            completion(self.getAllValuesFromSettings(settings: settings, user: user))
+        getSettings { result in
+            completion(self.getAllValuesFromSettings(result: result, user: user ?? self.defaultUser))
         }
     }
 
+    /**
+     Initiates a force refresh asynchronously on the cached configuration.
+
+     - Parameter completion: the function which will be called when refresh completed successfully.
+     */
+    @available(*, deprecated, message: "Use `forceRefresh()` instead")
     @objc public func refresh(completion: @escaping () -> ()) {
         if let configService = configService {
-            configService.refresh(completion: completion)
+            configService.refresh { _ in
+                completion()
+            }
         } else {
             log.warning(message: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect.")
             completion()
         }
     }
 
-    func getSettings(completion: @escaping ([String: Any]) -> Void) {
+    /**
+     Initiates a force refresh asynchronously on the cached configuration.
+
+     - Parameter completion: the function which will be called when refresh completed successfully.
+     */
+    @objc public func forceRefresh(completion: @escaping (RefreshResult) -> ()) {
+        if let configService = configService {
+            configService.refresh(completion: completion)
+        } else {
+            log.warning(message: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect.")
+            completion(RefreshResult(success: false, error: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect."))
+        }
+    }
+
+    func getSettings(completion: @escaping (SettingResult) -> Void) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            completion(overrideDataSource.getOverrides())
+            completion(SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
             return
         }
         guard let configService = configService else {
-            completion([:])
+            completion(SettingResult(settings: [:], fetchTime: .distantPast))
             return
         }
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
-                configService.settings { settings in
-                    completion(settings.merging(overrideDataSource.getOverrides()) { (_, new) in
+                configService.settings { result in
+                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                         new
-                    })
+                    }, fetchTime: result.fetchTime))
                 }
                 return
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
-                configService.settings { settings in
-                    completion(settings.merging(overrideDataSource.getOverrides()) { (current, _) in
+                configService.settings { result in
+                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                         current
-                    })
+                    }, fetchTime: result.fetchTime))
                 }
                 return
             }
@@ -176,7 +297,30 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
 
-    func getValueFromSettings<Value>(settings: [String: Any], key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
+    /// Sets the default user.
+    @objc public func setDefaultUser(user: ConfigCatUser) {
+        defaultUser = user
+    }
+
+    /// Sets the default user to null.
+    @objc public func clearDefaultUser() {
+        defaultUser = nil
+    }
+
+    /// Configures the SDK to allow HTTP requests.
+    @objc public func setOnline() {
+        configService?.setOnline()
+    }
+
+    /// Configures the SDK to not initiate HTTP requests.
+    @objc public func setOffline() {
+        configService?.setOffline()
+    }
+
+    /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
+    @objc public var isOffline: Bool {get {configService?.isOffline ?? true}}
+
+    func getValueFromSettings<Value>(result: SettingResult, key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
         if Value.self != String.self &&
                    Value.self != String?.self &&
                    Value.self != Int.self &&
@@ -188,104 +332,179 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Any.self &&
                    Value.self != Any?.self {
             log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                    value: defaultValue,
+                    error: "Only String, Integer, Double, Bool or Any types are supported."))
             return defaultValue
         }
-        if settings.isEmpty {
-            log.error(message: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)");
+        if result.settings.isEmpty {
+            log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                    value: defaultValue,
+                    error: String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")))
             return defaultValue
         }
 
-        let (value, _, evaluateLog): (Value?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
+        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Value?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
         if let evaluateLog = evaluateLog {
-            log.info(message: "%@", evaluateLog)
+            log.info(message: "%{public}@", evaluateLog)
         }
         if let value = value {
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
+                    value: value,
+                    variationId: variationId ?? "",
+                    fetchTime: result.fetchTime,
+                    user: user,
+                    matchedEvaluationRule: rolloutRule,
+                    matchedEvaluationPercentageRule: percentageRule))
             return value
         }
 
         log.error(message: """
-                           Evaluating the value for the key '%@' failed.
-                           Returning defaultValue: [%@].
-                           Here are the available keys: %@
-                           """, key, "\(defaultValue)", [String](settings.keys))
+                           Evaluating the value for the key '%{public}@' failed.
+                           Returning defaultValue: [%{public}@].
+                           Here are the available keys: %{public}@
+                           """, key, "\(defaultValue)", [String](result.settings.keys))
 
+        hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                value: defaultValue,
+                error: String(format: """
+                                      Evaluating the value for the key '%@' failed.
+                                      Returning defaultValue: [%@].
+                                      Here are the available keys: %@
+                                      """, key, "\(defaultValue)", [String](result.settings.keys))))
         return defaultValue
     }
 
-    func getVariationIdFromSettings(settings: [String: Any], key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
-        let (_, variationId, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
+    func getValueDetailsFromSettings<Value>(result: SettingResult, key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> TypedEvaluationDetails<Value> {
+        if Value.self != String.self &&
+                   Value.self != String?.self &&
+                   Value.self != Int.self &&
+                   Value.self != Int?.self &&
+                   Value.self != Double.self &&
+                   Value.self != Double?.self &&
+                   Value.self != Bool.self &&
+                   Value.self != Bool?.self &&
+                   Value.self != Any.self &&
+                   Value.self != Any?.self {
+            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            let message = "Only String, Integer, Double, Bool or Any types are supported."
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+            return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
+        }
+        if result.settings.isEmpty {
+            log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
+            let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+            return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
+        }
+        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Value?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
         if let evaluateLog = evaluateLog {
-            log.info(message: "%@", evaluateLog)
+            log.info(message: "%{public}@", evaluateLog)
+        }
+        if let value = value {
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
+                    value: value,
+                    variationId: variationId ?? "",
+                    fetchTime: result.fetchTime,
+                    user: user,
+                    matchedEvaluationRule: rolloutRule,
+                    matchedEvaluationPercentageRule: percentageRule))
+            return TypedEvaluationDetails<Value>(key: key,
+                    value: value,
+                    variationId: variationId ?? "",
+                    fetchTime: result.fetchTime,
+                    user: user,
+                    matchedEvaluationRule: rolloutRule,
+                    matchedEvaluationPercentageRule: percentageRule)
+        }
+        log.error(message: """
+                           Evaluating the value for the key '%{public}@' failed.
+                           Returning defaultValue: [%{public}@].
+                           Here are the available keys: %{public}@
+                           """, key, "\(defaultValue)", [String](result.settings.keys))
+        let message = String(format: """
+                                     Evaluating the value for the key '%@' failed.
+                                     Returning defaultValue: [%@].
+                                     Here are the available keys: %@
+                                     """, key, "\(defaultValue)", [String](result.settings.keys))
+        hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+        return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
+    }
+
+    func getVariationIdFromSettings(result: SettingResult, key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
+        let (_, variationId, evaluateLog, _, _): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
+        if let evaluateLog = evaluateLog {
+            log.info(message: "%{public}@", evaluateLog)
         }
         if let variationId = variationId {
             return variationId
         }
-
         log.error(message: """
-                           Evaluating the variation id for the key '%@' failed.
-                           Returning defaultVariationId: %@
-                           Here are the available keys: %@
-                           """, key, defaultVariationId ?? "nil", [String](settings.keys))
-
+                           Evaluating the variation id for the key '%{public}@' failed.
+                           Returning defaultVariationId: %{public}@
+                           Here are the available keys: %{public}@
+                           """, key, defaultVariationId ?? "nil", [String](result.settings.keys))
         return defaultVariationId
     }
 
-    func getAllVariationIdsFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String] {
+    func getAllVariationIdsFromSettings(result: SettingResult, user: ConfigCatUser? = nil) -> [String] {
         var variationIds = [String]()
-        for key in settings.keys {
-            let (_, variationId, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
+        for key in result.settings.keys {
+            let (_, variationId, evaluateLog, _, _): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
             if let evaluateLog = evaluateLog {
-                log.info(message: "%@", evaluateLog)
+                log.info(message: "%{public}@", evaluateLog)
             }
             if let variationId = variationId {
                 variationIds.append(variationId)
             } else {
-                log.error(message: "Evaluating the variation id for the key '%@' failed.", key)
+                log.error(message: "Evaluating the variation id for the key '%{public}@' failed.", key)
             }
         }
         return variationIds
     }
 
-    func getAllValuesFromSettings(settings: [String: Any], user: ConfigCatUser? = nil) -> [String: Any] {
+    func getAllValuesFromSettings(result: SettingResult, user: ConfigCatUser? = nil) -> [String: Any] {
         var allValues = [String: Any]()
-        for key in settings.keys {
-            let (value, _, evaluateLog): (Any?, String?, String?) = evaluator.evaluate(json: settings[key], key: key, user: user)
+        for key in result.settings.keys {
+            let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
             if let evaluateLog = evaluateLog {
-                log.info(message: "%@", evaluateLog)
+                log.info(message: "%{public}@", evaluateLog)
             }
             if let value = value {
+                hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
+                        value: value,
+                        variationId: variationId ?? "",
+                        fetchTime: result.fetchTime,
+                        user: user,
+                        matchedEvaluationRule: rolloutRule,
+                        matchedEvaluationPercentageRule: percentageRule))
                 allValues[key] = value
             } else {
-                log.error(message: "Evaluating the value for the key '%@' failed.", key)
+                log.error(message: "Evaluating the value for the key '%{public}@' failed.", key)
             }
         }
         return allValues
     }
 
-    func getKeyAndValueFromSettings(settings: [String: Any], variationId: String) -> KeyValue? {
-        for (key, json) in settings {
-            if let json = json as? [String: Any], let value = json[Config.value] {
-                if variationId == json[Config.variationId] as? String {
-                    return KeyValue(key: key, value: value)
+    func getKeyAndValueFromSettings(result: SettingResult, variationId: String) -> KeyValue? {
+        for (key, setting) in result.settings {
+            if variationId == setting.variationId {
+                return KeyValue(key: key, value: setting.value)
+            }
+            for rule in setting.rolloutRules {
+                if variationId == rule.variationId {
+                    return KeyValue(key: key, value: rule.value)
                 }
-
-                let rolloutRules = json[Config.rolloutRules] as? [[String: Any]] ?? []
-                for rule in rolloutRules {
-                    if variationId == rule[Config.variationId] as? String, let value = rule[Config.value] {
-                        return KeyValue(key: key, value: value)
-                    }
-                }
-
-                let rolloutPercentageItems = json[Config.rolloutPercentageItems] as? [[String: Any]] ?? []
-                for rule in rolloutPercentageItems {
-                    if variationId == rule[Config.variationId] as? String, let value = rule[Config.value] {
-                        return KeyValue(key: key, value: value)
-                    }
+            }
+            for rule in setting.percentageItems {
+                if variationId == rule.variationId {
+                    return KeyValue(key: key, value: rule.value)
                 }
             }
         }
 
-        log.error(message: "Could not find the setting for the given variationId: '%@'", variationId);
+        log.error(message: "Could not find the setting for the given variationId: '%{public}@'", variationId);
         return nil
     }
 }

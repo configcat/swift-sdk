@@ -12,13 +12,16 @@ class LocalTests: XCTestCase {
             "doubleSetting": 3.14,
             "stringSetting": "test"
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOnly))
+        let options = ClientOptions.default
+        options.flagOverrides = LocalDictionaryDataSource(source: dictionary, behaviour: .localOnly)
+        let client = ConfigCatClient.get(sdkKey: "testKey", options: options)
+        defer { client.close() }
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["enabledFeature"] as? Bool ?? false)
             XCTAssertFalse(values["disabledFeature"] as? Bool ?? true)
             XCTAssertEqual(5, values["intSetting"] as? Int ?? 0)
-            XCTAssertEqual(3.14, values["doubleSetting"] as? Double ?? 3.14)
+            XCTAssertEqual(3.14, values["doubleSetting"] as? Double ?? 0.0)
             XCTAssertEqual("test", values["stringSetting"] as? String ?? "")
             expectation.fulfill()
         }
@@ -33,7 +36,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
@@ -51,7 +54,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertFalse(values["fakeKey"] as? Bool ?? true)

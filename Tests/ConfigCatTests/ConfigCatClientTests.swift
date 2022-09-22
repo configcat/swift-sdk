@@ -14,7 +14,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "43"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 10) { value in
                 XCTAssertEqual(43, value)
                 expectation.fulfill()
@@ -27,7 +27,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 10) { value in
                 XCTAssertEqual(10, value)
                 expectation.fulfill()
@@ -40,7 +40,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "{", statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 10) { value in
                 XCTAssertEqual(10, value)
                 expectation.fulfill()
@@ -53,7 +53,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "def") { value in
                 XCTAssertEqual("fake", value)
                 expectation.fulfill()
@@ -66,7 +66,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "33"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "def") { value in
                 XCTAssertEqual("def", value)
                 expectation.fulfill()
@@ -79,7 +79,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "43.56"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 3.14) { value in
                 XCTAssertEqual(43.56, value)
                 expectation.fulfill()
@@ -92,7 +92,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 404, error: TestError.test))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 3.14) { value in
                 XCTAssertEqual(3.14, value)
                 expectation.fulfill()
@@ -105,7 +105,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "true"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: false) { value in
                 XCTAssertTrue(value)
                 expectation.fulfill()
@@ -118,7 +118,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 404, error: TestError.test))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: false) { value in
                 XCTAssertFalse(value)
                 expectation.fulfill()
@@ -131,7 +131,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: Float(55)) { value in
                 XCTAssertEqual(Float(55), value)
                 expectation.fulfill()
@@ -145,7 +145,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         let client = createClient()
         let expectation1 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 0) { value in
                 XCTAssertEqual(55, value)
                 expectation1.fulfill()
@@ -154,7 +154,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation1], timeout: 2)
 
         let expectation2 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: 0) { value in
                 XCTAssertEqual(55, value)
                 expectation2.fulfill()
@@ -177,7 +177,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation1], timeout: 2)
 
         let expectation2 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("test2", value)
                 expectation2.fulfill()
@@ -200,7 +200,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation1], timeout: 2)
 
         let expectation2 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("test2", value)
                 expectation2.fulfill()
@@ -242,9 +242,9 @@ class ConfigCatClientTests: XCTestCase {
     func testFromCacheOnly() throws {
         let cache = InMemoryConfigCache()
         let sdkKey = "test"
-        let keyToHash = "swift_" + sdkKey + "_" + Constants.configJsonName
+        let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
         let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
-        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\""))
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().toJsonString())
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session(), configCache: cache)
@@ -259,14 +259,14 @@ class ConfigCatClientTests: XCTestCase {
     func testFromCacheOnlyRefresh() throws {
         let cache = InMemoryConfigCache()
         let sdkKey = "test"
-        let keyToHash = "swift_" + sdkKey + "_" + Constants.configJsonName
+        let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
         let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
-        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\""))
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().toJsonString())
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session(), configCache: cache)
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("fake", value)
                 expectation.fulfill()
@@ -279,7 +279,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), session: MockHTTP.session())
         let expectation1 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("", value)
                 expectation1.fulfill()
@@ -303,7 +303,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
         let client = createClient()
         let expectation1 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getAllValues { allValues in
                 XCTAssertEqual(2, allValues.count)
                 XCTAssertEqual(true, allValues["key1"] as! Bool)
@@ -318,7 +318,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("fake", value)
                 expectation.fulfill()
@@ -332,7 +332,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(), session: MockHTTP.session())
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("fake", value)
                 expectation.fulfill()
@@ -346,7 +346,7 @@ class ConfigCatClientTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
                 XCTAssertEqual("fake", value)
                 expectation.fulfill()

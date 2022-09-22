@@ -3,7 +3,8 @@ import XCTest
 
 class ConfigCatClientIntegrationTests: XCTestCase {
     func testGetAllKeys() {
-        let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        defer { client.close() }
         let expectation = expectation(description: "wait for all keys")
         client.getAllKeys { keys in
             XCTAssertEqual(16, keys.count)
@@ -14,7 +15,8 @@ class ConfigCatClientIntegrationTests: XCTestCase {
     }
 
     func testGetAllValues() {
-        let client = ConfigCatClient(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        defer { client.close() }
         let expectation = expectation(description: "wait for all values")
         client.getAllValues { allValues in
             XCTAssertEqual(16, allValues.count)

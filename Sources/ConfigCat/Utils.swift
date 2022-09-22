@@ -14,19 +14,10 @@ struct ParseError: Error, CustomStringConvertible {
     }
 }
 
-extension String {
-    func parseConfigFromJson() -> Result<Config, Error> {
-        do {
-            guard let data = data(using: .utf8) else {
-                return .failure(ParseError(message: "Decode to utf8 data failed."))
-            }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
-            }
-            return .success(Config(preferences: jsonObject[Config.preferences] as? [String: Any] ?? [:], entries: jsonObject[Config.entries] as? [String: Any] ?? [:]))
-        } catch {
-            return .failure(error)
-        }
+extension StaticString {
+    @inlinable
+    var stringValue: String {
+        self.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
     }
 }
 
