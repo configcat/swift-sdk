@@ -48,7 +48,7 @@ class ManualPollingTests: XCTestCase {
         let hooks = Hooks()
         hooks.addOnError { error in
             called = true
-            XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", error)
+            XCTAssertTrue(error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey."))
         }
         let logger = Logger(level: .warning, hooks: hooks)
 
@@ -70,7 +70,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", result.error)
+            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
                 expectation2.fulfill()

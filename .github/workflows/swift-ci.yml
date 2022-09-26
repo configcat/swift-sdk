@@ -32,9 +32,9 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
-          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
-        if: success() || failure()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
@@ -54,9 +54,9 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -quiet
-          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -resultBundlePath tests/${{ matrix.platform }}
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
-        if: success() || failure()
+        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: test-results
