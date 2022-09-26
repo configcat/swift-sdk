@@ -70,7 +70,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false)
+            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("500") ?? false)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
                 expectation2.fulfill()

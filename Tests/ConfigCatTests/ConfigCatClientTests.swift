@@ -455,7 +455,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 2)
 
         waitFor {
-            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.")
+            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
         }
     }
 
@@ -487,7 +487,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 2)
 
         waitFor {
-            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.")
+            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
         }
     }
 
