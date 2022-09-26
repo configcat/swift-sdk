@@ -387,7 +387,7 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testDefaultUser() {
-        MockHTTP.enqueueResponse(response: Response(body: Utils.createTestConfigWithRules().toJsonString(), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: createTestConfigWithRules().toJsonString(), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -454,9 +454,9 @@ class ConfigCatClientTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 2)
 
-        XCTAssertTrue(changed)
-        XCTAssertTrue(ready)
-        XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", error)
+        waitFor {
+            changed && ready && "Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500" == error
+        }
     }
 
     func testHooksSub() {
@@ -486,8 +486,9 @@ class ConfigCatClientTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 2)
 
-        XCTAssertTrue(changed)
-        XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", error)
+        waitFor {
+            changed && "Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500" == error
+        }
     }
 
     private func createClient() -> ConfigCatClient {

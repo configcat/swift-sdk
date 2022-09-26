@@ -77,7 +77,10 @@ class ManualPollingTests: XCTestCase {
             }
         }
         wait(for: [expectation2], timeout: 2)
-        XCTAssertTrue(called)
+
+        waitFor {
+            called
+        }
     }
 
     func testCache() throws {
