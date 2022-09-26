@@ -81,7 +81,7 @@
 		F1BC414628E1D54800F2230A /* ClientOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414328E1D54800F2230A /* ClientOptions.swift */; };
 		F1BC414728E1D54800F2230A /* EvaluationDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414428E1D54800F2230A /* EvaluationDetails.swift */; };
 		F1BC414828E1D54800F2230A /* EvaluationDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414428E1D54800F2230A /* EvaluationDetails.swift */; };
-		F1BC414A28E1D55C00F2230A /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414928E1D55C00F2230A /* Utils.swift */; };
+		F1BC414C28E1D6C900F2230A /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414B28E1D6C900F2230A /* Helpers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -146,7 +146,7 @@
 		F17DEE27288876F6009C3E48 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		F1BC414328E1D54800F2230A /* ClientOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientOptions.swift; sourceTree = "<group>"; };
 		F1BC414428E1D54800F2230A /* EvaluationDetails.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvaluationDetails.swift; sourceTree = "<group>"; };
-		F1BC414928E1D55C00F2230A /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		F1BC414B28E1D6C900F2230A /* Helpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		F1E1180A257532D700DA245A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -244,7 +244,7 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				F1BC414928E1D55C00F2230A /* Utils.swift */,
+				F1BC414B28E1D6C900F2230A /* Helpers.swift */,
 				F11F76BD288AE7540097939F /* SyncTests.swift */,
 				F11F76BB288AD6CA0097939F /* AsyncAwaitTests.swift */,
 				F17DEE22288876AE009C3E48 /* LazyLoadingTests.swift */,
@@ -433,7 +433,6 @@
 				F17DEE2F288876F7009C3E48 /* Utils.swift in Sources */,
 				F11F76BC288AD6CA0097939F /* AsyncAwaitTests.swift in Sources */,
 				C4FA1B41278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */,
-				F1BC414A28E1D55C00F2230A /* Utils.swift in Sources */,
 				F17DEE23288876AE009C3E48 /* LazyLoadingTests.swift in Sources */,
 				B4BD2AEF258CA7DF007371E2 /* ConfigCache.swift in Sources */,
 				B4BD2AF1258CA7DF007371E2 /* Version+Comparable.swift in Sources */,
@@ -442,6 +441,7 @@
 				B4BD2AF6258CA7DF007371E2 /* RolloutEvaluator.swift in Sources */,
 				F1BC414628E1D54800F2230A /* ClientOptions.swift in Sources */,
 				F17DEE2D288876F7009C3E48 /* ConfigService.swift in Sources */,
+				F1BC414C28E1D6C900F2230A /* Helpers.swift in Sources */,
 				F17DEE2B288876F7009C3E48 /* Mutex.swift in Sources */,
 				B4BD2AF7258CA7DF007371E2 /* PollingModes.swift in Sources */,
 				B4BD2AF8258CA7DF007371E2 /* ConfigCatClientTests.swift in Sources */,
