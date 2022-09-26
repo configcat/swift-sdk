@@ -50,7 +50,7 @@ public protocol ConfigCatClientProtocol {
     func setOffline()
 
     /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
-    var isOffline: Bool {get}
+    var isOffline: Bool { get }
 
     /**
      Initiates a force refresh asynchronously on the cached configuration.

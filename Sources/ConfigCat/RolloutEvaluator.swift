@@ -333,6 +333,7 @@ internal extension Data {
     var hexString: String {
         map {
             String(format: "%02x", UInt8($0))
-        }.joined()
+        }
+                .joined()
     }
 }

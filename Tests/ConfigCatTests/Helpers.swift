@@ -24,7 +24,7 @@ extension JsonSerializable {
 
 class Utils {
     static func createTestConfigWithRules() -> Config {
-        Config(entries: [ "key": Setting(value: "def", variationId: "defVar", percentageItems: [], rolloutRules: [
+        Config(entries: ["key": Setting(value: "def", variationId: "defVar", percentageItems: [], rolloutRules: [
             RolloutRule(value: "fake1", variationId: "id1", comparator: 2, comparisonAttribute: "Identifier", comparisonValue: "@test1.com"),
             RolloutRule(value: "fake2", variationId: "id2", comparator: 2, comparisonAttribute: "Identifier", comparisonValue: "@test2.com")
         ])])

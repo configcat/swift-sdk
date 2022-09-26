@@ -64,7 +64,9 @@ class ConfigService {
                     return
                 }
                 this.mutex.lock()
-                defer { this.mutex.unlock() }
+                defer {
+                    this.mutex.unlock()
+                }
 
                 // Max wait time expired without result, notify subscribers with the cached config.
                 if !this.initialized {
@@ -84,7 +86,9 @@ class ConfigService {
 
     func close() {
         mutex.lock()
-        defer { mutex.unlock() }
+        defer {
+            mutex.unlock()
+        }
 
         callCompletions(result: .success(cachedEntry))
         completions = nil
@@ -98,14 +102,14 @@ class ConfigService {
             fetchIfOlder(time: Date().subtract(seconds: lazy.cacheRefreshIntervalInSeconds)!) { result in
                 switch result {
                 case .success(let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
-                case.failure(_): completion(SettingResult(settings: self.cachedEntry.config.entries, fetchTime: self.cachedEntry.fetchTime))
+                case .failure(_): completion(SettingResult(settings: self.cachedEntry.config.entries, fetchTime: self.cachedEntry.fetchTime))
                 }
             }
         default:
             fetchIfOlder(time: .distantPast, preferCache: true) { result in
                 switch result {
                 case .success(let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
-                case.failure(_): completion(SettingResult(settings: self.cachedEntry.config.entries, fetchTime: self.cachedEntry.fetchTime))
+                case .failure(_): completion(SettingResult(settings: self.cachedEntry.config.entries, fetchTime: self.cachedEntry.fetchTime))
                 }
             }
         }
@@ -122,8 +126,12 @@ class ConfigService {
 
     func setOnline() {
         mutex.lock()
-        defer { mutex.unlock() }
-        if !offline { return }
+        defer {
+            mutex.unlock()
+        }
+        if !offline {
+            return
+        }
         offline = false
         if let autoPoll = pollingMode as? AutoPollingMode {
             startPoll(mode: autoPoll)
@@ -133,19 +141,29 @@ class ConfigService {
 
     func setOffline() {
         mutex.lock()
-        defer { mutex.unlock() }
-        if offline { return }
+        defer {
+            mutex.unlock()
+        }
+        if offline {
+            return
+        }
         offline = true
         pollTimer?.cancel()
         pollTimer = nil
         log.debug(message: "Switched to OFFLINE mode.")
     }
 
-    var isOffline: Bool {get {offline} }
+    var isOffline: Bool {
+        get {
+            offline
+        }
+    }
 
     private func fetchIfOlder(time: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
         mutex.lock()
-        defer { mutex.unlock() }
+        defer {
+            mutex.unlock()
+        }
 
         // Sync up with the cache and use it when it's not expired.
         if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
@@ -191,7 +209,9 @@ class ConfigService {
 
     private func processResponse(response: FetchResponse) {
         mutex.lock()
-        defer { mutex.unlock() }
+        defer {
+            mutex.unlock()
+        }
 
         if !initialized {
             initialized = true

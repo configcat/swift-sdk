@@ -67,7 +67,9 @@ class Config: JsonSerializable {
 
     static func fromJson(json: [String: Any]) -> Config {
         let entriesMap = json[Config.entriesKey] as? [String: Any] ?? [:]
-        let entries = entriesMap.mapValues { entry in Setting.fromJson(json: entry as? [String: Any] ?? [:]) }
+        let entries = entriesMap.mapValues { entry in
+            Setting.fromJson(json: entry as? [String: Any] ?? [:])
+        }
         if let preferences = json[Config.preferencesKey] as? [String: Any] {
             return Config(preferences: Preferences.fromJson(json: preferences), entries: entries)
         }
@@ -76,7 +78,9 @@ class Config: JsonSerializable {
 
     func toJsonMap() -> [String: Any] {
         var result: [String: Any] = [
-            Config.entriesKey: entries.mapValues { setting in setting.toJsonMap() },
+            Config.entriesKey: entries.mapValues { setting in
+                setting.toJsonMap()
+            },
         ]
         if let pref = preferences {
             result[Config.preferencesKey] = pref.toJsonMap()
@@ -148,16 +152,24 @@ public final class Setting: NSObject, JsonSerializable {
 
         return Setting(value: json[Setting.valueKey] ?? "",
                 variationId: json[Setting.variationIdKey] as? String ?? "",
-                percentageItems: percentageRules.map { rule in PercentageRule.fromJson(json: rule) },
-                rolloutRules: rolloutRules.map { rule in RolloutRule.fromJson(json: rule) })
+                percentageItems: percentageRules.map { rule in
+                    PercentageRule.fromJson(json: rule)
+                },
+                rolloutRules: rolloutRules.map { rule in
+                    RolloutRule.fromJson(json: rule)
+                })
     }
 
     func toJsonMap() -> [String: Any] {
         [
             Setting.valueKey: value,
             Setting.variationIdKey: variationId,
-            Setting.percentageItemsKey: percentageItems.map { rule in rule.toJsonMap() },
-            Setting.rolloutRulesKey: rolloutRules.map { rule in rule.toJsonMap() },
+            Setting.percentageItemsKey: percentageItems.map { rule in
+                rule.toJsonMap()
+            },
+            Setting.rolloutRulesKey: rolloutRules.map { rule in
+                rule.toJsonMap()
+            },
         ]
     }
 }

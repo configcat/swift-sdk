@@ -17,7 +17,7 @@ struct ParseError: Error, CustomStringConvertible {
 class Weak<T: AnyObject> {
     weak private var value: T?
 
-    init (value: T) {
+    init(value: T) {
         self.value = value
     }
 
@@ -29,7 +29,9 @@ class Weak<T: AnyObject> {
 extension StaticString {
     @inlinable
     var stringValue: String {
-        self.withUTF8Buffer { String(decoding: $0, as: UTF8.self) }
+        self.withUTF8Buffer {
+            String(decoding: $0, as: UTF8.self)
+        }
     }
 }
 

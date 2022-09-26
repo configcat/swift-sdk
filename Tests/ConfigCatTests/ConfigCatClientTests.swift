@@ -431,9 +431,15 @@ class ConfigCatClientTests: XCTestCase {
         var changed = false
         var ready = false
         let hooks = Hooks()
-        hooks.addOnError { e in error = e }
-        hooks.addOnReady { ready = true }
-        hooks.addOnConfigChanged { _ in changed = true }
+        hooks.addOnError { e in
+            error = e
+        }
+        hooks.addOnReady {
+            ready = true
+        }
+        hooks.addOnConfigChanged { _ in
+            changed = true
+        }
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), hooks: hooks)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -459,9 +465,15 @@ class ConfigCatClientTests: XCTestCase {
         var ready = false
         let hooks = Hooks()
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: hooks)
-        client.hooks.addOnError { e in error = e }
-        client.hooks.addOnReady { ready = true }
-        client.hooks.addOnConfigChanged { _ in changed = true }
+        client.hooks.addOnError { e in
+            error = e
+        }
+        client.hooks.addOnReady {
+            ready = true
+        }
+        client.hooks.addOnConfigChanged { _ in
+            changed = true
+        }
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             expectation.fulfill()

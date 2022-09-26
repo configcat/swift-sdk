@@ -106,40 +106,41 @@ class ConfigFetcher: NSObject {
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let request = getRequest(url: url, eTag: eTag)
         session.dataTask(with: request) { (data, resp, error) in
-            if let error = error {
-                var extraInfo = ""
-                if error._code == NSURLErrorTimedOut {
-                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
-                }
-                self.log.error(message: "An error occurred during the config fetch: %{public}@%{public}@", error.localizedDescription, extraInfo)
-                completion(.failure(String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)))
-            } else {
-                let response = resp as! HTTPURLResponse
-                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
-                    self.log.debug(message: "Fetch was successful: new config fetched")
-                    let etag = response.allHeaderFields["Etag"] as? String ?? ""
-                    let jsonString = String(data: data, encoding: .utf8) ?? ""
-                    let configResult = self.parseConfigFromJson(json: jsonString)
-                    switch configResult {
-                    case .success(let config):
-                        completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
-                    case .failure(let error):
-                        self.log.error(message: "An error occurred during JSON deserialization. %{public}@", error.localizedDescription)
-                        completion(.failure(String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)))
+                    if let error = error {
+                        var extraInfo = ""
+                        if error._code == NSURLErrorTimedOut {
+                            extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
+                        }
+                        self.log.error(message: "An error occurred during the config fetch: %{public}@%{public}@", error.localizedDescription, extraInfo)
+                        completion(.failure(String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)))
+                    } else {
+                        let response = resp as! HTTPURLResponse
+                        if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                            self.log.debug(message: "Fetch was successful: new config fetched")
+                            let etag = response.allHeaderFields["Etag"] as? String ?? ""
+                            let jsonString = String(data: data, encoding: .utf8) ?? ""
+                            let configResult = self.parseConfigFromJson(json: jsonString)
+                            switch configResult {
+                            case .success(let config):
+                                completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
+                            case .failure(let error):
+                                self.log.error(message: "An error occurred during JSON deserialization. %{public}@", error.localizedDescription)
+                                completion(.failure(String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)))
+                            }
+                        } else if response.statusCode == 304 {
+                            self.log.debug(message: "Fetch was successful: not modified")
+                            completion(.notModified)
+                        } else {
+                            self.log.error(message: """
+                                                    Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %{public}@
+                                                    """, String(response.statusCode))
+                            completion(.failure(String(format: """
+                                                               Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                                               """, String(response.statusCode))))
+                        }
                     }
-                } else if response.statusCode == 304 {
-                    self.log.debug(message: "Fetch was successful: not modified")
-                    completion(.notModified)
-                } else {
-                    self.log.error(message: """
-                                            Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %{public}@
-                                            """, String(response.statusCode))
-                    completion(.failure(String(format: """
-                                                       Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                                                       """, String(response.statusCode))))
                 }
-            }
-        }.resume()
+                .resume()
     }
 
     private func getRequest(url: String, eTag: String) -> URLRequest {

@@ -104,7 +104,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      */
     @objc public static func get(sdkKey: String, options: ClientOptions? = nil) -> ConfigCatClient {
         mutex.lock()
-        defer { mutex.unlock() }
+        defer {
+            mutex.unlock()
+        }
         if let client = instances[sdkKey]?.get(), options != nil {
             client.log.warning(message: """
                                         Client for '%{public}@' is already created and will be reused; options passed are being ignored.
@@ -129,7 +131,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Closes all ConfigCatClient instances.
     @objc public static func closeAll() {
         mutex.lock()
-        defer { mutex.unlock() }
+        defer {
+            mutex.unlock()
+        }
         for item in instances {
             item.value.get()?.closeResources()
         }
@@ -142,7 +146,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Closes the underlying resources.
     @objc public func close() {
         ConfigCatClient.mutex.lock()
-        defer { ConfigCatClient.mutex.unlock() }
+        defer {
+            ConfigCatClient.mutex.unlock()
+        }
         closeResources()
         ConfigCatClient.instances.removeValue(forKey: sdkKey)
     }
@@ -317,7 +323,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
-    @objc public var isOffline: Bool {get {configService?.isOffline ?? true}}
+    @objc public var isOffline: Bool {
+        get {
+            configService?.isOffline ?? true
+        }
+    }
 
     func getValueFromSettings<Value>(result: SettingResult, key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
         if Value.self != String.self &&
