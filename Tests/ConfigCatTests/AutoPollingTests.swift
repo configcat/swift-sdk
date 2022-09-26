@@ -185,4 +185,72 @@ class AutoPollingTests: XCTestCase {
         wait(for: [expectation2], timeout: 2)
     }
 
+    func testPollIntervalRespectsCacheExpiration() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let cache = SingleValueCache(initValue: initValue)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        sleep(3)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+    }
+
+    func testOnlineOffline() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        Thread.sleep(forTimeInterval: 1.5)
+
+        service.setOffline()
+        XCTAssertTrue(service.isOffline)
+        XCTAssertEqual(2, MockHTTP.requests.count)
+
+        Thread.sleep(forTimeInterval: 2)
+
+        XCTAssertEqual(2, MockHTTP.requests.count)
+        service.setOnline()
+        XCTAssertFalse(service.isOffline)
+
+        Thread.sleep(forTimeInterval: 1)
+
+        XCTAssertEqual(3, MockHTTP.requests.count)
+    }
+
+    func testInitWaitTimeIgnoredWhenCacheIsNotExpired() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let cache = SingleValueCache(initValue: initValue)
+        let start = Date()
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let endTime = Date()
+        let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
+        XCTAssert(elapsedTimeInSeconds < 1)
+    }
 }

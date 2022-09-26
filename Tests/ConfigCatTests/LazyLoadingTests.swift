@@ -137,4 +137,132 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 2)
     }
+
+    func testCacheExpirationRespectedInTTLCalc() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let cache = SingleValueCache(initValue: initValue)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let expectation2 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        sleep(1)
+
+        let expectation3 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        let expectation4 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation4.fulfill()
+        }
+        wait(for: [expectation4], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+    }
+
+    func testCacheExpirationRespectedInTTLCalc304() throws {
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 304))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let cache = SingleValueCache(initValue: initValue)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        let expectation2 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        sleep(1)
+
+        let expectation3 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        let expectation4 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation4.fulfill()
+        }
+        wait(for: [expectation4], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+    }
+
+    func testOnlineOffline() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+
+        service.setOffline()
+        Thread.sleep(forTimeInterval: 1.5)
+
+        let expectation2 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+
+        service.setOnline()
+
+        let expectation3 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        XCTAssertEqual(2, MockHTTP.requests.count)
+    }
 }

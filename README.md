@@ -49,7 +49,7 @@ If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) 
 
 ``` swift
 dependencies: [
-  .package(url: "https://github.com/configcat/swift-sdk", from: "9.0.1")
+  .package(url: "https://github.com/configcat/swift-sdk", from: "9.1.0")
 ]
 ```
 
@@ -63,7 +63,7 @@ import ConfigCat
 
 ### 4. Create a *ConfigCat* client instance
 ```swift
-let client = ConfigCatClient(sdkKey: "#YOUR-SDK-KEY#")
+let client = ConfigCatClient.get(sdkKey: "#YOUR-SDK-KEY#")
 ```
 
 ### 5. Get your setting value
@@ -84,6 +84,11 @@ if isMyAwesomeFeatureEnabled {
     doTheOldThing()
 }
 ```
+
+### 6. Close the client on application exit
+ ```swift
+ client.close();
+ ```
 
 ## Getting user specific setting values with Targeting
 Using this feature, you will be able to get different setting values for different users in your application by passing a `User Object` to the `getValue()` function.

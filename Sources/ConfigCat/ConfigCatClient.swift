@@ -24,7 +24,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private var defaultUser: ConfigCatUser?
 
     private static let mutex = Mutex()
-    private static var instances: [String: ConfigCatClient] = [:]
+    private static var instances: [String: Weak<ConfigCatClient>] = [:]
 
     /**
      Initializes a new `ConfigCatClient`.
@@ -102,28 +102,27 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
        - options: the configuration options.
      - Returns: the ConfigCatClient instance.
      */
-    @objc public static func get(sdkKey: String, options: ClientOptions = ClientOptions.default) -> ConfigCatClient {
+    @objc public static func get(sdkKey: String, options: ClientOptions? = nil) -> ConfigCatClient {
         mutex.lock()
         defer { mutex.unlock() }
-        if let client = instances[sdkKey] {
-            if options != ClientOptions.default {
-                client.log.warning(message: """
-                                            Client for '%{public}@' is already created and will be reused; options passed are being ignored.
-                                            """, sdkKey)
-            }
+        if let client = instances[sdkKey]?.get(), options != nil {
+            client.log.warning(message: """
+                                        Client for '%{public}@' is already created and will be reused; options passed are being ignored.
+                                        """, sdkKey)
             return client
         }
+        let opts = options ?? ClientOptions.default
         let client = ConfigCatClient(sdkKey: sdkKey,
-                refreshMode: options.refreshMode,
-                session: URLSession(configuration: options.sessionConfiguration),
-                hooks: options.hooks,
-                configCache: options.configCache,
-                baseUrl: options.baseUrl,
-                dataGovernance: options.dataGovernance,
-                flagOverrides: options.flagOverrides,
-                defaultUser: options.defaultUser,
-                logLevel: options.logLevel)
-        instances[sdkKey] = client
+                refreshMode: opts.refreshMode,
+                session: URLSession(configuration: opts.sessionConfiguration),
+                hooks: opts.hooks,
+                configCache: opts.configCache,
+                baseUrl: opts.baseUrl,
+                dataGovernance: opts.dataGovernance,
+                flagOverrides: opts.flagOverrides,
+                defaultUser: opts.defaultUser,
+                logLevel: opts.logLevel)
+        instances[sdkKey] = Weak(value: client)
         return client
     }
 
@@ -132,7 +131,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         mutex.lock()
         defer { mutex.unlock() }
         for item in instances {
-            item.value.closeResources()
+            item.value.get()?.closeResources()
         }
         instances.removeAll()
     }
@@ -192,7 +191,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
         getSettings { result in
-            completion(self.getValueDetailsFromSettings(result: result, key: key, defaultValue: defaultValue))
+            completion(self.getValueDetailsFromSettings(result: result, key: key, defaultValue: defaultValue, user: user ?? self.defaultUser))
         }
     }
 

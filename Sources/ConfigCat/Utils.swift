@@ -14,6 +14,18 @@ struct ParseError: Error, CustomStringConvertible {
     }
 }
 
+class Weak<T: AnyObject> {
+    weak private var value: T?
+
+    init (value: T) {
+        self.value = value
+    }
+
+    func get() -> T? {
+        value
+    }
+}
+
 extension StaticString {
     @inlinable
     var stringValue: String {
@@ -33,7 +45,7 @@ extension Date {
 }
 
 class Constants {
-    static let version: String = "9.0.1"
+    static let version: String = "9.1.0"
     static let configJsonName: String = "config_v5"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"

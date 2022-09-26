@@ -165,4 +165,48 @@ class ManualPollingTests: XCTestCase {
 
         XCTAssertEqual(0, MockHTTP.requests.count)
     }
+
+    func testOnlineOffline() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let cache = SingleValueCache(initValue: initValue)
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertTrue(result.success)
+            XCTAssertNil(result.error)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+
+        service.setOffline()
+
+        let expectation2 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+
+        service.setOnline()
+
+        let expectation3 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertTrue(result.success)
+            XCTAssertNil(result.error)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        XCTAssertEqual(2, MockHTTP.requests.count)
+    }
 }

@@ -15,7 +15,6 @@ class LocalTests: XCTestCase {
         let options = ClientOptions.default
         options.flagOverrides = LocalDictionaryDataSource(source: dictionary, behaviour: .localOnly)
         let client = ConfigCatClient.get(sdkKey: "testKey", options: options)
-        defer { client.close() }
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["enabledFeature"] as? Bool ?? false)

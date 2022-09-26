@@ -1,6 +1,10 @@
 import Foundation
 
-class ConfigEntry: Equatable {
+protocol JsonSerializable {
+    func toJsonMap() -> [String: Any]
+}
+
+class ConfigEntry: Equatable, JsonSerializable {
     static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
         lhs.eTag == rhs.eTag
     }
@@ -49,7 +53,7 @@ class ConfigEntry: Equatable {
     static let empty = ConfigEntry(eTag: "empty")
 }
 
-class Config {
+class Config: JsonSerializable {
     static let preferencesKey = "p"
     static let entriesKey = "f"
 
@@ -88,7 +92,7 @@ class Config {
     static let empty = Config()
 }
 
-class Preferences {
+class Preferences: JsonSerializable {
     static let preferencesUrlKey = "u"
     static let preferencesRedirectKey = "r"
 
@@ -113,7 +117,7 @@ class Preferences {
     }
 }
 
-public final class Setting: NSObject {
+public final class Setting: NSObject, JsonSerializable {
     static let valueKey = "v"
     static let percentageItemsKey = "p"
     static let rolloutRulesKey = "r"
@@ -158,7 +162,7 @@ public final class Setting: NSObject {
     }
 }
 
-public final class RolloutRule: NSObject {
+public final class RolloutRule: NSObject, JsonSerializable {
     static let valueKey = "v"
     static let comparatorKey = "t"
     static let comparisonAttributeKey = "a"
@@ -226,7 +230,7 @@ public final class RolloutRule: NSObject {
     }
 }
 
-public final class PercentageRule: NSObject {
+public final class PercentageRule: NSObject, JsonSerializable {
     static let valueKey = "v"
     static let percentageKey = "p"
     static let variationIdKey = "i"

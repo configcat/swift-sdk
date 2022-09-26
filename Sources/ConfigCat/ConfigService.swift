@@ -124,17 +124,21 @@ class ConfigService {
         mutex.lock()
         defer { mutex.unlock() }
         if !offline { return }
+        offline = false
         if let autoPoll = pollingMode as? AutoPollingMode {
             startPoll(mode: autoPoll)
         }
+        log.debug(message: "Switched to ONLINE mode.")
     }
 
     func setOffline() {
         mutex.lock()
         defer { mutex.unlock() }
         if offline { return }
+        offline = true
         pollTimer?.cancel()
         pollTimer = nil
+        log.debug(message: "Switched to OFFLINE mode.")
     }
 
     var isOffline: Bool {get {offline} }
@@ -225,13 +229,13 @@ class ConfigService {
 
     private func startPoll(mode: AutoPollingMode) {
         pollTimer = DispatchSource.makeTimerSource()
-        let interval: Int = Int(Double(mode.autoPollIntervalInSeconds) * 0.8)
         pollTimer?.schedule(deadline: .now(), repeating: .seconds(mode.autoPollIntervalInSeconds))
+        let ageThreshold = Int(Double(mode.autoPollIntervalInSeconds) * 0.8)
         pollTimer?.setEventHandler(handler: { [weak self] in
             guard let this = self else {
                 return
             }
-            this.fetchIfOlder(time: Date().subtract(seconds: interval)!) { _ in
+            this.fetchIfOlder(time: Date().subtract(seconds: ageThreshold)!) { _ in
                 // we don't have to do anything with the result in the timer ticks.
             }
         })

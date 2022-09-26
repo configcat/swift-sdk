@@ -356,6 +356,101 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual("ConfigCat-Swift/m-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
+    func testOnlineOffline() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
+        let client = createClient()
+        let expectation = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        client.setOffline()
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        client.setOnline()
+
+        let expectation3 = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        XCTAssertEqual(2, MockHTTP.requests.count)
+    }
+
+    func testDefaultUser() {
+        MockHTTP.enqueueResponse(response: Response(body: Utils.createTestConfigWithRules().toJsonString(), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let expectation = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        let user1 = ConfigCatUser(identifier: "test@test1.com")
+        let user2 = ConfigCatUser(identifier: "test@test2.com")
+
+        client.setDefaultUser(user: user1)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.getValue(for: "key", defaultValue: "") { val in
+            XCTAssertEqual("fake1", val)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        let expectation3 = self.expectation(description: "wait for response")
+        client.getValue(for: "key", defaultValue: "", user: user2) { val in
+            XCTAssertEqual("fake2", val)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        client.clearDefaultUser()
+
+        let expectation4 = self.expectation(description: "wait for response")
+        client.getValue(for: "key", defaultValue: "") { val in
+            XCTAssertEqual("def", val)
+            expectation4.fulfill()
+        }
+        wait(for: [expectation4], timeout: 2)
+    }
+
+    func testHooks() {
+        MockHTTP.enqueueResponse(response: Response(body: Utils.createTestConfigWithRules().toJsonString(), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        var error = ""
+        var changed = false
+        var ready = false
+        let hooks = Hooks()
+        hooks.addOnError { e in error = e }
+        hooks.addOnReady { ready = true }
+        hooks.addOnConfigChanged { _ in changed = true }
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), hooks: hooks)
+        let expectation = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+        let expectation2 = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertTrue(changed)
+        XCTAssertTrue(ready)
+        XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", error)
+    }
+
     private func createClient() -> ConfigCatClient {
         ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
     }
