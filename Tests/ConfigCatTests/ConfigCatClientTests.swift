@@ -357,7 +357,7 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testOnlineOffline() {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "fake"), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -425,7 +425,7 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testHooks() {
-        MockHTTP.enqueueResponse(response: Response(body: Utils.createTestConfigWithRules().toJsonString(), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         var error = ""
         var changed = false
@@ -442,12 +442,14 @@ class ConfigCatClientTests: XCTestCase {
         }
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), hooks: hooks)
         let expectation = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { r in
+            XCTAssertTrue(r.success)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 2)
         let expectation2 = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { r in
+            XCTAssertFalse(r.success)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 2)
@@ -458,35 +460,33 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testHooksSub() {
-        MockHTTP.enqueueResponse(response: Response(body: Utils.createTestConfigWithRules().toJsonString(), statusCode: 200))
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         var error = ""
         var changed = false
-        var ready = false
         let hooks = Hooks()
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: hooks)
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), hooks: hooks)
         client.hooks.addOnError { e in
             error = e
-        }
-        client.hooks.addOnReady {
-            ready = true
         }
         client.hooks.addOnConfigChanged { _ in
             changed = true
         }
+
         let expectation = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { r in
+            XCTAssertTrue(r.success)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 2)
         let expectation2 = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { r in
+            XCTAssertFalse(r.success)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 2)
 
         XCTAssertTrue(changed)
-        XCTAssertTrue(ready)
         XCTAssertEqual("Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: 500", error)
     }
 
