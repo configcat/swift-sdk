@@ -48,7 +48,7 @@ jobs:
           xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -quiet
 
   coverage:
-    needs: test
+    needs: [test-ios, test-osx]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
