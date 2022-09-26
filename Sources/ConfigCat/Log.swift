@@ -34,9 +34,9 @@ class Logger {
     }
 
     func error(message: StaticString, _ args: CVarArg...) {
-        log(message: message, currentLevel: .error, args: args)
         let msg = message.stringValue.replacingOccurrences(of: "{public}", with: "")
         hooks.invokeOnError(error: String(format: msg, args))
+        log(message: message, currentLevel: .error, args: args)
     }
 
     func log(message: StaticString, currentLevel: LogLevel, args: Array<CVarArg>) {
