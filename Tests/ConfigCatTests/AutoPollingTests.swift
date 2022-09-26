@@ -227,9 +227,9 @@ class AutoPollingTests: XCTestCase {
         service.setOnline()
         XCTAssertFalse(service.isOffline)
 
-        Thread.sleep(forTimeInterval: 1)
-
-        XCTAssertEqual(3, MockHTTP.requests.count)
+        waitFor {
+            MockHTTP.requests.count >= 3
+        }
     }
 
     func testInitWaitTimeIgnoredWhenCacheIsNotExpired() throws {

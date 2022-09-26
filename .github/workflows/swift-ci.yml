@@ -22,14 +22,22 @@ jobs:
         include:
           - sdk: iphonesimulator15.2
             destination: OS=15.2,name=iPhone 8
+            platform: iphone
           - sdk: appletvsimulator15.2
             destination: OS=15.2,name=Apple TV 4K (at 1080p)
+            platform: appletv
     steps:
       - uses: actions/checkout@v2
       - name: Tests
         run: |
           set -o pipefail
-          xcodebuild test -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -verbose
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}
+      - name: Archive results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: tests
 
   test-osx:
     runs-on: macos-latest
@@ -38,12 +46,20 @@ jobs:
         include:
           - sdk: macosx12.1
             destination: arch=x86_64
+            platform: macos
     steps:
       - uses: actions/checkout@v2
       - name: Tests
         run: |
           set -o pipefail
-          xcodebuild test -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}"
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -resultBundlePath tests/${{ matrix.platform }}
+      - name: Archive results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: tests
+
 
   coverage:
     needs: [test-ios, test-osx]
