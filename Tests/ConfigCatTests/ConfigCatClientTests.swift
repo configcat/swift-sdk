@@ -342,6 +342,19 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual("ConfigCat-Swift/l-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
+    func testGetValueDetailsWithError() {
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(), session: MockHTTP.session())
+        let expectation = self.expectation(description: "wait for response")
+        client.getValueDetails(for: "fakeKey", defaultValue: "") { details in
+            XCTAssertEqual("", details.value)
+            XCTAssertTrue(details.isDefaultValue)
+            XCTAssertEqual("Config is not present. Returning defaultValue: [].", details.error)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+    }
+
     func testManualPollUserAgentHeader() {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
@@ -488,6 +501,28 @@ class ConfigCatClientTests: XCTestCase {
 
         waitFor {
             changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
+        }
+    }
+
+    func testOnFlagEvalError() {
+        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
+        let hooks = Hooks()
+        var called = false
+        hooks.addOnFlagEvaluated { details in
+            XCTAssertEqual("", details.value as? String)
+            XCTAssertEqual("Config is not present. Returning defaultValue: [].", details.error)
+            XCTAssertTrue(details.isDefaultValue)
+            called = true
+        }
+        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.lazyLoad(), session: MockHTTP.session(), hooks: hooks)
+        let expectation = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { value in
+            XCTAssertEqual("", value)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+        waitFor {
+            called
         }
     }
 
