@@ -101,6 +101,7 @@ extension ConfigCatClient {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @discardableResult
     public func forceRefresh() async -> RefreshResult {
         await withCheckedContinuation { continuation in
             forceRefresh { result in
@@ -187,6 +188,7 @@ extension ConfigCatClient {
         semaphore.wait()
     }
 
+    @discardableResult
     @objc public func forceRefreshSync() -> RefreshResult {
         let semaphore = DispatchSemaphore(value: 0)
         var refreshResult: RefreshResult?

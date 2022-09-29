@@ -381,6 +381,8 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual(1, MockHTTP.requests.count)
         client.setOffline()
 
+        XCTAssertTrue(client.isOffline)
+
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             expectation2.fulfill()
@@ -397,6 +399,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation3], timeout: 2)
 
         XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertFalse(client.isOffline)
     }
 
     func testDefaultUser() {
