@@ -268,10 +268,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
             guard let typedValue = details.value as? Value else {
                 self.log.error(message: """
-                                   The value '%{public}@' cannot be converted to the requested type.
-                                   Returning defaultValue: [%{public}@].
-                                   Here are the available keys: %{public}@
-                                   """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
+                                        The value '%{public}@' cannot be converted to the requested type.
+                                        Returning defaultValue: [%{public}@].
+                                        Here are the available keys: %{public}@
+                                        """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
                 let message = String(format: """
                                              The value '%@' cannot be converted to the requested type.
                                              Returning defaultValue: [%@].
