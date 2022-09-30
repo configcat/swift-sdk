@@ -35,11 +35,7 @@ class RolloutEvaluator {
     }
 
 
-    func evaluate<Value>(setting: Setting?, key: String, user: ConfigCatUser?) -> (value: Value?, variationId: String?, evaluateLog: String?, rollout: RolloutRule?, percentage: PercentageRule?) {
-        guard let setting = setting else {
-            return (nil, nil, nil, nil, nil)
-        }
-
+    func evaluate(setting: Setting, key: String, user: ConfigCatUser?) -> (value: Any, variationId: String?, evaluateLog: String?, rollout: RolloutRule?, percentage: PercentageRule?) {
         guard let user = user else {
             if setting.rolloutRules.count > 0 || setting.percentageItems.count > 0 {
                 log.warning(message:
@@ -52,7 +48,7 @@ class RolloutEvaluator {
                         key)
             }
 
-            return (setting.value as? Value, setting.variationId, nil, nil, nil)
+            return (setting.value, setting.variationId, nil, nil, nil)
         }
 
         var evaluateLog = String(format: "Evaluating getValue(%{public}@).\nUser object: %{public}@.", key, user)
@@ -68,7 +64,7 @@ class RolloutEvaluator {
                     continue
                 }
 
-                let ruleValue = rule.value as? Value
+                let ruleValue = rule.value
                 let ruleVariationId = rule.variationId
 
                 switch comparator {
@@ -280,7 +276,7 @@ class RolloutEvaluator {
                         bucket += rule.percentage
                         if scaled < bucket {
                             evaluateLog += "\n" + String(format: "Evaluating %% options. Returning %{public}@", rule.value as? String ?? "")
-                            return (rule.value as? Value, rule.variationId, evaluateLog, nil, rule)
+                            return (rule.value, rule.variationId, evaluateLog, nil, rule)
                         }
                     }
                 }
@@ -288,16 +284,13 @@ class RolloutEvaluator {
         }
 
         evaluateLog += "\n" + String(format: "Returning %{public}@", setting.value as? String ?? "")
-        return (setting.value as? Value, setting.variationId, evaluateLog, nil, nil)
+        return (setting.value, setting.variationId, evaluateLog, nil, nil)
     }
 
-    private func formatMatchRule<Value>(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Value?) -> String {
+    private func formatMatchRule(comparisonAttribute: String, userValue: String, comparator: Int, comparisonValue: String, value: Any) -> String {
         let format = String(format: "Evaluating rule: [%{public}@:%{public}@] [%{public}@] [%{public}@] => match, returning: ",
                 comparisonAttribute, userValue, RolloutEvaluator.comparatorTexts[comparator], comparisonValue)
 
-        guard let value = value else {
-            return format + "nil"
-        }
         return format + "\(value)"
     }
 

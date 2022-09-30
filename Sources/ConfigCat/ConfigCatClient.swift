@@ -179,8 +179,43 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
+        if Value.self != String.self &&
+                   Value.self != String?.self &&
+                   Value.self != Int.self &&
+                   Value.self != Int?.self &&
+                   Value.self != Double.self &&
+                   Value.self != Double?.self &&
+                   Value.self != Bool.self &&
+                   Value.self != Bool?.self &&
+                   Value.self != Any.self &&
+                   Value.self != Any?.self {
+            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                    value: defaultValue,
+                    error: "Only String, Integer, Double, Bool or Any types are supported."))
+            completion(defaultValue)
+            return
+        }
         getSettings { result in
-            completion(self.getValueFromSettings(result: result, key: key, defaultValue: defaultValue, user: user ?? self.defaultUser))
+            if result.settings.isEmpty {
+                self.log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                        value: defaultValue,
+                        error: String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")))
+                completion(defaultValue)
+                return
+            }
+            guard let setting = result.settings[key] else {
+                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                        value: defaultValue,
+                        error: String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))))
+                completion(defaultValue)
+                return
+            }
+
+            let evalDetails = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+            completion(evalDetails.value as? Value ?? defaultValue)
         }
     }
 
@@ -196,8 +231,66 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
+        if Value.self != String.self &&
+                   Value.self != String?.self &&
+                   Value.self != Int.self &&
+                   Value.self != Int?.self &&
+                   Value.self != Double.self &&
+                   Value.self != Double?.self &&
+                   Value.self != Bool.self &&
+                   Value.self != Bool?.self &&
+                   Value.self != Any.self &&
+                   Value.self != Any?.self {
+            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            let message = "Only String, Integer, Double, Bool or Any types are supported."
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+            return
+        }
         getSettings { result in
-            completion(self.getValueDetailsFromSettings(result: result, key: key, defaultValue: defaultValue, user: user ?? self.defaultUser))
+            if result.settings.isEmpty {
+                self.log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
+                let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                return
+            }
+            guard let setting = result.settings[key] else {
+                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
+                let message = String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
+                        value: defaultValue,
+                        error: message))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                return
+            }
+
+            let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+            guard let typedValue = details.value as? Value else {
+                self.log.error(message: """
+                                   The value '%{public}@' cannot be converted to the requested type.
+                                   Returning defaultValue: [%{public}@].
+                                   Here are the available keys: %{public}@
+                                   """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
+                let message = String(format: """
+                                             The value '%@' cannot be converted to the requested type.
+                                             Returning defaultValue: [%@].
+                                             Here are the available keys: %@
+                                             """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                return
+            }
+
+            self.hooks.invokeOnFlagEvaluated(details: details)
+            completion(TypedEvaluationDetails<Value>(key: key,
+                    value: typedValue,
+                    variationId: details.variationId ?? "",
+                    fetchTime: result.fetchTime,
+                    user: user,
+                    matchedEvaluationRule: details.matchedEvaluationRule,
+                    matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule))
+
         }
     }
 
@@ -214,28 +307,80 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
         getSettings { result in
-            completion(self.getVariationIdFromSettings(result: result, key: key, defaultVariationId: defaultVariationId, user: user ?? self.defaultUser))
+            if result.settings.isEmpty {
+                self.log.error(message: "Config is not present. Returning defaultVariationId: [%{public}@].", "\(defaultVariationId ?? "")");
+                completion(defaultVariationId)
+                return
+            }
+            guard let setting = result.settings[key] else {
+                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
+                completion(defaultVariationId)
+                return
+            }
+
+            let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+            completion(details.variationId ?? defaultVariationId)
         }
     }
 
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
         getSettings { result in
-            completion(self.getAllVariationIdsFromSettings(result: result, user: user ?? self.defaultUser))
+            var variationIds = [String]()
+            for key in result.settings.keys {
+                guard let setting = result.settings[key] else {
+                    continue
+                }
+                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+                if let variationId = details.variationId {
+                    variationIds.append(variationId)
+                } else {
+                    self.log.error(message: "Evaluating the variation id for the key '%{public}@' failed.", key)
+                }
+            }
+            completion(variationIds)
         }
     }
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
         getSettings { result in
-            completion(self.getKeyAndValueFromSettings(result: result, variationId: variationId))
+            for (key, setting) in result.settings {
+                if variationId == setting.variationId {
+                    completion(KeyValue(key: key, value: setting.value))
+                    return
+                }
+                for rule in setting.rolloutRules {
+                    if variationId == rule.variationId {
+                        completion(KeyValue(key: key, value: rule.value))
+                        return
+                    }
+                }
+                for rule in setting.percentageItems {
+                    if variationId == rule.variationId {
+                        completion(KeyValue(key: key, value: rule.value))
+                        return
+                    }
+                }
+            }
+
+            self.log.error(message: "Could not find the setting for the given variationId: '%{public}@'", variationId);
+            completion(nil)
         }
     }
 
     /// Gets the values of all feature flags or settings asynchronously.
     @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
         getSettings { result in
-            completion(self.getAllValuesFromSettings(result: result, user: user ?? self.defaultUser))
+            var allValues = [String: Any]()
+            for key in result.settings.keys {
+                guard let setting = result.settings[key] else {
+                    continue
+                }
+                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+                allValues[key] = details.value
+            }
+            completion(allValues)
         }
     }
 
@@ -329,191 +474,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
 
-    func getValueFromSettings<Value>(result: SettingResult, key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> Value {
-        if Value.self != String.self &&
-                   Value.self != String?.self &&
-                   Value.self != Int.self &&
-                   Value.self != Int?.self &&
-                   Value.self != Double.self &&
-                   Value.self != Double?.self &&
-                   Value.self != Bool.self &&
-                   Value.self != Bool?.self &&
-                   Value.self != Any.self &&
-                   Value.self != Any?.self {
-            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                    value: defaultValue,
-                    error: "Only String, Integer, Double, Bool or Any types are supported."))
-            return defaultValue
-        }
-        if result.settings.isEmpty {
-            log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                    value: defaultValue,
-                    error: String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")))
-            return defaultValue
-        }
-
-        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Value?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
+    func evaluate(setting: Setting, key: String, user: ConfigCatUser?, fetchTime: Date) -> EvaluationDetails {
+        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: setting, key: key, user: user)
         if let evaluateLog = evaluateLog {
             log.info(message: "%{public}@", evaluateLog)
         }
-        if let value = value {
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
-                    value: value,
-                    variationId: variationId ?? "",
-                    fetchTime: result.fetchTime,
-                    user: user,
-                    matchedEvaluationRule: rolloutRule,
-                    matchedEvaluationPercentageRule: percentageRule))
-            return value
-        }
-
-        log.error(message: """
-                           Evaluating the value for the key '%{public}@' failed.
-                           Returning defaultValue: [%{public}@].
-                           Here are the available keys: %{public}@
-                           """, key, "\(defaultValue)", [String](result.settings.keys))
-
-        hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                value: defaultValue,
-                error: String(format: """
-                                      Evaluating the value for the key '%@' failed.
-                                      Returning defaultValue: [%@].
-                                      Here are the available keys: %@
-                                      """, key, "\(defaultValue)", [String](result.settings.keys))))
-        return defaultValue
-    }
-
-    func getValueDetailsFromSettings<Value>(result: SettingResult, key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> TypedEvaluationDetails<Value> {
-        if Value.self != String.self &&
-                   Value.self != String?.self &&
-                   Value.self != Int.self &&
-                   Value.self != Int?.self &&
-                   Value.self != Double.self &&
-                   Value.self != Double?.self &&
-                   Value.self != Bool.self &&
-                   Value.self != Bool?.self &&
-                   Value.self != Any.self &&
-                   Value.self != Any?.self {
-            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
-            let message = "Only String, Integer, Double, Bool or Any types are supported."
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-            return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
-        }
-        if result.settings.isEmpty {
-            log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
-            let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-            return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
-        }
-        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Value?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
-        if let evaluateLog = evaluateLog {
-            log.info(message: "%{public}@", evaluateLog)
-        }
-        if let value = value {
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
-                    value: value,
-                    variationId: variationId ?? "",
-                    fetchTime: result.fetchTime,
-                    user: user,
-                    matchedEvaluationRule: rolloutRule,
-                    matchedEvaluationPercentageRule: percentageRule))
-            return TypedEvaluationDetails<Value>(key: key,
-                    value: value,
-                    variationId: variationId ?? "",
-                    fetchTime: result.fetchTime,
-                    user: user,
-                    matchedEvaluationRule: rolloutRule,
-                    matchedEvaluationPercentageRule: percentageRule)
-        }
-        log.error(message: """
-                           Evaluating the value for the key '%{public}@' failed.
-                           Returning defaultValue: [%{public}@].
-                           Here are the available keys: %{public}@
-                           """, key, "\(defaultValue)", [String](result.settings.keys))
-        let message = String(format: """
-                                     Evaluating the value for the key '%@' failed.
-                                     Returning defaultValue: [%@].
-                                     Here are the available keys: %@
-                                     """, key, "\(defaultValue)", [String](result.settings.keys))
-        hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-        return TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message)
-    }
-
-    func getVariationIdFromSettings(result: SettingResult, key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
-        let (_, variationId, evaluateLog, _, _): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
-        if let evaluateLog = evaluateLog {
-            log.info(message: "%{public}@", evaluateLog)
-        }
-        if let variationId = variationId {
-            return variationId
-        }
-        log.error(message: """
-                           Evaluating the variation id for the key '%{public}@' failed.
-                           Returning defaultVariationId: %{public}@
-                           Here are the available keys: %{public}@
-                           """, key, defaultVariationId ?? "nil", [String](result.settings.keys))
-        return defaultVariationId
-    }
-
-    func getAllVariationIdsFromSettings(result: SettingResult, user: ConfigCatUser? = nil) -> [String] {
-        var variationIds = [String]()
-        for key in result.settings.keys {
-            let (_, variationId, evaluateLog, _, _): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
-            if let evaluateLog = evaluateLog {
-                log.info(message: "%{public}@", evaluateLog)
-            }
-            if let variationId = variationId {
-                variationIds.append(variationId)
-            } else {
-                log.error(message: "Evaluating the variation id for the key '%{public}@' failed.", key)
-            }
-        }
-        return variationIds
-    }
-
-    func getAllValuesFromSettings(result: SettingResult, user: ConfigCatUser? = nil) -> [String: Any] {
-        var allValues = [String: Any]()
-        for key in result.settings.keys {
-            let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any?, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: result.settings[key], key: key, user: user)
-            if let evaluateLog = evaluateLog {
-                log.info(message: "%{public}@", evaluateLog)
-            }
-            if let value = value {
-                hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
-                        value: value,
-                        variationId: variationId ?? "",
-                        fetchTime: result.fetchTime,
-                        user: user,
-                        matchedEvaluationRule: rolloutRule,
-                        matchedEvaluationPercentageRule: percentageRule))
-                allValues[key] = value
-            } else {
-                log.error(message: "Evaluating the value for the key '%{public}@' failed.", key)
-            }
-        }
-        return allValues
-    }
-
-    func getKeyAndValueFromSettings(result: SettingResult, variationId: String) -> KeyValue? {
-        for (key, setting) in result.settings {
-            if variationId == setting.variationId {
-                return KeyValue(key: key, value: setting.value)
-            }
-            for rule in setting.rolloutRules {
-                if variationId == rule.variationId {
-                    return KeyValue(key: key, value: rule.value)
-                }
-            }
-            for rule in setting.percentageItems {
-                if variationId == rule.variationId {
-                    return KeyValue(key: key, value: rule.value)
-                }
-            }
-        }
-
-        log.error(message: "Could not find the setting for the given variationId: '%{public}@'", variationId);
-        return nil
+        let details = EvaluationDetails(key: key,
+                value: value,
+                variationId: variationId,
+                fetchTime: fetchTime,
+                user: user,
+                matchedEvaluationRule: rolloutRule,
+                matchedEvaluationPercentageRule: percentageRule)
+        hooks.invokeOnFlagEvaluated(details: details)
+        return details
     }
 }

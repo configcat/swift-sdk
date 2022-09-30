@@ -2,7 +2,7 @@ import Foundation
 
 public class EvaluationDetailsBase: NSObject {
     @objc public let key: String
-    @objc public let variationId: String
+    @objc public let variationId: String?
     @objc public let user: ConfigCatUser?
     @objc public let isDefaultValue: Bool
     @objc public let error: String?
@@ -11,7 +11,7 @@ public class EvaluationDetailsBase: NSObject {
     @objc public let matchedEvaluationPercentageRule: PercentageRule?
 
     init(key: String,
-         variationId: String,
+         variationId: String?,
          fetchTime: Date = Date.distantPast,
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
@@ -34,7 +34,7 @@ public final class EvaluationDetails: EvaluationDetailsBase {
 
     init(key: String,
          value: Any,
-         variationId: String,
+         variationId: String?,
          fetchTime: Date = Date.distantPast,
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
@@ -55,7 +55,7 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
 
     init(key: String,
          value: Value,
-         variationId: String,
+         variationId: String?,
          fetchTime: Date = Date.distantPast,
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
