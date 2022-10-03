@@ -138,6 +138,10 @@ public final class Hooks: NSObject {
     }
 
     func clear() {
+        mutex.lock()
+        defer {
+            mutex.unlock()
+        }
         onError.removeAll()
         onFlagEvaluated.removeAll()
         onConfigChanged.removeAll()
