@@ -46,7 +46,7 @@ public protocol ConfigCatClientProtocol {
     /// Configures the SDK to allow HTTP requests.
     func setOnline()
 
-    /// Configures the SDK to not initiate HTTP requests.
+    /// Configures the SDK to not initiate HTTP requests and work only from its cache.
     func setOffline()
 
     /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
