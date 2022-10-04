@@ -507,7 +507,7 @@ class ConfigCatClientTests: XCTestCase {
         }
     }
 
-    func testOnFlagEvalError() {
+    func testOnFlagEvaluationError() {
         MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 500))
         let hooks = Hooks()
         var called = false
