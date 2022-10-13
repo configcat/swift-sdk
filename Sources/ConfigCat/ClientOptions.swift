@@ -33,6 +33,9 @@ public final class ClientOptions: NSObject {
     /// Hooks for events sent by ConfigCatClient.
     @objc public let hooks: Hooks = Hooks()
 
+    /// Indicates whether the SDK should be initialized in offline mode or not.
+    @objc public let offline: Bool = false
+
     /// The default client configuration options.
     @objc public static var `default`: ClientOptions {
         get {

@@ -62,7 +62,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          dataGovernance: DataGovernance = DataGovernance.global,
          flagOverrides: OverrideDataSource? = nil,
          defaultUser: ConfigCatUser? = nil,
-         logLevel: LogLevel = .warning) {
+         logLevel: LogLevel = .warning,
+         offline: Bool = false) {
         if sdkKey.isEmpty {
             assert(false, "sdkKey cannot be empty")
         }
@@ -90,7 +91,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                     cache: configCache,
                     pollingMode: refreshMode,
                     hooks: self.hooks,
-                    sdkKey: sdkKey)
+                    sdkKey: sdkKey,
+                    offline: offline)
         }
     }
 
@@ -123,7 +125,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 dataGovernance: opts.dataGovernance,
                 flagOverrides: opts.flagOverrides,
                 defaultUser: opts.defaultUser,
-                logLevel: opts.logLevel)
+                logLevel: opts.logLevel,
+                offline: opts.offline)
         instances[sdkKey] = Weak(value: client)
         return client
     }

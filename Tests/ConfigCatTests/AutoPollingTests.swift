@@ -15,7 +15,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -40,7 +40,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -70,7 +70,7 @@ class AutoPollingTests: XCTestCase {
             called = true
         }
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
         sleep(1)
 
@@ -91,7 +91,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         sleep(2)
 
@@ -113,7 +113,7 @@ class AutoPollingTests: XCTestCase {
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -135,7 +135,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -166,7 +166,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -192,7 +192,7 @@ class AutoPollingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -213,7 +213,7 @@ class AutoPollingTests: XCTestCase {
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         Thread.sleep(forTimeInterval: 1.5)
 
@@ -232,6 +232,26 @@ class AutoPollingTests: XCTestCase {
         }
     }
 
+    func testInitOffline() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+
+        XCTAssertTrue(service.isOffline)
+        Thread.sleep(forTimeInterval: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        service.setOnline()
+
+        XCTAssertFalse(service.isOffline)
+        waitFor {
+            MockHTTP.requests.count >= 2
+        }
+    }
+
     func testInitWaitTimeIgnoredWhenCacheIsNotExpired() throws {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
 
@@ -240,7 +260,7 @@ class AutoPollingTests: XCTestCase {
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in

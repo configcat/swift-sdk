@@ -41,12 +41,13 @@ class ConfigService {
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
 
-    init(log: Logger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String) {
+    init(log: Logger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
         self.log = log
         self.fetcher = fetcher
         self.cache = cache
         self.pollingMode = pollingMode
         self.hooks = hooks
+        self.offline = offline
         let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
         cacheKey = String(keyToHash.sha1hex ?? keyToHash)
 

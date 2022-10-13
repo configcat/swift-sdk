@@ -15,7 +15,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -50,7 +50,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -86,7 +86,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -118,7 +118,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -145,7 +145,7 @@ class LazyLoadingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -189,7 +189,7 @@ class LazyLoadingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -231,7 +231,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "")
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -264,5 +264,44 @@ class LazyLoadingTests: XCTestCase {
         wait(for: [expectation3], timeout: 2)
 
         XCTAssertEqual(2, MockHTTP.requests.count)
+    }
+
+    func testInitOffline() throws {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertTrue(settingsResult.settings.isEmpty)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        Thread.sleep(forTimeInterval: 1.5)
+
+        let expectation2 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertTrue(settingsResult.settings.isEmpty)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+
+        service.setOnline()
+
+        let expectation3 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertFalse(settingsResult.settings.isEmpty)
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
     }
 }
