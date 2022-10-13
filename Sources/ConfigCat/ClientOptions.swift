@@ -34,7 +34,7 @@ public final class ClientOptions: NSObject {
     @objc public let hooks: Hooks = Hooks()
 
     /// Indicates whether the SDK should be initialized in offline mode or not.
-    @objc public let offline: Bool = false
+    @objc public var offline: Bool = false
 
     /// The default client configuration options.
     @objc public static var `default`: ClientOptions {

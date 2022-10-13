@@ -402,6 +402,37 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertFalse(client.isOffline)
     }
 
+    func testInitOffline() {
+        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = createClient(offline: true)
+        let expectation = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertTrue(client.isOffline)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 2)
+
+        XCTAssertEqual(0, MockHTTP.requests.count)
+        client.setOnline()
+
+        let expectation3 = self.expectation(description: "wait for response")
+        client.forceRefresh { _ in
+            expectation3.fulfill()
+        }
+        wait(for: [expectation3], timeout: 2)
+
+        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertFalse(client.isOffline)
+    }
+
     func testDefaultUser() {
         MockHTTP.enqueueResponse(response: Response(body: createTestConfigWithRules().toJsonString(), statusCode: 200))
         let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
@@ -529,7 +560,7 @@ class ConfigCatClientTests: XCTestCase {
         }
     }
 
-    private func createClient() -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+    private func createClient(offline: Bool = false) -> ConfigCatClient {
+        ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), offline: offline)
     }
 }
