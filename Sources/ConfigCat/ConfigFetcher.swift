@@ -9,7 +9,7 @@ enum RedirectMode: Int {
 enum FetchResponse: Equatable {
     case fetched(ConfigEntry)
     case notModified
-    case failure
+    case failure(String)
 
     public var entry: ConfigEntry? {
         switch self {
@@ -25,7 +25,7 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     switch (lhs, rhs) {
     case (.fetched(_), .fetched(_)),
          (.notModified, .notModified),
-         (.failure, .failure):
+         (.failure(_), .failure(_)):
         return true
     default:
         return false
@@ -57,7 +57,7 @@ class ConfigFetcher: NSObject {
     func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let cachedUrl = baseUrl.get()
         executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
-            if let newUrl = response.entry?.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty && newUrl != cachedUrl {
+            if let newUrl = response.entry?.config.preferences?.preferencesUrl, !newUrl.isEmpty && newUrl != cachedUrl {
                 _ = self.baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
             }
             completion(response)
@@ -66,15 +66,15 @@ class ConfigFetcher: NSObject {
 
     private func executeFetch(url: String, eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
         sendFetchRequest(url: url, eTag: eTag, completion: { response in
-            guard case .fetched(let entry) = response, !entry.config.preferences.isEmpty else {
+            guard case .fetched(let entry) = response else {
                 completion(response)
                 return
             }
-            guard let newUrl = entry.config.preferences[Config.preferencesUrl] as? String, !newUrl.isEmpty, newUrl != url else {
+            guard let newUrl = entry.config.preferences?.preferencesUrl, !newUrl.isEmpty, newUrl != url else {
                 completion(response)
                 return
             }
-            guard let redirect = entry.config.preferences[Config.preferencesRedirect] as? Int else {
+            guard let redirect = entry.config.preferences?.preferencesRedirect else {
                 completion(response)
                 return
             }
@@ -106,38 +106,41 @@ class ConfigFetcher: NSObject {
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let request = getRequest(url: url, eTag: eTag)
         session.dataTask(with: request) { (data, resp, error) in
-            if let error = error {
-                var extraInfo = ""
-                if error._code == NSURLErrorTimedOut {
-                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
-                }
-                self.log.error(message: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
-                completion(.failure)
-            } else {
-                let response = resp as! HTTPURLResponse
-                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
-                    self.log.debug(message: "Fetch was successful: new config fetched")
-                    let etag = response.allHeaderFields["Etag"] as? String ?? ""
-                    let jsonString = String(data: data, encoding: .utf8) ?? ""
-                    let configResult = jsonString.parseConfigFromJson()
-                    switch configResult {
-                    case .success(let config):
-                        completion(.fetched(ConfigEntry(jsonString: jsonString, config: config, eTag: etag, fetchTime: Date())))
-                    case .failure(let error):
-                        self.log.error(message: "An error occurred during JSON deserialization. %@", error.localizedDescription)
-                        completion(.failure)
+                    if let error = error {
+                        var extraInfo = ""
+                        if error._code == NSURLErrorTimedOut {
+                            extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
+                        }
+                        self.log.error(message: "An error occurred during the config fetch: %{public}@%{public}@", error.localizedDescription, extraInfo)
+                        completion(.failure(String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)))
+                    } else {
+                        let response = resp as! HTTPURLResponse
+                        if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                            self.log.debug(message: "Fetch was successful: new config fetched")
+                            let etag = response.allHeaderFields["Etag"] as? String ?? ""
+                            let jsonString = String(data: data, encoding: .utf8) ?? ""
+                            let configResult = self.parseConfigFromJson(json: jsonString)
+                            switch configResult {
+                            case .success(let config):
+                                completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
+                            case .failure(let error):
+                                self.log.error(message: "An error occurred during JSON deserialization. %{public}@", error.localizedDescription)
+                                completion(.failure(String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)))
+                            }
+                        } else if response.statusCode == 304 {
+                            self.log.debug(message: "Fetch was successful: not modified")
+                            completion(.notModified)
+                        } else {
+                            self.log.error(message: """
+                                                    Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %{public}@
+                                                    """, String(response.statusCode))
+                            completion(.failure(String(format: """
+                                                               Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                                               """, String(response.statusCode))))
+                        }
                     }
-                } else if response.statusCode == 304 {
-                    self.log.debug(message: "Fetch was successful: not modified")
-                    completion(.notModified)
-                } else {
-                    self.log.error(message: """
-                                            Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                                            """, String(response.statusCode))
-                    completion(.failure)
                 }
-            }
-        }.resume()
+                .resume()
     }
 
     private func getRequest(url: String, eTag: String) -> URLRequest {
@@ -148,5 +151,19 @@ class ConfigFetcher: NSObject {
             request.addValue(eTag, forHTTPHeaderField: "If-None-Match")
         }
         return request
+    }
+
+    private func parseConfigFromJson(json: String) -> Result<Config, Error> {
+        do {
+            guard let data = json.data(using: .utf8) else {
+                return .failure(ParseError(message: "Decode to utf8 data failed."))
+            }
+            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
+            }
+            return .success(Config.fromJson(json: jsonObject))
+        } catch {
+            return .failure(error)
+        }
     }
 }

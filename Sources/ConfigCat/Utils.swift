@@ -14,18 +14,23 @@ struct ParseError: Error, CustomStringConvertible {
     }
 }
 
-extension String {
-    func parseConfigFromJson() -> Result<Config, Error> {
-        do {
-            guard let data = data(using: .utf8) else {
-                return .failure(ParseError(message: "Decode to utf8 data failed."))
-            }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
-            }
-            return .success(Config(preferences: jsonObject[Config.preferences] as? [String: Any] ?? [:], entries: jsonObject[Config.entries] as? [String: Any] ?? [:]))
-        } catch {
-            return .failure(error)
+class Weak<T: AnyObject> {
+    weak private var value: T?
+
+    init(value: T) {
+        self.value = value
+    }
+
+    func get() -> T? {
+        value
+    }
+}
+
+extension StaticString {
+    @inlinable
+    var stringValue: String {
+        self.withUTF8Buffer {
+            String(decoding: $0, as: UTF8.self)
         }
     }
 }
@@ -42,7 +47,7 @@ extension Date {
 }
 
 class Constants {
-    static let version: String = "9.0.1"
+    static let version: String = "9.1.0"
     static let configJsonName: String = "config_v5"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"

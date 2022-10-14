@@ -16,7 +16,7 @@ class ConfigFetcherTests: XCTestCase {
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
-            XCTAssertEqual("fakeValue", (response.entry?.config.entries["fakeKey"] as? [String: Any])?[Config.value] as? String)
+            XCTAssertEqual("fakeValue", response.entry?.config.entries["fakeKey"]?.value as? String)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 2)
@@ -41,7 +41,7 @@ class ConfigFetcherTests: XCTestCase {
         let expectation = self.expectation(description: "wait for response")
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
-            XCTAssertEqual(.failure, response)
+            XCTAssertEqual(.failure(""), response)
             XCTAssertNil(response.entry)
             expectation.fulfill()
         }

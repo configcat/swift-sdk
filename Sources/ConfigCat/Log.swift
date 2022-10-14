@@ -11,12 +11,14 @@ import Foundation
 }
 
 class Logger {
-    static let noLogger: Logger = Logger(level: .nolog)
+    static let noLogger: Logger = Logger(level: .nolog, hooks: Hooks())
     private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
     private let level: LogLevel
+    private let hooks: Hooks
 
-    init(level: LogLevel) {
+    init(level: LogLevel, hooks: Hooks) {
         self.level = level
+        self.hooks = hooks
     }
 
     func debug(message: StaticString, _ args: CVarArg...) {
@@ -32,6 +34,8 @@ class Logger {
     }
 
     func error(message: StaticString, _ args: CVarArg...) {
+        let msg = message.stringValue.replacingOccurrences(of: "{public}", with: "")
+        hooks.invokeOnError(error: String(format: msg, args))
         log(message: message, currentLevel: .error, args: args)
     }
 

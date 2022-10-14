@@ -55,7 +55,7 @@ class VariationIdTests: XCTestCase {
         let client = createClient()
 
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getVariationId(for: "key1", defaultVariationId: nil) { variationId in
                 XCTAssertEqual("fakeId1", variationId)
                 expectation.fulfill()
@@ -68,7 +68,7 @@ class VariationIdTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: testJson, statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getVariationId(for: "nonexisting", defaultVariationId: "def") { variationId in
                 XCTAssertEqual("def", variationId)
                 expectation.fulfill()
@@ -82,7 +82,7 @@ class VariationIdTests: XCTestCase {
         let client = createClient()
 
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getAllVariationIds { variationIds in
                 XCTAssertEqual(2, variationIds.count)
                 XCTAssertTrue(variationIds.contains("fakeId1"))
@@ -97,7 +97,7 @@ class VariationIdTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "{}", statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getAllVariationIds { variationIds in
                 XCTAssertEqual(0, variationIds.count)
                 expectation.fulfill()
@@ -113,7 +113,7 @@ class VariationIdTests: XCTestCase {
         let expectation1 = self.expectation(description: "wait for response")
         let expectation2 = self.expectation(description: "wait for response")
         let expectation3 = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getKeyAndValue(for: "fakeId2") { kv in
                 if let result = kv {
                     XCTAssertEqual("key2", result.key)
@@ -149,7 +149,7 @@ class VariationIdTests: XCTestCase {
         MockHTTP.enqueueResponse(response: Response(body: "{}", statusCode: 200))
         let client = createClient()
         let expectation = self.expectation(description: "wait for response")
-        client.refresh {
+        client.forceRefresh { _ in
             client.getKeyAndValue(for: "nonexisting") { result in
                 XCTAssertNil(result)
                 expectation.fulfill()

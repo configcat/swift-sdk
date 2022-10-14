@@ -15,25 +15,56 @@ env:
   DEVELOPER_DIR: /Applications/Xcode_13.2.app/Contents/Developer
 
 jobs:
-  test:
+  test-ios:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - sdk: iphonesimulator15.2
+            destination: OS=15.2,name=iPhone 8
+            platform: iphone
+          - sdk: appletvsimulator15.2
+            destination: OS=15.2,name=Apple TV 4K (at 1080p)
+            platform: appletv
     steps:
       - uses: actions/checkout@v2
-
       - name: Tests
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -sdk iphonesimulator15.2 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "OS=15.2,name=iPhone 8" CODE_SIGNING_REQUIRED=NO -quiet
-          xcodebuild test-without-building -sdk iphonesimulator15.2 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "OS=15.2,name=iPhone 8" CODE_SIGNING_REQUIRED=NO -quiet
-          
-          xcodebuild build-for-testing -sdk appletvsimulator15.2 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "OS=15.2,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO -quiet
-          xcodebuild test-without-building -sdk appletvsimulator15.2 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "OS=15.2,name=Apple TV 4K (at 1080p)" CODE_SIGNING_REQUIRED=NO -quiet
-          
-          xcodebuild build-for-testing -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "arch=x86_64" -quiet
-          xcodebuild test-without-building -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "arch=x86_64" -quiet
-          
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
+      - name: Archive results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: tests
+
+  test-osx:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - sdk: macosx12.1
+            destination: arch=x86_64
+            platform: macos
+    steps:
+      - uses: actions/checkout@v2
+      - name: Tests
+        run: |
+          set -o pipefail
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -resultBundlePath tests/${{ matrix.platform }}.xcresult
+      - name: Archive results
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: tests
+
+
   coverage:
-    needs: test
+    needs: [test-ios, test-osx]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
