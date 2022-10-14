@@ -274,7 +274,7 @@ class RolloutEvaluator {
                     for rule in setting.percentageItems {
                         bucket += rule.percentage
                         if scaled < bucket {
-                            evaluateLog += "\n" + String(format: "Evaluating %% options. Returning %@", rule.value as? String ?? "")
+                            evaluateLog += "\n" + String(format: "Evaluating %@ options. Returning %@", "%", rule.value as? String ?? "")
                             return (rule.value, rule.variationId, evaluateLog, nil, rule)
                         }
                     }

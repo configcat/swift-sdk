@@ -256,6 +256,7 @@ class ConfigService {
             guard let this = self else {
                 return
             }
+            this.log.debug(message: "Polling for config.json changes.")
             this.fetchIfOlder(time: Date().subtract(seconds: ageThreshold)!) { _ in
                 // we don't have to do anything with the result in the timer ticks.
             }

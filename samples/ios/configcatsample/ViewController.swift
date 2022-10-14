@@ -4,23 +4,27 @@ import ConfigCat
 class ViewController: UIViewController {
     
     var client: ConfigCatClient?
-    var user: ConfigCatUser?
     @IBOutlet weak var label: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let options = ClientOptions.default
         
-        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5) {
+        options.refreshMode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5)
+        options.hooks.addOnConfigChanged { _ in
             self.configChanged()
         }
         
-        // Creating a user object to identify your user (optional).
-        self.user = ConfigCatUser(identifier: "user-id", email: "configcat@example.com")
+        // Info level logging helps to inspect the feature flag evaluation process.
+        // Remove this line to avoid too detailed logging in your application.
+        options.logLevel = .info
         
-        self.client = ConfigCatClient(
+        // Creating a user object to identify your user (optional).
+        options.defaultUser = ConfigCatUser(identifier: "user-id", email: "configcat@example.com")
+        
+        self.client = ConfigCatClient.get(
             sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A",
-            refreshMode: mode,
-            logLevel: .info // Info level logging helps to inspect the feature flag evaluation process. Remove this line to avoid too detailed logging in your application.
+            options: options
         )
     }
 
@@ -30,7 +34,7 @@ class ViewController: UIViewController {
     }
 
     func configChanged() {
-        self.client?.getValue(for: "string25Cat25Dog25Falcon25Horse", defaultValue: "", user: self.user) { value in
+        self.client?.getValue(for: "string25Cat25Dog25Falcon25Horse", defaultValue: "") { value in
             DispatchQueue.main.sync {
                 self.label.text = value
             }
