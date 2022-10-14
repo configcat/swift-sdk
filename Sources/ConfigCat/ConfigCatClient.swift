@@ -110,9 +110,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             mutex.unlock()
         }
         if let client = instances[sdkKey]?.get(), options != nil {
-            client.log.warning(message: """
-                                        Client for '%{public}@' is already created and will be reused; options passed are being ignored.
-                                        """, sdkKey)
+            client.log.warning(message: String(format: """
+                                        Client for '%@' is already created and will be reused; options passed are being ignored.
+                                        """, sdkKey))
             return client
         }
         let opts = options ?? ClientOptions.default
@@ -192,27 +192,30 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Bool?.self &&
                    Value.self != Any.self &&
                    Value.self != Any?.self {
-            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
+            let message = "Only String, Integer, Double, Bool or Any types are supported."
+            log.error(message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                     value: defaultValue,
-                    error: "Only String, Integer, Double, Bool or Any types are supported."))
+                    error: message))
             completion(defaultValue)
             return
         }
         getSettings { result in
             if result.settings.isEmpty {
-                self.log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
+                let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
+                self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
-                        error: String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")))
+                        error: message))
                 completion(defaultValue)
                 return
             }
             guard let setting = result.settings[key] else {
-                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
+                let message = String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))
+                self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
-                        error: String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))))
+                        error: message))
                 completion(defaultValue)
                 return
             }
@@ -244,23 +247,23 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Bool?.self &&
                    Value.self != Any.self &&
                    Value.self != Any?.self {
-            log.error(message: "Only String, Integer, Double, Bool or Any types are supported.")
             let message = "Only String, Integer, Double, Bool or Any types are supported."
+            log.error(message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
             completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
             return
         }
         getSettings { result in
             if result.settings.isEmpty {
-                self.log.error(message: "Config is not present. Returning defaultValue: [%{public}@].", "\(defaultValue)");
                 let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
+                self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
                 completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
                 return
             }
             guard let setting = result.settings[key] else {
-                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
                 let message = String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))
+                self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
                         error: message))
@@ -270,16 +273,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
             let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
             guard let typedValue = details.value as? Value else {
-                self.log.error(message: """
-                                        The value '%{public}@' cannot be converted to the requested type.
-                                        Returning defaultValue: [%{public}@].
-                                        Here are the available keys: %{public}@
-                                        """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
                 let message = String(format: """
                                              The value '%@' cannot be converted to the requested type.
                                              Returning defaultValue: [%@].
                                              Here are the available keys: %@
                                              """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
+                self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
                 completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
                 return
@@ -311,12 +310,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
         getSettings { result in
             if result.settings.isEmpty {
-                self.log.error(message: "Config is not present. Returning defaultVariationId: [%{public}@].", "\(defaultVariationId ?? "")");
+                self.log.error(message: String(format: "Config is not present. Returning defaultVariationId: [%@].", "\(defaultVariationId ?? "")"))
                 completion(defaultVariationId)
                 return
             }
             guard let setting = result.settings[key] else {
-                self.log.error(message: "Value not found for key '%{public}@'. Here are the available keys: %{public}@", key, [String](result.settings.keys));
+                self.log.error(message: String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys)))
                 completion(defaultVariationId)
                 return
             }
@@ -338,7 +337,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 if let variationId = details.variationId {
                     variationIds.append(variationId)
                 } else {
-                    self.log.error(message: "Evaluating the variation id for the key '%{public}@' failed.", key)
+                    self.log.error(message: String(format: "Evaluating the variation id for the key '@' failed.", key))
                 }
             }
             completion(variationIds)
@@ -367,7 +366,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 }
             }
 
-            self.log.error(message: "Could not find the setting for the given variationId: '%{public}@'", variationId);
+            self.log.error(message: String(format: "Could not find the setting for the given variationId: '%@'", variationId))
             completion(nil)
         }
     }
@@ -413,8 +412,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if let configService = configService {
             configService.refresh(completion: completion)
         } else {
-            log.warning(message: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect.")
-            completion(RefreshResult(success: false, error: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect."))
+            let message = "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect."
+            log.warning(message: message)
+            completion(RefreshResult(success: false, error: message))
         }
     }
 
@@ -480,7 +480,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     func evaluate(setting: Setting, key: String, user: ConfigCatUser?, fetchTime: Date) -> EvaluationDetails {
         let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: setting, key: key, user: user)
         if let evaluateLog = evaluateLog {
-            log.info(message: "%{public}@", evaluateLog)
+            log.info(message: evaluateLog)
         }
         let details = EvaluationDetails(key: key,
                 value: value,

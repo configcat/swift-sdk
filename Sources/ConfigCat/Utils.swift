@@ -26,15 +26,6 @@ class Weak<T: AnyObject> {
     }
 }
 
-extension StaticString {
-    @inlinable
-    var stringValue: String {
-        self.withUTF8Buffer {
-            String(decoding: $0, as: UTF8.self)
-        }
-    }
-}
-
 extension Date {
     func add(years: Int = 0, months: Int = 0, days: Int = 0, hours: Int = 0, minutes: Int = 0, seconds: Int = 0) -> Date? {
         let comp = DateComponents(year: years, month: months, day: days, hour: hours, minute: minutes, second: seconds)

@@ -21,39 +21,26 @@ class Logger {
         self.hooks = hooks
     }
 
-    func debug(message: StaticString, _ args: CVarArg...) {
-        log(message: message, currentLevel: .debug, args: args)
+    func debug(message: String) {
+        log(message: message, currentLevel: .debug)
     }
 
-    func warning(message: StaticString, _ args: CVarArg...) {
-        log(message: message, currentLevel: .warning, args: args)
+    func warning(message: String) {
+        log(message: message, currentLevel: .warning)
     }
 
-    func info(message: StaticString, _ args: CVarArg...) {
-        log(message: message, currentLevel: .info, args: args)
+    func info(message: String) {
+        log(message: message, currentLevel: .info)
     }
 
-    func error(message: StaticString, _ args: CVarArg...) {
-        let msg = message.stringValue.replacingOccurrences(of: "{public}", with: "")
-        hooks.invokeOnError(error: String(format: msg, args))
-        log(message: message, currentLevel: .error, args: args)
+    func error(message: String) {
+        hooks.invokeOnError(error: message)
+        log(message: message, currentLevel: .error)
     }
 
-    func log(message: StaticString, currentLevel: LogLevel, args: Array<CVarArg>) {
+    func log(message: String, currentLevel: LogLevel) {
         if currentLevel.rawValue >= level.rawValue {
-            switch args.count {
-            case 0:
-                os_log(message, log: Logger.log, type: getLogType(level: currentLevel))
-            case 1:
-                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0])
-            case 2:
-                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0], args[1])
-            case 3:
-                os_log(message, log: Logger.log, type: getLogType(level: currentLevel), args[0], args[1], args[2])
-            default:
-                os_log(message, log: Logger.log, type: getLogType(level: currentLevel))
-            }
-
+            os_log("%{public}@", log: Logger.log, type: getLogType(level: currentLevel), message)
         }
     }
 

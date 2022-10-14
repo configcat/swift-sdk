@@ -71,7 +71,7 @@ class ConfigService {
 
                 // Max wait time expired without result, notify subscribers with the cached config.
                 if !this.initialized {
-                    this.log.warning(message: "Max init wait time for the very first fetch reached (%{public}@s). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds)
+                    this.log.warning(message: String(format: "Max init wait time for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
                     this.initialized = true
                     hooks.invokeOnReady()
                     this.callCompletions(result: .success(this.cachedEntry))
@@ -277,7 +277,7 @@ class ConfigService {
             cachedJsonString = jsonString
             try cache.write(for: cacheKey, value: jsonString)
         } catch {
-            log.error(message: "An error occurred during the cache write: %{public}@", error.localizedDescription)
+            log.error(message: String(format: "An error occurred during the cache write: %@", error.localizedDescription))
         }
     }
 
@@ -301,7 +301,7 @@ class ConfigService {
             cachedJsonString = json
             return .fromJson(json: jsonObject)
         } catch {
-            log.error(message: "An error occurred during the cache read: %{public}@", error.localizedDescription)
+            log.error(message: String(format: "An error occurred during the cache read: %@", error.localizedDescription))
             return .empty
         }
     }
