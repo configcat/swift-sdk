@@ -53,7 +53,10 @@ class ConfigService {
 
         if let autoPoll = pollingMode as? AutoPollingMode {
             initialized = false
-            startPoll(mode: autoPoll)
+
+            if !offline {
+                startPoll(mode: autoPoll)
+            }
 
             // Waiting for the client initialization.
             // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
