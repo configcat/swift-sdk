@@ -77,8 +77,8 @@
 		F17DEE2D288876F7009C3E48 /* ConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE26288876F6009C3E48 /* ConfigService.swift */; };
 		F17DEE2E288876F7009C3E48 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE27288876F6009C3E48 /* Utils.swift */; };
 		F17DEE2F288876F7009C3E48 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE27288876F6009C3E48 /* Utils.swift */; };
-		F1BC414528E1D54800F2230A /* ClientOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414328E1D54800F2230A /* ClientOptions.swift */; };
-		F1BC414628E1D54800F2230A /* ClientOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414328E1D54800F2230A /* ClientOptions.swift */; };
+		F1B1D8B528FF2C830034165E /* ConfigCatOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B1D8B428FF2C830034165E /* ConfigCatOptions.swift */; };
+		F1B1D8B628FF2C830034165E /* ConfigCatOptions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B1D8B428FF2C830034165E /* ConfigCatOptions.swift */; };
 		F1BC414728E1D54800F2230A /* EvaluationDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414428E1D54800F2230A /* EvaluationDetails.swift */; };
 		F1BC414828E1D54800F2230A /* EvaluationDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414428E1D54800F2230A /* EvaluationDetails.swift */; };
 		F1BC414C28E1D6C900F2230A /* Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BC414B28E1D6C900F2230A /* Helpers.swift */; };
@@ -144,7 +144,7 @@
 		F17DEE25288876F6009C3E48 /* Mutex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mutex.swift; sourceTree = "<group>"; };
 		F17DEE26288876F6009C3E48 /* ConfigService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigService.swift; sourceTree = "<group>"; };
 		F17DEE27288876F6009C3E48 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		F1BC414328E1D54800F2230A /* ClientOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientOptions.swift; sourceTree = "<group>"; };
+		F1B1D8B428FF2C830034165E /* ConfigCatOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCatOptions.swift; sourceTree = "<group>"; };
 		F1BC414428E1D54800F2230A /* EvaluationDetails.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvaluationDetails.swift; sourceTree = "<group>"; };
 		F1BC414B28E1D6C900F2230A /* Helpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
 		F1E1180A257532D700DA245A /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
@@ -213,7 +213,7 @@
 		3F880A42207BE91900087A6B /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				F1BC414328E1D54800F2230A /* ClientOptions.swift */,
+				F1B1D8B428FF2C830034165E /* ConfigCatOptions.swift */,
 				F1BC414428E1D54800F2230A /* EvaluationDetails.swift */,
 				F11F76BF288AE7640097939F /* Extensions.swift */,
 				F17DEE26288876F6009C3E48 /* ConfigService.swift */,
@@ -391,7 +391,6 @@
 				B4BD2AB3258CA6FF007371E2 /* PollingMode.swift in Sources */,
 				B4BD2AB4258CA6FF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AB5258CA6FF007371E2 /* Version+Comparable.swift in Sources */,
-				F1BC414528E1D54800F2230A /* ClientOptions.swift in Sources */,
 				F17DEE28288876F7009C3E48 /* MutableQueue.swift in Sources */,
 				F1BC414728E1D54800F2230A /* EvaluationDetails.swift in Sources */,
 				C4FA1B3D278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
@@ -407,6 +406,7 @@
 				F17DEE2A288876F7009C3E48 /* Mutex.swift in Sources */,
 				B4BD2AC2258CA6FF007371E2 /* Version+Range.swift in Sources */,
 				F11F76C1288AE7970097939F /* Extensions.swift in Sources */,
+				F1B1D8B528FF2C830034165E /* ConfigCatOptions.swift in Sources */,
 				B4BD2AC3258CA6FF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
 				B4BD2AC5258CA6FF007371E2 /* ConfigCache.swift in Sources */,
 				B4BD2AC6258CA6FF007371E2 /* Version+Foundation.swift in Sources */,
@@ -421,6 +421,7 @@
 				F1BC414828E1D54800F2230A /* EvaluationDetails.swift in Sources */,
 				B4BD2AE4258CA7DF007371E2 /* Version+Range.swift in Sources */,
 				C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
+				F1B1D8B628FF2C830034165E /* ConfigCatOptions.swift in Sources */,
 				B4BD2AE6258CA7DF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AE7258CA7DF007371E2 /* RolloutIntegrationTests.swift in Sources */,
 				B4BD2AE8258CA7DF007371E2 /* Config.swift in Sources */,
@@ -439,7 +440,6 @@
 				B4BD2AF3258CA7DF007371E2 /* Version.swift in Sources */,
 				B4BD2AF4258CA7DF007371E2 /* KeyValue.swift in Sources */,
 				B4BD2AF6258CA7DF007371E2 /* RolloutEvaluator.swift in Sources */,
-				F1BC414628E1D54800F2230A /* ClientOptions.swift in Sources */,
 				F17DEE2D288876F7009C3E48 /* ConfigService.swift in Sources */,
 				F1BC414C28E1D6C900F2230A /* Helpers.swift in Sources */,
 				F17DEE2B288876F7009C3E48 /* Mutex.swift in Sources */,
