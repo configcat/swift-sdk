@@ -14,7 +14,7 @@ class AsyncAwaitTests: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetValue() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let value = await client.getValue(for: "key1", defaultValue: false)
         XCTAssertTrue(value)
         let value2 = await client.getValue(for: "key2", defaultValue: false, user: user)
@@ -23,7 +23,7 @@ class AsyncAwaitTests: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetVariationId() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = await client.getVariationId(for: "key1", defaultVariationId: "")
         XCTAssertEqual("fakeId1", id)
         let id2 = await client.getVariationId(for: "key2", defaultVariationId: "", user: user)
@@ -32,7 +32,7 @@ class AsyncAwaitTests: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetKeyValue() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = await client.getKeyAndValue(for: "fakeId1")
         XCTAssertEqual(true, id?.value as? Bool)
         XCTAssertEqual("key1", id?.key)
@@ -40,21 +40,21 @@ class AsyncAwaitTests: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetAllKeys() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let keys = await client.getAllKeys()
         XCTAssertEqual(2, keys.count)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetAllValues() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let values = await client.getAllValues()
         XCTAssertEqual(2, values.count)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testRefresh() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
         let result = await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertTrue(result.success)
@@ -64,7 +64,7 @@ class AsyncAwaitTests: XCTestCase {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testRefreshWithoutResult() async {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
         await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertFalse(value)

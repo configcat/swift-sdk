@@ -47,7 +47,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
     func testEvalHook() {
         let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
         var called = false
-        let config = ClientOptions.default
+        let config = ConfigCatOptions.default
         config.hooks.addOnFlagEvaluated { details in
             XCTAssertEqual("stringContainsDogDefaultCat", details.key)
             XCTAssertEqual("Dog", details.value as? String)

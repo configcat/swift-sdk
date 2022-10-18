@@ -38,7 +38,7 @@ extension Date {
 }
 
 class Constants {
-    static let version: String = "9.1.2"
+    static let version: String = "9.2.0"
     static let configJsonName: String = "config_v5"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"

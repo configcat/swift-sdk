@@ -159,6 +159,6 @@ class VariationIdTests: XCTestCase {
     }
 
     private func createClient() -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
     }
 }

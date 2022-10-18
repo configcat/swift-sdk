@@ -12,7 +12,7 @@ class LocalTests: XCTestCase {
             "doubleSetting": 3.14,
             "stringSetting": "test"
         ]
-        let options = ClientOptions.default
+        let options = ConfigCatOptions.default
         options.flagOverrides = LocalDictionaryDataSource(source: dictionary, behaviour: .localOnly)
         let client = ConfigCatClient.get(sdkKey: "testKey", options: options)
         let expectation = self.expectation(description: "wait for response")
@@ -35,7 +35,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
@@ -53,7 +53,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertFalse(values["fakeKey"] as? Bool ?? true)

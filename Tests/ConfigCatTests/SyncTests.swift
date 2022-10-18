@@ -12,7 +12,7 @@ class SyncTests: XCTestCase {
     }
 
     func testGetValue() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let value = client.getValueSync(for: "key1", defaultValue: false)
         XCTAssertTrue(value)
         let value2 = client.getValueSync(for: "key2", defaultValue: false, user: user)
@@ -20,7 +20,7 @@ class SyncTests: XCTestCase {
     }
 
     func testGetVariationId() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = client.getVariationIdSync(for: "key1", defaultVariationId: "")
         XCTAssertEqual("fakeId1", id)
         let id2 = client.getVariationIdSync(for: "key2", defaultVariationId: "", user: user)
@@ -28,26 +28,26 @@ class SyncTests: XCTestCase {
     }
 
     func testGetKeyValue() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let id = client.getKeyAndValueSync(for: "fakeId1")
         XCTAssertEqual(true, id?.value as? Bool)
         XCTAssertEqual("key1", id?.key)
     }
 
     func testGetAllKeys() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let keys = client.getAllKeysSync()
         XCTAssertEqual(2, keys.count)
     }
 
     func testGetAllValues() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.autoPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session())
         let values = client.getAllValuesSync()
         XCTAssertEqual(2, values.count)
     }
 
     func testRefresh() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
         let result = client.forceRefreshSync()
         let value = client.getValueSync(for: "key2", defaultValue: true)
         XCTAssertTrue(result.success)
@@ -56,7 +56,7 @@ class SyncTests: XCTestCase {
     }
 
     func testRefreshWithoutResult() {
-        let client = ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
         client.forceRefreshSync()
         let value = client.getValueSync(for: "key2", defaultValue: true)
         XCTAssertFalse(value)

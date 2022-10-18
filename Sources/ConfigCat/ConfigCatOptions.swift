@@ -1,7 +1,7 @@
 import Foundation
 
 /// Configuration options for `ConfigCatClient`.
-public final class ClientOptions: NSObject {
+public final class ConfigCatOptions: NSObject {
     /**
      Default: `DataGovernance.global`. Set this parameter to be in sync with the
      Data Governance preference on the [Dashboard](https://app.configcat.com/organization/data-governance).
@@ -13,7 +13,7 @@ public final class ClientOptions: NSObject {
     @objc public var configCache: ConfigCache? = nil
 
     /// The polling mode.
-    @objc public var refreshMode: PollingMode = PollingModes.autoPoll()
+    @objc public var pollingMode: PollingMode = PollingModes.autoPoll()
 
     /// Custom `URLSessionConfiguration` used by the HTTP calls.
     @objc public var sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default
@@ -37,9 +37,9 @@ public final class ClientOptions: NSObject {
     @objc public var offline: Bool = false
 
     /// The default client configuration options.
-    @objc public static var `default`: ClientOptions {
+    @objc public static var `default`: ConfigCatOptions {
         get {
-            ClientOptions()
+            ConfigCatOptions()
         }
     }
 }
