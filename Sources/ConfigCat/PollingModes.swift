@@ -1,7 +1,7 @@
 import Foundation
 
 /// Describes the polling modes.
-public final class PollingModes {
+public final class PollingModes: NSObject {
     /**
     Creates a new `AutoPollingMode`.
     
