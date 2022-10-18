@@ -8,24 +8,21 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let options = ConfigCatOptions.default
-        
-        options.refreshMode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5)
-        options.hooks.addOnConfigChanged { _ in
-            self.configChanged()
-        }
-        
-        // Info level logging helps to inspect the feature flag evaluation process.
-        // Remove this line to avoid too detailed logging in your application.
-        options.logLevel = .info
-        
-        // Creating a user object to identify your user (optional).
-        options.defaultUser = ConfigCatUser(identifier: "user-id", email: "configcat@example.com")
-        
+
         self.client = ConfigCatClient.get(
-            sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A",
-            options: options
-        )
+            sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5)
+            options.hooks.addOnConfigChanged { _ in
+                self.configChanged()
+            }
+
+            // Info level logging helps to inspect the feature flag evaluation process.
+            // Remove this line to avoid too detailed logging in your application.
+            options.logLevel = .debug
+
+            // Creating a user object to identify your user (optional).
+            options.defaultUser = ConfigCatUser(identifier: "user-id", email: "configcat@example.com")
+        }
     }
 
     override func didReceiveMemoryWarning() {

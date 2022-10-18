@@ -3,15 +3,11 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        ClientOptions* options = [ConfigCatOptions default];
-        
-        // Info level logging helps to inspect the feature flag evaluation process.
-        // Use the default Warning level to avoid too detailed logging in your application.
-        options.logLevel = LogLevelInfo;
-        
-        // Initialize the ConfigCatClient with an SDK Key.
-        ConfigCatClient* client = [ConfigCatClient getWithSdkKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ"
-                                                         options:options];
+        ConfigCatClient* client = [ConfigCatClient getWithSdkKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ" configurator:^(ConfigCatOptions* options){
+            // Info level logging helps to inspect the feature flag evaluation process.
+            // Use the default Warning level to avoid too detailed logging in your application.
+            options.logLevel = LogLevelInfo;
+        }];
         
         // Creating a user object to identify your user (optional).
         ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"Some UserID"
