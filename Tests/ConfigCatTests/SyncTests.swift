@@ -62,4 +62,13 @@ class SyncTests: XCTestCase {
         XCTAssertFalse(value)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
+
+    func testDetails() {
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        client.forceRefreshSync()
+        let details = client.getValueDetailsSync(for: "key2", defaultValue: true)
+        XCTAssertFalse(details.isDefaultValue)
+        XCTAssertFalse(details.value)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+    }
 }

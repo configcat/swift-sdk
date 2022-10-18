@@ -68,6 +68,7 @@
 		F11F76BE288AE7540097939F /* SyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BD288AE7540097939F /* SyncTests.swift */; };
 		F11F76C0288AE7650097939F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BF288AE7640097939F /* Extensions.swift */; };
 		F11F76C1288AE7970097939F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BF288AE7640097939F /* Extensions.swift */; };
+		F14961CF28FF71400095A72A /* EvaluationDetailsExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F14961CE28FF71400095A72A /* EvaluationDetailsExtensionTests.swift */; };
 		F17DEE23288876AE009C3E48 /* LazyLoadingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE22288876AE009C3E48 /* LazyLoadingTests.swift */; };
 		F17DEE28288876F7009C3E48 /* MutableQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE24288876F6009C3E48 /* MutableQueue.swift */; };
 		F17DEE29288876F7009C3E48 /* MutableQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE24288876F6009C3E48 /* MutableQueue.swift */; };
@@ -135,6 +136,7 @@
 		F11F76BB288AD6CA0097939F /* AsyncAwaitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncAwaitTests.swift; sourceTree = "<group>"; };
 		F11F76BD288AE7540097939F /* SyncTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SyncTests.swift; sourceTree = "<group>"; };
 		F11F76BF288AE7640097939F /* Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		F14961CE28FF71400095A72A /* EvaluationDetailsExtensionTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvaluationDetailsExtensionTests.swift; sourceTree = "<group>"; };
 		F15F9AF62169176A00F490CD /* ConfigCatUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatUser.swift; sourceTree = "<group>"; };
 		F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RolloutEvaluator.swift; sourceTree = "<group>"; };
 		F15F9B122169738100F490CD /* testmatrix.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix.csv; path = Resources/testmatrix.csv; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				F14961CE28FF71400095A72A /* EvaluationDetailsExtensionTests.swift */,
 				F1BC414B28E1D6C900F2230A /* Helpers.swift */,
 				F11F76BD288AE7540097939F /* SyncTests.swift */,
 				F11F76BB288AD6CA0097939F /* AsyncAwaitTests.swift */,
@@ -446,6 +449,7 @@
 				B4BD2AF7258CA7DF007371E2 /* PollingModes.swift in Sources */,
 				B4BD2AF8258CA7DF007371E2 /* ConfigCatClientTests.swift in Sources */,
 				B4BD2AF9258CA7DF007371E2 /* ConfigCatClient.swift in Sources */,
+				F14961CF28FF71400095A72A /* EvaluationDetailsExtensionTests.swift in Sources */,
 				B4BD2AFA258CA7DF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
 				B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */,
 				C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */,

@@ -35,12 +35,45 @@ extension ConfigCatClient {
         }
     }
 
+    @objc public func getStringValueDetails(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (StringEvaluationDetails) -> ()) {
+        return getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+            completion(details.toStringDetails())
+        }
+    }
+
+    @objc public func getBoolValueDetails(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (BoolEvaluationDetails) -> ()) {
+        return getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+            completion(details.toBoolDetails())
+        }
+    }
+
+    @objc public func getIntValueDetails(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (IntEvaluationDetails) -> ()) {
+        return getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+            completion(details.toIntDetails())
+        }
+    }
+
+    @objc public func getDoubleValueDetails(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (DoubleEvaluationDetails) -> ()) {
+        return getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+            completion(details.toDoubleDetails())
+        }
+    }
+
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
         await withCheckedContinuation { continuation in
             getValue(for: key, defaultValue: defaultValue, user: user) { value in
                 continuation.resume(returning: value)
+            }
+        }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> TypedEvaluationDetails<Value> {
+        await withCheckedContinuation { continuation in
+            getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+                continuation.resume(returning: details)
             }
         }
     }
@@ -122,6 +155,17 @@ extension ConfigCatClient {
         }
         semaphore.wait()
         return result ?? defaultValue
+    }
+
+    public func getValueDetailsSync<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) -> TypedEvaluationDetails<Value> {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result: TypedEvaluationDetails<Value>?
+        getValueDetails(for: key, defaultValue: defaultValue, user: user) { value in
+            result = value
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return result ?? TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: String(format: "Could not get the evaluation details for '%@'.", key))
     }
 
     @objc public func getAllKeysSync() -> [String] {
@@ -218,6 +262,22 @@ extension ConfigCatClient {
 
     @objc public func getAnyValueSync(for key: String, defaultValue: Any, user: ConfigCatUser?) -> Any {
         getValueSync(for: key, defaultValue: defaultValue, user: user)
+    }
+
+    @objc public func getStringValueDetailsSync(for key: String, defaultValue: String, user: ConfigCatUser?) -> StringEvaluationDetails {
+        getValueDetailsSync(for: key, defaultValue: defaultValue, user: user).toStringDetails()
+    }
+
+    @objc public func getIntValueDetailsSync(for key: String, defaultValue: Int, user: ConfigCatUser?) -> IntEvaluationDetails {
+        getValueDetailsSync(for: key, defaultValue: defaultValue, user: user).toIntDetails()
+    }
+
+    @objc public func getDoubleValueDetailsSync(for key: String, defaultValue: Double, user: ConfigCatUser?) -> DoubleEvaluationDetails {
+        getValueDetailsSync(for: key, defaultValue: defaultValue, user: user).toDoubleDetails()
+    }
+
+    @objc public func getBoolValueDetailsSync(for key: String, defaultValue: Bool, user: ConfigCatUser?) -> BoolEvaluationDetails {
+        getValueDetailsSync(for: key, defaultValue: defaultValue, user: user).toBoolDetails()
     }
 }
 

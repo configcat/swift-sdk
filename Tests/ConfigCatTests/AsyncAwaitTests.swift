@@ -70,5 +70,15 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertFalse(value)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testDetails() async {
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
+        await client.forceRefresh()
+        let details = await client.getValueDetails(for: "key2", defaultValue: true)
+        XCTAssertFalse(details.isDefaultValue)
+        XCTAssertFalse(details.value)
+        XCTAssertEqual(1, MockHTTP.requests.count)
+    }
     #endif
 }

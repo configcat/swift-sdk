@@ -50,6 +50,46 @@ public final class EvaluationDetails: EvaluationDetailsBase {
     }
 }
 
+public final class StringEvaluationDetails: EvaluationDetailsBase {
+    @objc public let value: String
+
+    init(value: String,
+         base: EvaluationDetailsBase) {
+        self.value = value
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+    }
+}
+
+public final class BoolEvaluationDetails: EvaluationDetailsBase {
+    @objc public let value: Bool
+
+    init(value: Bool,
+         base: EvaluationDetailsBase) {
+        self.value = value
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+    }
+}
+
+public final class IntEvaluationDetails: EvaluationDetailsBase {
+    @objc public let value: Int
+
+    init(value: Int,
+         base: EvaluationDetailsBase) {
+        self.value = value
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+    }
+}
+
+public final class DoubleEvaluationDetails: EvaluationDetailsBase {
+    @objc public let value: Double
+
+    init(value: Double,
+         base: EvaluationDetailsBase) {
+        self.value = value
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+    }
+}
+
 public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
     public let value: Value
 
@@ -68,5 +108,21 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
 
     static func fromError<Value>(key: String, value: Value, error: String) -> TypedEvaluationDetails<Value> {
         TypedEvaluationDetails<Value>(key: key, value: value, variationId: "", isDefaultValue: true, error: error)
+    }
+
+    func toStringDetails() -> StringEvaluationDetails {
+        StringEvaluationDetails(value: value as? String ?? "", base: self)
+    }
+
+    func toBoolDetails() -> BoolEvaluationDetails {
+        BoolEvaluationDetails(value: value as? Bool ?? false, base: self)
+    }
+
+    func toIntDetails() -> IntEvaluationDetails {
+        IntEvaluationDetails(value: value as? Int ?? 0, base: self)
+    }
+
+    func toDoubleDetails() -> DoubleEvaluationDetails {
+        DoubleEvaluationDetails(value: value as? Double ?? 0, base: self)
     }
 }
