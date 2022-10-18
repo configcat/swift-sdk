@@ -560,6 +560,18 @@ class ConfigCatClientTests: XCTestCase {
         }
     }
 
+    func testSingleton() {
+        var client1 = ConfigCatClient.get(sdkKey: "test")
+        let client2 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertEqual(client1, client2)
+
+        ConfigCatClient.closeAll()
+        client1 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertNotEqual(client1, client2)
+    }
+
     private func createClient(offline: Bool = false) -> ConfigCatClient {
         ConfigCatClient(sdkKey: "test", refreshMode: PollingModes.manualPoll(), session: MockHTTP.session(), offline: offline)
     }

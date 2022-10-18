@@ -109,10 +109,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         defer {
             mutex.unlock()
         }
-        if let client = instances[sdkKey]?.get(), options != nil {
-            client.log.warning(message: String(format: """
-                                        Client for '%@' is already created and will be reused; options passed are being ignored.
-                                        """, sdkKey))
+        if let client = instances[sdkKey]?.get() {
+            if options != nil {
+                client.log.warning(message: String(format: """
+                                                           Client for '%@' is already created and will be reused; options passed are being ignored.
+                                                           """, sdkKey))
+            }
             return client
         }
         let opts = options ?? ClientOptions.default
