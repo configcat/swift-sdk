@@ -18,7 +18,7 @@ class ViewController: UIViewController {
 
             // Info level logging helps to inspect the feature flag evaluation process.
             // Remove this line to avoid too detailed logging in your application.
-            options.logLevel = .debug
+            options.logLevel = .info
 
             // Creating a user object to identify your user (optional).
             options.defaultUser = ConfigCatUser(identifier: "user-id", email: "configcat@example.com")
