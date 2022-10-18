@@ -3,7 +3,7 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        ClientOptions* options = [ClientOptions default];
+        ClientOptions* options = [ConfigCatOptions default];
         
         // Info level logging helps to inspect the feature flag evaluation process.
         // Use the default Warning level to avoid too detailed logging in your application.

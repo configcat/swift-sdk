@@ -8,7 +8,7 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        let options = ClientOptions.default
+        let options = ConfigCatOptions.default
         
         options.refreshMode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5)
         options.hooks.addOnConfigChanged { _ in
