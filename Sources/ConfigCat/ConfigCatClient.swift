@@ -133,6 +133,20 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         return client
     }
 
+    /**
+     Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
+
+     - Parameters:
+       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
+       - configurator: the configuration callback.
+     - Returns: the ConfigCatClient instance.
+     */
+    @objc public static func get(sdkKey: String, configurator: (ConfigCatOptions) -> ()) -> ConfigCatClient {
+        let options = ConfigCatOptions.default
+        configurator(options)
+        return get(sdkKey: sdkKey, options: options)
+    }
+
     /// Closes all ConfigCatClient instances.
     @objc public static func closeAll() {
         mutex.lock()

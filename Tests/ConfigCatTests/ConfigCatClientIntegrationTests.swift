@@ -70,4 +70,19 @@ class ConfigCatClientIntegrationTests: XCTestCase {
 
         XCTAssertTrue(called)
     }
+
+    func testOptionsCallback() {
+        let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
+
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.lazyLoad()
+            options.defaultUser = user
+        }
+        let expectation = expectation(description: "wait for all values")
+        client.getValue(for: "stringContainsDogDefaultCat", defaultValue: "") { value in
+            XCTAssertEqual("Dog", value)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+    }
 }
