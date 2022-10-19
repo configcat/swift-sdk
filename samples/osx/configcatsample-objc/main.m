@@ -1,5 +1,5 @@
-#import <Foundation/Foundation.h>
-#import "ConfigCat-Swift.h"
+@import Foundation;
+@import ConfigCat;
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
