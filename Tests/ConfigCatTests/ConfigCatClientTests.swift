@@ -572,6 +572,22 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertNotEqual(client1, client2)
     }
 
+    func testSingletonRemovesOnlyTheClosingInstance() {
+        var client1 = ConfigCatClient.get(sdkKey: "test")
+
+        client1.close()
+
+        let client2 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertNotEqual(client1, client2)
+
+        client1.close()
+
+        let client3 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertEqual(client2, client3)
+    }
+
     private func createClient(offline: Bool = false) -> ConfigCatClient {
         ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session(), offline: offline)
     }

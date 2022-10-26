@@ -169,7 +169,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             ConfigCatClient.mutex.unlock()
         }
         closeResources()
-        ConfigCatClient.instances.removeValue(forKey: sdkKey)
+        if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
+            ConfigCatClient.instances.removeValue(forKey: sdkKey)
+        }
     }
 
     func closeResources() {
