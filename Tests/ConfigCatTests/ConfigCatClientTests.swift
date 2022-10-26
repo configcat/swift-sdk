@@ -573,7 +573,7 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testSingletonRemovesOnlyTheClosingInstance() {
-        var client1 = ConfigCatClient.get(sdkKey: "test")
+        let client1 = ConfigCatClient.get(sdkKey: "test")
 
         client1.close()
 
