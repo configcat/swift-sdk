@@ -105,32 +105,30 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      - Returns: the ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, options: ConfigCatOptions? = nil) -> ConfigCatClient {
-        mutex.lock()
-        defer {
-            mutex.unlock()
-        }
-        if let client = instances[sdkKey]?.get() {
-            if options != nil {
-                client.log.warning(message: String(format: """
-                                                           Client for '%@' is already created and will be reused; options passed are being ignored.
-                                                           """, sdkKey))
+        mutex.withLock {
+            if let client = instances[sdkKey]?.get() {
+                if options != nil {
+                    client.log.warning(message: String(format: """
+                                                               Client for '%@' is already created and will be reused; options passed are being ignored.
+                                                               """, sdkKey))
+                }
+                return client
             }
+            let opts = options ?? ConfigCatOptions.default
+            let client = ConfigCatClient(sdkKey: sdkKey,
+                    pollingMode: opts.pollingMode,
+                    session: URLSession(configuration: opts.sessionConfiguration),
+                    hooks: opts.hooks,
+                    configCache: opts.configCache,
+                    baseUrl: opts.baseUrl,
+                    dataGovernance: opts.dataGovernance,
+                    flagOverrides: opts.flagOverrides,
+                    defaultUser: opts.defaultUser,
+                    logLevel: opts.logLevel,
+                    offline: opts.offline)
+            instances[sdkKey] = Weak(value: client)
             return client
         }
-        let opts = options ?? ConfigCatOptions.default
-        let client = ConfigCatClient(sdkKey: sdkKey,
-                pollingMode: opts.pollingMode,
-                session: URLSession(configuration: opts.sessionConfiguration),
-                hooks: opts.hooks,
-                configCache: opts.configCache,
-                baseUrl: opts.baseUrl,
-                dataGovernance: opts.dataGovernance,
-                flagOverrides: opts.flagOverrides,
-                defaultUser: opts.defaultUser,
-                logLevel: opts.logLevel,
-                offline: opts.offline)
-        instances[sdkKey] = Weak(value: client)
-        return client
     }
 
     /**
@@ -149,14 +147,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
     /// Closes all ConfigCatClient instances.
     @objc public static func closeAll() {
-        mutex.lock()
-        defer {
-            mutex.unlock()
+        mutex.withLock {
+            for item in instances {
+                item.value.get()?.closeResources()
+            }
+            instances.removeAll()
         }
-        for item in instances {
-            item.value.get()?.closeResources()
-        }
-        instances.removeAll()
     }
 
     /// Hooks for subscribing events.
@@ -164,13 +160,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
     /// Closes the underlying resources.
     @objc public func close() {
-        ConfigCatClient.mutex.lock()
-        defer {
-            ConfigCatClient.mutex.unlock()
-        }
-        closeResources()
-        if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
-            ConfigCatClient.instances.removeValue(forKey: sdkKey)
+        ConfigCatClient.mutex.withLock {
+            closeResources()
+            if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
+                ConfigCatClient.instances.removeValue(forKey: sdkKey)
+            }
         }
     }
 

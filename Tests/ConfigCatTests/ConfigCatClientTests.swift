@@ -384,7 +384,9 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertTrue(client.isOffline)
 
         let expectation2 = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 2)
