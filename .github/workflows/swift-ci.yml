@@ -24,7 +24,7 @@ jobs:
             destination: OS=15.2,name=iPhone 8
             platform: iphone
           - sdk: appletvsimulator15.2
-            destination: OS=15.2,name=Apple TV 4K (at 1080p)
+            destination: OS=15.2,name=Apple TV
             platform: appletv
     steps:
       - uses: actions/checkout@v2
