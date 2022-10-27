@@ -4,6 +4,7 @@ import Foundation
 class MockHTTP {
     private static var responses = [Response]()
     private static var capturedRequests = [URLRequest]()
+    private static let mutex: Mutex = Mutex()
 
     static var requests: [URLRequest] {
         get {
@@ -12,8 +13,6 @@ class MockHTTP {
             return capturedRequests
         }
     }
-
-    static let mutex: Mutex = Mutex()
 
     static func enqueueResponse(response: Response) {
         mutex.lock()
