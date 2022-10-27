@@ -172,7 +172,7 @@ class ManualPollingTests: XCTestCase {
     func testOnlineOffline() throws {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
@@ -216,7 +216,7 @@ class ManualPollingTests: XCTestCase {
     func testInitOffline() throws {
         MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryStringWithCurrentDate()
+        let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
