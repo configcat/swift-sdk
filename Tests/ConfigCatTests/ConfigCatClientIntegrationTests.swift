@@ -4,7 +4,7 @@ import XCTest
 class ConfigCatClientIntegrationTests: XCTestCase {
     func testGetAllKeys() {
         let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
-            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+            options.pollingMode = PollingModes.lazyLoad()
         }
         let expectation = expectation(description: "wait for all keys")
         client.getAllKeys { keys in
@@ -17,7 +17,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
 
     func testGetAllValues() {
         let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
-            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+            options.pollingMode = PollingModes.lazyLoad()
         }
         let expectation = expectation(description: "wait for all values")
         client.getAllValues { allValues in
@@ -30,7 +30,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
 
     func testEvalDetails() {
         let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
-            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+            options.pollingMode = PollingModes.lazyLoad()
         }
         let expectation = expectation(description: "wait for all values")
         let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
@@ -54,7 +54,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
         var called = false
         let config = ConfigCatOptions.default
-        config.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+        config.pollingMode = PollingModes.lazyLoad()
         config.hooks.addOnFlagEvaluated { details in
             XCTAssertEqual("stringContainsDogDefaultCat", details.key)
             XCTAssertEqual("Dog", details.value as? String)
