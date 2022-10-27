@@ -32,26 +32,8 @@ final class Mutex {
         assert(result == 0, "Failed to lock mutex.")
     }
 
-    func tryLock() -> Bool {
-        pthread_mutex_trylock(mutex) == 0
-    }
-
     func unlock() {
         let result = pthread_mutex_unlock(mutex)
         assert(result == 0, "Failed to unlock mutex.")
-    }
-}
-
-extension Mutex {
-    func withLock<Result>(_ block: () throws -> Result) rethrows -> Result {
-        lock()
-        defer { unlock() }
-        return try block()
-    }
-
-    func withLock(_ block: () throws -> Void) rethrows -> Void {
-        lock()
-        defer { unlock() }
-        try block()
     }
 }

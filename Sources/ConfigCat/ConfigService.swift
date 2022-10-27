@@ -67,15 +67,15 @@ class ConfigService {
                 guard let this = self else {
                     return
                 }
-                this.mutex.withLock {
-                    // Max wait time expired without result, notify subscribers with the cached config.
-                    if !this.initialized {
-                        this.log.warning(message: String(format: "Max init wait time for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
-                        this.initialized = true
-                        hooks.invokeOnReady()
-                        this.callCompletions(result: .success(this.cachedEntry))
-                        this.completions = nil
-                    }
+                this.mutex.lock()
+                defer { this.mutex.unlock() }
+                // Max wait time expired without result, notify subscribers with the cached config.
+                if !this.initialized {
+                    this.log.warning(message: String(format: "Max init wait time for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
+                    this.initialized = true
+                    hooks.invokeOnReady()
+                    this.callCompletions(result: .success(this.cachedEntry))
+                    this.completions = nil
                 }
             })
             initTimer?.resume()
@@ -86,12 +86,12 @@ class ConfigService {
     }
 
     func close() {
-        mutex.withLock {
-            callCompletions(result: .success(cachedEntry))
-            completions = nil
-            pollTimer?.cancel()
-            initTimer?.cancel()
-        }
+        mutex.lock()
+        defer { mutex.unlock() }
+        callCompletions(result: .success(cachedEntry))
+        completions = nil
+        pollTimer?.cancel()
+        initTimer?.cancel()
     }
 
     func settings(completion: @escaping (SettingResult) -> Void) {
@@ -130,107 +130,104 @@ class ConfigService {
     }
 
     func setOnline() {
-        mutex.withLock {
-            if !offline {
-                return
-            }
-            offline = false
-            if let autoPoll = pollingMode as? AutoPollingMode {
-                startPoll(mode: autoPoll)
-            }
-            log.debug(message: "Switched to ONLINE mode.")
+        mutex.lock()
+        defer { mutex.unlock() }
+        if !offline { return }
+        offline = false
+        if let autoPoll = pollingMode as? AutoPollingMode {
+            startPoll(mode: autoPoll)
         }
+        log.debug(message: "Switched to ONLINE mode.")
     }
 
     func setOffline() {
-        mutex.withLock {
-            if offline {
-                return
-            }
-            offline = true
-            pollTimer?.cancel()
-            pollTimer = nil
-            log.debug(message: "Switched to OFFLINE mode.")
-        }
+        mutex.lock()
+        defer { mutex.unlock() }
+        if offline { return }
+        offline = true
+        pollTimer?.cancel()
+        pollTimer = nil
+        log.debug(message: "Switched to OFFLINE mode.")
     }
 
     var isOffline: Bool {
         get {
-            mutex.withLock {
-                offline
-            }
+            mutex.lock()
+            defer { mutex.unlock() }
+            return offline
         }
     }
 
     private func fetchIfOlder(time: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
-        mutex.withLock {
-            // Sync up with the cache and use it when it's not expired.
-            if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
-                let entry = readCache()
-                if !entry.isEmpty && entry != cachedEntry {
-                    cachedEntry = entry
-                    hooks.invokeOnConfigChanged(settings: entry.config.entries)
-                }
-                // Cache isn't expired
-                if cachedEntry.fetchTime > time {
-                    if !initialized {
-                        initialized = true
-                        hooks.invokeOnReady()
-                    }
-                    completion(.success(cachedEntry))
-                    return
-                }
+        mutex.lock()
+        defer { mutex.unlock() }
+        // Sync up with the cache and use it when it's not expired.
+        if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
+            let entry = readCache()
+            if !entry.isEmpty && entry != cachedEntry {
+                cachedEntry = entry
+                hooks.invokeOnConfigChanged(settings: entry.config.entries)
             }
-            // Use cache anyway (get calls on auto & manual poll must not initiate fetch).
-            // The initialized check ensures that we subscribe for the ongoing fetch during the
-            // max init wait time window in case of auto poll.
-            if preferCache && initialized {
+            // Cache isn't expired
+            if cachedEntry.fetchTime > time {
+                if !initialized {
+                    initialized = true
+                    hooks.invokeOnReady()
+                }
                 completion(.success(cachedEntry))
                 return
             }
-            // If we are in offline mode we are not allowed to initiate fetch.
-            if offline {
-                completion(.success(cachedEntry))
-                return
-            }
-            // There's an ongoing fetch running, save the callback to call it later when the ongoing fetch finishes.
-            if completions != nil {
-                completions?.enqueue(item: completion)
-                return
-            }
-            // No fetch is running, initiate a new one.
-            completions = MutableQueue<(FetchResult) -> Void>()
+        }
+        // Use cache anyway (get calls on auto & manual poll must not initiate fetch).
+        // The initialized check ensures that we subscribe for the ongoing fetch during the
+        // max init wait time window in case of auto poll.
+        if preferCache && initialized {
+            completion(.success(cachedEntry))
+            return
+        }
+        // If we are in offline mode we are not allowed to initiate fetch.
+        if offline {
+            completion(.success(cachedEntry))
+            return
+        }
+        // There's an ongoing fetch running, save the callback to call it later when the ongoing fetch finishes.
+        if completions != nil {
             completions?.enqueue(item: completion)
-            fetcher.fetch(eTag: cachedEntry.eTag) { response in
-                self.processResponse(response: response)
-            }
+            return
+        }
+        // No fetch is running, initiate a new one.
+        completions = MutableQueue<(FetchResult) -> Void>()
+        completions?.enqueue(item: completion)
+        fetcher.fetch(eTag: cachedEntry.eTag) { response in
+            self.processResponse(response: response)
         }
     }
 
     private func processResponse(response: FetchResponse) {
-        mutex.withLock {
-            if !initialized {
-                initialized = true
-                hooks.invokeOnReady()
-            }
-            switch response {
-            case .fetched(let entry):
-                cachedEntry = entry
-                writeCache(entry: entry)
-                if let auto = pollingMode as? AutoPollingMode {
-                    auto.onConfigChanged?()
-                }
-                hooks.invokeOnConfigChanged(settings: entry.config.entries)
-                callCompletions(result: .success(entry))
-            case .notModified:
-                cachedEntry = cachedEntry.withFetchTime(time: Date())
-                writeCache(entry: cachedEntry)
-                callCompletions(result: .success(cachedEntry))
-            case .failure(let error):
-                callCompletions(result: .failure(error, cachedEntry))
-            }
-            completions = nil
+        mutex.lock()
+        defer { mutex.unlock() }
+
+        if !initialized {
+            initialized = true
+            hooks.invokeOnReady()
         }
+        switch response {
+        case .fetched(let entry):
+            cachedEntry = entry
+            writeCache(entry: entry)
+            if let auto = pollingMode as? AutoPollingMode {
+                auto.onConfigChanged?()
+            }
+            hooks.invokeOnConfigChanged(settings: entry.config.entries)
+            callCompletions(result: .success(entry))
+        case .notModified:
+            cachedEntry = cachedEntry.withFetchTime(time: Date())
+            writeCache(entry: cachedEntry)
+            callCompletions(result: .success(cachedEntry))
+        case .failure(let error):
+            callCompletions(result: .failure(error, cachedEntry))
+        }
+        completions = nil
     }
 
     private func callCompletions(result: FetchResult) {

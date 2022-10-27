@@ -10,24 +10,32 @@ struct Synced<Value: Equatable> {
     }
 
     var wrappedValue: Value {
-        get { mutex.withLock { storedValue } }
-        set { mutex.withLock { storedValue = newValue } }
+        get {
+            mutex.lock()
+            defer { mutex.unlock() }
+            return storedValue
+        }
+        set {
+            mutex.lock()
+            defer { mutex.unlock() }
+            storedValue = newValue
+        }
     }
 
     @discardableResult
     mutating func testAndSet(expect: Value, new: Value) -> Bool {
-        mutex.withLock {
-            let challenge = storedValue == expect
-            storedValue = challenge ? new : storedValue
-            return challenge
-        }
+        mutex.lock()
+        defer { mutex.unlock() }
+        let challenge = storedValue == expect
+        storedValue = challenge ? new : storedValue
+        return challenge
     }
 
     mutating func getAndSet(new: Value) -> Value {
-        mutex.withLock {
-            let old = storedValue
-            storedValue = new
-            return old
-        }
+        mutex.lock()
+        defer { mutex.unlock() }
+        let old = storedValue
+        storedValue = new
+        return old
     }
 }
