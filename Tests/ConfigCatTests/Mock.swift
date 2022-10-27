@@ -3,19 +3,41 @@ import Foundation
 
 class MockHTTP {
     private static var responses = [Response]()
-    static var requests = [URLRequest]()
+    private static var capturedRequests = [URLRequest]()
+
+    static var requests: [URLRequest] {
+        get {
+            mutex.lock()
+            defer { mutex.unlock() }
+            return capturedRequests
+        }
+    }
+
+    static let mutex: Mutex = Mutex()
 
     static func enqueueResponse(response: Response) {
+        mutex.lock()
+        defer { mutex.unlock() }
         responses.append(response)
     }
 
+    static func captureRequest(request: URLRequest) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        capturedRequests.append(request)
+    }
+
     static func next() -> Response {
-        responses.count == 1 ? responses[0] : responses.removeFirst()
+        mutex.lock()
+        defer { mutex.unlock() }
+        return responses.count == 1 ? responses[0] : responses.removeFirst()
     }
 
     static func reset() {
+        mutex.lock()
+        defer { mutex.unlock() }
         responses.removeAll()
-        requests.removeAll()
+        capturedRequests.removeAll()
     }
 
     static func session(config: URLSessionConfiguration = URLSessionConfiguration.default) -> URLSession {
@@ -36,7 +58,7 @@ class MockURLProtocol: URLProtocol {
     }
 
     override func startLoading() {
-        MockHTTP.requests.append(request)
+        MockHTTP.captureRequest(request: request)
         let response = MockHTTP.next()
         if response.delay <= 0 {
             finish(response: response)
