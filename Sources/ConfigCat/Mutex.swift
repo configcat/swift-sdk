@@ -6,7 +6,7 @@ import Darwin
 
 import Foundation
 
-class Mutex {
+final class Mutex {
     private let mutex: UnsafeMutablePointer<pthread_mutex_t> = UnsafeMutablePointer.allocate(capacity: 1)
 
     init(recursive: Bool = false) {
@@ -43,9 +43,15 @@ class Mutex {
 }
 
 extension Mutex {
-    func withLock<Result>(block: () throws -> Result) rethrows -> Result {
+    func withLock<Result>(_ block: () throws -> Result) rethrows -> Result {
         lock()
         defer { unlock() }
         return try block()
+    }
+
+    func withLock(_ block: () throws -> Void) rethrows -> Void {
+        lock()
+        defer { unlock() }
+        try block()
     }
 }
