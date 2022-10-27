@@ -3,29 +3,35 @@ import XCTest
 
 class ConfigCatClientIntegrationTests: XCTestCase {
     func testGetAllKeys() {
-        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+        }
         let expectation = expectation(description: "wait for all keys")
         client.getAllKeys { keys in
             XCTAssertEqual(16, keys.count)
             XCTAssertTrue(keys.contains("stringDefaultCat"))
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation], timeout: 10)
     }
 
     func testGetAllValues() {
-        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+        }
         let expectation = expectation(description: "wait for all values")
         client.getAllValues { allValues in
             XCTAssertEqual(16, allValues.count)
             XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation], timeout: 10)
     }
 
     func testEvalDetails() {
-        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A")
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
+        }
         let expectation = expectation(description: "wait for all values")
         let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
         client.getValueDetails(for: "stringContainsDogDefaultCat", defaultValue: "", user: user) { details in
@@ -41,13 +47,14 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual(user.identifier, details.user?.identifier)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation], timeout: 10)
     }
 
     func testEvalHook() {
         let user = ConfigCatUser(identifier: "test@configcat.com", email: "test@configcat.com")
         var called = false
         let config = ConfigCatOptions.default
+        config.pollingMode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 10)
         config.hooks.addOnFlagEvaluated { details in
             XCTAssertEqual("stringContainsDogDefaultCat", details.key)
             XCTAssertEqual("Dog", details.value as? String)
@@ -66,7 +73,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         client.getValue(for: "stringContainsDogDefaultCat", defaultValue: "", user: user) { _ in
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation], timeout: 10)
 
         XCTAssertTrue(called)
     }
@@ -83,6 +90,6 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual("Dog", value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation], timeout: 10)
     }
 }

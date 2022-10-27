@@ -64,7 +64,9 @@ class RolloutIntegrationTests: XCTestCase {
     }
 
     func testRolloutMatrix(url: URL, sdkKey: String, type: TestType) throws {
-        let client: ConfigCatClient = ConfigCatClient.get(sdkKey: sdkKey)
+        let client: ConfigCatClient = ConfigCatClient.get(sdkKey: sdkKey) { options in
+            options.pollingMode = PollingModes.lazyLoad()
+        }
         defer {
             ConfigCatClient.closeAll()
         }
@@ -123,7 +125,7 @@ class RolloutIntegrationTests: XCTestCase {
 
                 user = ConfigCatUser(identifier: identifier, email: email, country: country, custom: custom)
             }
-
+            
             var i: Int = 0
             for settingKey in settingKeys {
                 let expectation = expectation(description: "wait for response")
@@ -174,7 +176,7 @@ class RolloutIntegrationTests: XCTestCase {
                         expectation.fulfill()
                     }
                 }
-                wait(for: [expectation], timeout: 2)
+                wait(for: [expectation], timeout: 10)
                 i += 1
             }
         }
