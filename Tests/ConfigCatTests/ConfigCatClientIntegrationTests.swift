@@ -12,7 +12,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertTrue(keys.contains("stringDefaultCat"))
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 20)
     }
 
     func testGetAllValues() {
@@ -25,7 +25,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 20)
     }
 
     func testEvalDetails() {
@@ -47,7 +47,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual(user.identifier, details.user?.identifier)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 20)
     }
 
     func testEvalHook() {
@@ -73,7 +73,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         client.getValue(for: "stringContainsDogDefaultCat", defaultValue: "", user: user) { _ in
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 20)
 
         XCTAssertTrue(called)
     }
@@ -90,6 +90,6 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual("Dog", value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 10)
+        wait(for: [expectation], timeout: 20)
     }
 }

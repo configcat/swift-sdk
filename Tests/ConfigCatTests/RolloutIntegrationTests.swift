@@ -176,7 +176,7 @@ class RolloutIntegrationTests: XCTestCase {
                         expectation.fulfill()
                     }
                 }
-                wait(for: [expectation], timeout: 10)
+                wait(for: [expectation], timeout: 20)
                 i += 1
             }
         }
