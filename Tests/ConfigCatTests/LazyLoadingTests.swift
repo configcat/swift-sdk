@@ -4,17 +4,13 @@ import XCTest
 class LazyLoadingTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "v": "%@", "p": [], "r": [] } } }"#
 
-    override func setUp() {
-        super.setUp()
-        MockHTTP.reset()
-    }
-
     func testGet() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -31,7 +27,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         //wait for cache invalidation
         sleep(3)
@@ -45,11 +41,12 @@ class LazyLoadingTests: XCTestCase {
     }
 
     func testGetFailedRefresh() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -66,7 +63,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         //wait for cache invalidation
         sleep(3)
@@ -80,12 +77,13 @@ class LazyLoadingTests: XCTestCase {
     }
 
     func testCache() throws {
+        let engine = MockEngine()
         let mockCache = InMemoryConfigCache()
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -113,11 +111,12 @@ class LazyLoadingTests: XCTestCase {
     }
 
     func testCacheFails() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -139,12 +138,13 @@ class LazyLoadingTests: XCTestCase {
     }
 
     func testCacheExpirationRespectedInTTLCalc() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -161,7 +161,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
 
         sleep(1)
 
@@ -179,16 +179,17 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation4], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
     }
 
     func testCacheExpirationRespectedInTTLCalc304() throws {
-        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 304))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "", statusCode: 304))
 
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -205,7 +206,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
 
         sleep(1)
 
@@ -223,14 +224,15 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation4], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
     }
 
     func testOnlineOffline() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -240,7 +242,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation1], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         service.setOffline()
         Thread.sleep(forTimeInterval: 1.5)
@@ -252,7 +254,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         service.setOnline()
 
@@ -263,14 +265,15 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation3], timeout: 5)
 
-        XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertEqual(2, engine.requests.count)
     }
 
     func testInitOffline() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         let expectation1 = expectation(description: "wait for settings")
@@ -280,7 +283,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation1], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
 
         Thread.sleep(forTimeInterval: 1.5)
 
@@ -291,7 +294,7 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
 
         service.setOnline()
 
@@ -302,6 +305,6 @@ class LazyLoadingTests: XCTestCase {
         }
         wait(for: [expectation3], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
     }
 }

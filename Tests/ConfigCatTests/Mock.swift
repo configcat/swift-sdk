@@ -1,92 +1,31 @@
 import Foundation
 @testable import ConfigCat
 
-class MockHTTP {
-    private static var responses = [Response]()
-    private static var capturedRequests = [URLRequest]()
-    private static let mutex: Mutex = Mutex()
+class MockEngine: HttpEngine {
+    private var responses = [Response]()
+    private var capturedRequests = [URLRequest]()
 
-    static var requests: [URLRequest] {
-        get {
-            mutex.lock()
-            defer { mutex.unlock() }
-            return capturedRequests
-        }
-    }
+    var requests: [URLRequest] { get { capturedRequests } }
 
-    static func enqueueResponse(response: Response) {
-        mutex.lock()
-        defer { mutex.unlock() }
-        responses.append(response)
-    }
-
-    static func captureRequest(request: URLRequest) {
-        mutex.lock()
-        defer { mutex.unlock() }
+    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
         capturedRequests.append(request)
-    }
-
-    static func next() -> Response {
-        mutex.lock()
-        defer { mutex.unlock() }
-        return responses.count == 1 ? responses[0] : responses.removeFirst()
-    }
-
-    static func reset() {
-        mutex.lock()
-        defer { mutex.unlock() }
-        responses.removeAll()
-        capturedRequests.removeAll()
-    }
-
-    static func session(config: URLSessionConfiguration = URLSessionConfiguration.ephemeral) -> URLSession {
-        config.protocolClasses = [MockURLProtocol.self]
-        return URLSession.init(configuration: config)
-    }
-}
-
-class MockURLProtocol: URLProtocol {
-    private var requestJob: DispatchWorkItem?
-
-    override class func canInit(with request: URLRequest) -> Bool {
-        true
-    }
-
-    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
-        request
-    }
-
-    override func startLoading() {
-        MockHTTP.captureRequest(request: request)
-        let response = MockHTTP.next()
+        let response = next()
         if response.delay <= 0 {
-            finish(response: response)
+            completion(response.data, response.httpResponse, response.error)
             return
         }
 
-        requestJob = DispatchWorkItem(block: { [weak self] in
-            guard let self = self else {
-                return
-            }
-            self.finish(response: response)
-        })
-
-        DispatchQueue.global(qos: DispatchQoS.QoSClass.userInitiated)
-                .asyncAfter(deadline: .now() + .seconds(response.delay), execute: requestJob!)
-    }
-
-    override func stopLoading() {
-        requestJob?.cancel()
-    }
-
-    private func finish(response: Response) {
-        if let error = response.error {
-            client?.urlProtocol(self, didFailWithError: error)
-        } else {
-            client?.urlProtocol(self, didReceive: response.httpResponse, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: response.data ?? Data())
-            client?.urlProtocolDidFinishLoading(self)
+        DispatchQueue.global().asyncAfter(deadline: .now() + .seconds(response.delay)) {
+            completion(response.data, response.httpResponse, response.error)
         }
+    }
+
+    func enqueueResponse(response: Response) {
+        responses.append(response)
+    }
+
+    private func next() -> Response {
+        responses.count == 1 ? responses[0] : responses.removeFirst()
     }
 }
 

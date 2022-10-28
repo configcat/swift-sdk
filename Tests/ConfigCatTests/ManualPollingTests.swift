@@ -4,17 +4,13 @@ import XCTest
 class ManualPollingTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "v": "%@", "p": [], "r": [] } } }"#
 
-    override func setUp() {
-        super.setUp()
-        MockHTTP.reset()
-    }
-
     func testGet() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -41,8 +37,9 @@ class ManualPollingTests: XCTestCase {
     }
 
     func testGetFailedRefresh() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
 
         var called = false
         let hooks = Hooks()
@@ -53,7 +50,7 @@ class ManualPollingTests: XCTestCase {
         let logger = Logger(level: .warning, hooks: hooks)
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: logger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: logger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -84,12 +81,13 @@ class ManualPollingTests: XCTestCase {
     }
 
     func testCache() throws {
+        let engine = MockEngine()
         let mockCache = InMemoryConfigCache()
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -122,11 +120,12 @@ class ManualPollingTests: XCTestCase {
     }
 
     func testCacheFails() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -153,10 +152,11 @@ class ManualPollingTests: XCTestCase {
     }
 
     func testEmptyCacheDoesNotInitiateHTTP() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -166,16 +166,17 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation1], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
     }
 
     func testOnlineOffline() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -186,7 +187,7 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation1], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         service.setOffline()
 
@@ -198,7 +199,7 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
 
         service.setOnline()
 
@@ -210,16 +211,17 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation3], timeout: 5)
 
-        XCTAssertEqual(2, MockHTTP.requests.count)
+        XCTAssertEqual(2, engine.requests.count)
     }
 
     func testInitOffline() throws {
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
         let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         let expectation1 = self.expectation(description: "wait for response")
@@ -230,7 +232,7 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation1], timeout: 5)
 
-        XCTAssertEqual(0, MockHTTP.requests.count)
+        XCTAssertEqual(0, engine.requests.count)
 
         service.setOnline()
 
@@ -242,6 +244,6 @@ class ManualPollingTests: XCTestCase {
         }
         wait(for: [expectation2], timeout: 5)
 
-        XCTAssertEqual(1, MockHTTP.requests.count)
+        XCTAssertEqual(1, engine.requests.count)
     }
 }

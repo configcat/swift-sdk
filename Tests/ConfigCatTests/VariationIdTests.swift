@@ -45,14 +45,10 @@ class VariationIdTests: XCTestCase {
                    }}
                    """#
 
-    override func setUp() {
-        super.setUp()
-        MockHTTP.reset()
-    }
-
     func testGetVariationId() {
-        MockHTTP.enqueueResponse(response: Response(body: testJson, statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJson, statusCode: 200))
+        let client = createClient(httpEngine: engine)
 
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -65,8 +61,9 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetVariationIdNotFound() {
-        MockHTTP.enqueueResponse(response: Response(body: testJson, statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJson, statusCode: 200))
+        let client = createClient(httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getVariationId(for: "nonexisting", defaultVariationId: "def") { variationId in
@@ -78,8 +75,9 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetAllVariationIds() {
-        MockHTTP.enqueueResponse(response: Response(body: testJson, statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJson, statusCode: 200))
+        let client = createClient(httpEngine: engine)
 
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -94,8 +92,9 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetAllVariationIdsEmpty() {
-        MockHTTP.enqueueResponse(response: Response(body: "{}", statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "{}", statusCode: 200))
+        let client = createClient(httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getAllVariationIds { variationIds in
@@ -107,8 +106,9 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetKeyAndValue() {
-        MockHTTP.enqueueResponse(response: Response(body: testJson, statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJson, statusCode: 200))
+        let client = createClient(httpEngine: engine)
 
         let expectation1 = self.expectation(description: "wait for response")
         let expectation2 = self.expectation(description: "wait for response")
@@ -146,8 +146,9 @@ class VariationIdTests: XCTestCase {
     }
 
     func testGetKeyAndValueNotFound() {
-        MockHTTP.enqueueResponse(response: Response(body: "{}", statusCode: 200))
-        let client = createClient()
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "{}", statusCode: 200))
+        let client = createClient(httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getKeyAndValue(for: "nonexisting") { result in
@@ -158,7 +159,7 @@ class VariationIdTests: XCTestCase {
         wait(for: [expectation], timeout: 5)
     }
 
-    private func createClient() -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), session: MockHTTP.session())
+    private func createClient(httpEngine: HttpEngine) -> ConfigCatClient {
+        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: httpEngine)
     }
 }

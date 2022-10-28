@@ -49,13 +49,13 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                                   baseUrl: String = "",
                                   flagOverrides: OverrideDataSource? = nil,
                                   logLevel: LogLevel = .warning) {
-        self.init(sdkKey: sdkKey, pollingMode: refreshMode, session: URLSession(configuration: sessionConfiguration),
+        self.init(sdkKey: sdkKey, pollingMode: refreshMode, httpEngine: URLSessionEngine(session: URLSession(configuration: sessionConfiguration)),
                 configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
     }
 
     init(sdkKey: String,
          pollingMode: PollingMode,
-         session: URLSession?,
+         httpEngine: HttpEngine?,
          hooks: Hooks? = nil,
          configCache: ConfigCache? = nil,
          baseUrl: String = "",
@@ -79,7 +79,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             // configService is not needed in localOnly mode
             configService = nil
         } else {
-            let fetcher = ConfigFetcher(session: session ?? URLSession(configuration: URLSessionConfiguration.default),
+            let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
                     sdkKey: sdkKey,
                     mode: pollingMode.identifier,
@@ -119,7 +119,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         let opts = options ?? ConfigCatOptions.default
         let client = ConfigCatClient(sdkKey: sdkKey,
                 pollingMode: opts.pollingMode,
-                session: URLSession(configuration: opts.sessionConfiguration),
+                httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
                 hooks: opts.hooks,
                 configCache: opts.configCache,
                 baseUrl: opts.baseUrl,

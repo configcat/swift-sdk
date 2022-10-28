@@ -32,18 +32,36 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     }
 }
 
+protocol HttpEngine {
+    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void)
+}
+
+class URLSessionEngine: HttpEngine {
+    fileprivate let session: URLSession
+
+    init(session: URLSession) {
+        self.session = session
+    }
+
+    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        session.dataTask(with: request) { (data, resp, error) in
+            completion(data, resp, error)
+        }.resume()
+    }
+}
+
 class ConfigFetcher: NSObject {
     private let log: Logger
-    private let session: URLSession
+    private let httpEngine: HttpEngine
     @Synced private var baseUrl: String
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
 
-    init(session: URLSession, logger: Logger, sdkKey: String, mode: String,
+    init(httpEngine: HttpEngine, logger: Logger, sdkKey: String, mode: String,
          dataGovernance: DataGovernance, baseUrl: String = "") {
         log = logger
-        self.session = session
+        self.httpEngine = httpEngine
         self.sdkKey = sdkKey
         urlIsCustom = !baseUrl.isEmpty
         self.baseUrl = baseUrl.isEmpty
@@ -105,43 +123,42 @@ class ConfigFetcher: NSObject {
 
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let request = getRequest(url: url, eTag: eTag)
-        session.dataTask(with: request) { (data, resp, error) in
-                    if let error = error {
-                        var extraInfo = ""
-                        if error._code == NSURLErrorTimedOut {
-                            extraInfo = String(format: " Timeout interval for request: %.2f seconds.", self.session.configuration.timeoutIntervalForRequest)
-                        }
-                        let message = String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
+        httpEngine.get(request: request) { (data, resp, error) in
+            if let error = error {
+                var extraInfo = ""
+                if error._code == NSURLErrorTimedOut, let engine = self.httpEngine as? URLSessionEngine {
+                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", engine.session.configuration.timeoutIntervalForRequest)
+                }
+                let message = String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
+                self.log.error(message: message)
+                completion(.failure(message))
+            } else {
+                let response = resp as! HTTPURLResponse
+                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                    self.log.debug(message: "Fetch was successful: new config fetched")
+                    let etag = response.allHeaderFields["Etag"] as? String ?? ""
+                    let jsonString = String(data: data, encoding: .utf8) ?? ""
+                    let configResult = self.parseConfigFromJson(json: jsonString)
+                    switch configResult {
+                    case .success(let config):
+                        completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
+                    case .failure(let error):
+                        let message = String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)
                         self.log.error(message: message)
                         completion(.failure(message))
-                    } else {
-                        let response = resp as! HTTPURLResponse
-                        if response.statusCode >= 200 && response.statusCode < 300, let data = data {
-                            self.log.debug(message: "Fetch was successful: new config fetched")
-                            let etag = response.allHeaderFields["Etag"] as? String ?? ""
-                            let jsonString = String(data: data, encoding: .utf8) ?? ""
-                            let configResult = self.parseConfigFromJson(json: jsonString)
-                            switch configResult {
-                            case .success(let config):
-                                completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
-                            case .failure(let error):
-                                let message = String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)
-                                self.log.error(message: message)
-                                completion(.failure(message))
-                            }
-                        } else if response.statusCode == 304 {
-                            self.log.debug(message: "Fetch was successful: not modified")
-                            completion(.notModified)
-                        } else {
-                            let message = String(format: """
-                                                         Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
-                                                         """, String(response.statusCode))
-                            self.log.error(message: message)
-                            completion(.failure(message))
-                        }
                     }
+                } else if response.statusCode == 304 {
+                    self.log.debug(message: "Fetch was successful: not modified")
+                    completion(.notModified)
+                } else {
+                    let message = String(format: """
+                                                 Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                                 """, String(response.statusCode))
+                    self.log.error(message: message)
+                    completion(.failure(message))
                 }
-                .resume()
+            }
+        }
     }
 
     private func getRequest(url: String, eTag: String) -> URLRequest {

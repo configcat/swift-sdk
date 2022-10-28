@@ -2,18 +2,13 @@ import XCTest
 @testable import ConfigCat
 
 class ConfigFetcherTests: XCTestCase {
-
-    override func setUp() {
-        super.setUp()
-        MockHTTP.reset()
-    }
-
     func testSimpleFetchSuccess() throws {
+        let engine = MockEngine()
         let testBody = #"{ "f": { "fakeKey": { "v": "fakeValue", "p": [], "r": [] } } }"#
-        MockHTTP.enqueueResponse(response: Response(body: testBody, statusCode: 200))
+        engine.enqueueResponse(response: Response(body: testBody, statusCode: 200))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
             XCTAssertEqual("fakeValue", response.entry?.config.entries["fakeKey"]?.value as? String)
@@ -23,10 +18,11 @@ class ConfigFetcherTests: XCTestCase {
     }
 
     func testSimpleFetchNotModified() throws {
-        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 304))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "", statusCode: 304))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.notModified, response)
             XCTAssertNil(response.entry)
@@ -36,10 +32,11 @@ class ConfigFetcherTests: XCTestCase {
     }
 
     func testSimpleFetchFailed() throws {
-        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 404))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "", statusCode: 404))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.failure(""), response)
             XCTAssertNil(response.entry)
@@ -49,12 +46,13 @@ class ConfigFetcherTests: XCTestCase {
     }
 
     func testFetchNotModifiedEtag() throws {
+        let engine = MockEngine()
         let etag = "test"
         let testBody = #"{ "f": { "fakeKey": { "v": "fakeValue", "p": [], "r": [] } } }"#
-        MockHTTP.enqueueResponse(response: Response(body: testBody, statusCode: 200, headers: ["Etag": etag]))
-        MockHTTP.enqueueResponse(response: Response(body: "", statusCode: 304))
+        engine.enqueueResponse(response: Response(body: testBody, statusCode: 200, headers: ["Etag": etag]))
+        engine.enqueueResponse(response: Response(body: "", statusCode: 304))
 
-        let fetcher = ConfigFetcher(session: MockHTTP.session(), logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         let expectation = self.expectation(description: "wait for response")
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
@@ -71,6 +69,6 @@ class ConfigFetcherTests: XCTestCase {
             notModifiedExpectation.fulfill()
         }
         wait(for: [notModifiedExpectation], timeout: 5)
-        XCTAssertEqual(etag, MockHTTP.requests.last?.value(forHTTPHeaderField: "If-None-Match"))
+        XCTAssertEqual(etag, engine.requests.last?.value(forHTTPHeaderField: "If-None-Match"))
     }
 }

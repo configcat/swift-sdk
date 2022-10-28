@@ -28,14 +28,14 @@ class LocalTests: XCTestCase {
     }
 
     func testLocalOverRemote() throws {
-        MockHTTP.reset()
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
 
         let dictionary: [String: Any] = [
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
@@ -46,14 +46,14 @@ class LocalTests: XCTestCase {
     }
 
     func testRemoteOverLocal() throws {
-        MockHTTP.reset()
-        MockHTTP.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "false"), statusCode: 200))
 
         let dictionary: [String: Any] = [
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), session: MockHTTP.session(), hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertFalse(values["fakeKey"] as? Bool ?? true)
