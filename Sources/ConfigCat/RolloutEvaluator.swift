@@ -196,14 +196,14 @@ class RolloutEvaluator {
                     }
                     if let userValueVersion = Version(userValue),
                        let comparisonValueVersion = Version(comparison) {
-                        let userValueVersionWithoutMetadata = Version(major: userValueVersion.major,
-                                minor: userValueVersion.minor,
-                                patch: userValueVersion.patch,
-                                prereleaseIdentifiers: userValueVersion.prereleaseIdentifiers)
-                        let comparisonValueVersionWithoutMetadata = Version(major: comparisonValueVersion.major,
-                                minor: comparisonValueVersion.minor,
-                                patch: comparisonValueVersion.patch,
-                                prereleaseIdentifiers: comparisonValueVersion.prereleaseIdentifiers)
+                        let userValueVersionWithoutMetadata = Version(userValueVersion.major,
+                                userValueVersion.minor,
+                                userValueVersion.patch,
+                                pre: userValueVersion.prereleaseIdentifiers)
+                        let comparisonValueVersionWithoutMetadata = Version(comparisonValueVersion.major,
+                                comparisonValueVersion.minor,
+                                comparisonValueVersion.patch,
+                                pre: comparisonValueVersion.prereleaseIdentifiers)
                         if (comparator == 6 && userValueVersionWithoutMetadata < comparisonValueVersionWithoutMetadata)
                                    || (comparator == 7 && userValueVersionWithoutMetadata <= comparisonValueVersionWithoutMetadata)
                                    || (comparator == 8 && userValueVersionWithoutMetadata > comparisonValueVersionWithoutMetadata)

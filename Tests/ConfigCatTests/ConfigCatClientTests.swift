@@ -384,7 +384,9 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertTrue(client.isOffline)
 
         let expectation2 = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
+        client.forceRefresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 2)
@@ -570,6 +572,22 @@ class ConfigCatClientTests: XCTestCase {
         client1 = ConfigCatClient.get(sdkKey: "test")
 
         XCTAssertNotEqual(client1, client2)
+    }
+
+    func testSingletonRemovesOnlyTheClosingInstance() {
+        let client1 = ConfigCatClient.get(sdkKey: "test")
+
+        client1.close()
+
+        let client2 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertNotEqual(client1, client2)
+
+        client1.close()
+
+        let client3 = ConfigCatClient.get(sdkKey: "test")
+
+        XCTAssertEqual(client2, client3)
     }
 
     private func createClient(offline: Bool = false) -> ConfigCatClient {

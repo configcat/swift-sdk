@@ -10,8 +10,8 @@ extension String {
         return ConfigEntry(config: config)
     }
 
-    func asEntryStringWithCurrentDate() -> String {
-        toEntryFromConfigString().withFetchTime(time: Date()).toJsonString()
+    func asEntryString(date: Date = Date()) -> String {
+        toEntryFromConfigString().withFetchTime(time: date).toJsonString()
     }
 }
 

@@ -19,7 +19,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         client.forceRefreshSync()
 
         let expectation = expectation(description: "wait for result")
-        let details = client.getBoolValueDetails(for: "key", defaultValue: true, user: nil) { details in
+        client.getBoolValueDetails(for: "key", defaultValue: true, user: nil) { details in
             XCTAssertFalse(details.isDefaultValue)
             XCTAssertTrue(details.value)
             expectation.fulfill()

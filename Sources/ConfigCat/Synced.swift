@@ -1,47 +1,41 @@
 import Foundation
 
-class Synced<Value: Equatable> {
+@propertyWrapper
+struct Synced<Value: Equatable> {
     private let mutex = Mutex()
-    private var value: Value
+    private var storedValue: Value
 
-    init(initValue: Value) {
-        value = initValue
+    init(wrappedValue: Value) {
+        storedValue = wrappedValue
     }
 
-    func get() -> Value {
-        mutex.lock()
-        defer {
-            mutex.unlock()
+    var wrappedValue: Value {
+        get {
+            mutex.lock()
+            defer { mutex.unlock() }
+            return storedValue
         }
-        return value
-    }
-
-    func set(new: Value) {
-        mutex.lock()
-        defer {
-            mutex.unlock()
+        set {
+            mutex.lock()
+            defer { mutex.unlock() }
+            storedValue = newValue
         }
-        value = new
     }
 
     @discardableResult
-    func testAndSet(expect: Value, new: Value) -> Bool {
+    mutating func testAndSet(expect: Value, new: Value) -> Bool {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
-        let challenge = value == expect
-        value = challenge ? new : value
+        defer { mutex.unlock() }
+        let challenge = storedValue == expect
+        storedValue = challenge ? new : storedValue
         return challenge
     }
 
-    func getAndSet(new: Value) -> Value {
+    mutating func getAndSet(new: Value) -> Value {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
-        let old = value
-        value = new
+        defer { mutex.unlock() }
+        let old = storedValue
+        storedValue = new
         return old
     }
 }

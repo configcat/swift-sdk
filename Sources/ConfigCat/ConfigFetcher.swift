@@ -35,7 +35,7 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
 class ConfigFetcher: NSObject {
     private let log: Logger
     private let session: URLSession
-    private let baseUrl: Synced<String>
+    @Synced private var baseUrl: String
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
@@ -46,19 +46,19 @@ class ConfigFetcher: NSObject {
         self.session = session
         self.sdkKey = sdkKey
         urlIsCustom = !baseUrl.isEmpty
-        self.baseUrl = Synced(initValue: baseUrl.isEmpty
+        self.baseUrl = baseUrl.isEmpty
                 ? dataGovernance == DataGovernance.euOnly
                 ? Constants.euOnlyBaseUrl
                 : Constants.globalBaseUrl
-                : baseUrl)
+                : baseUrl
         self.mode = mode
     }
 
     func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
-        let cachedUrl = baseUrl.get()
+        let cachedUrl = baseUrl
         executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
             if let newUrl = response.entry?.config.preferences?.preferencesUrl, !newUrl.isEmpty && newUrl != cachedUrl {
-                _ = self.baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
+                self._baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
             }
             completion(response)
         }

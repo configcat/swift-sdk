@@ -6,7 +6,7 @@ import Darwin
 
 import Foundation
 
-class Mutex {
+final class Mutex {
     private let mutex: UnsafeMutablePointer<pthread_mutex_t> = UnsafeMutablePointer.allocate(capacity: 1)
 
     init(recursive: Bool = false) {
@@ -30,10 +30,6 @@ class Mutex {
     func lock() {
         let result = pthread_mutex_lock(mutex)
         assert(result == 0, "Failed to lock mutex.")
-    }
-
-    func tryLock() -> Bool {
-        pthread_mutex_trylock(mutex) == 0
     }
 
     func unlock() {

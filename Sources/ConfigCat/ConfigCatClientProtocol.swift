@@ -79,6 +79,17 @@ public protocol ConfigCatClientProtocol {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> Value
 
+    /**
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+
+     - Parameter key: the identifier of the feature flag or setting.
+     - Parameter defaultValue: in case of any failure, this value will be returned.
+     - Parameter user: the user object to identify the caller.
+     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     */
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> TypedEvaluationDetails<Value>
+
     /// Gets all the setting keys asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getAllKeys() async -> [String]
@@ -101,7 +112,12 @@ public protocol ConfigCatClientProtocol {
 
     /// Initiates a force refresh asynchronously on the cached configuration.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "Use `forceRefresh()` instead")
     func refresh() async
+
+    /// Initiates a force refresh asynchronously on the cached configuration.
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func forceRefresh() async -> RefreshResult
     #endif
 
     /// Objective-C interface
@@ -111,5 +127,10 @@ public protocol ConfigCatClientProtocol {
     func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ())
     func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ())
     func getAnyValue(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ())
+
     func getAnyValueDetails(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (EvaluationDetails) -> ())
+    func getStringValueDetails(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (StringEvaluationDetails) -> ())
+    func getBoolValueDetails(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (BoolEvaluationDetails) -> ())
+    func getIntValueDetails(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (IntEvaluationDetails) -> ())
+    func getDoubleValueDetails(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (DoubleEvaluationDetails) -> ())
 }

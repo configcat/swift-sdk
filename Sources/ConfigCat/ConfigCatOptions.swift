@@ -58,9 +58,7 @@ public final class Hooks: NSObject {
      */
     @objc public func addOnReady(handler: @escaping () -> ()) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         onReady.append(handler)
     }
 
@@ -70,9 +68,7 @@ public final class Hooks: NSObject {
      */
     @objc public func addOnFlagEvaluated(handler: @escaping (EvaluationDetails) -> ()) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         onFlagEvaluated.append(handler)
     }
 
@@ -82,9 +78,7 @@ public final class Hooks: NSObject {
      */
     @objc public func addOnConfigChanged(handler: @escaping ([String: Setting]) -> ()) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         onConfigChanged.append(handler)
     }
 
@@ -94,17 +88,13 @@ public final class Hooks: NSObject {
      */
     @objc public func addOnError(handler: @escaping (String) -> ()) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         onError.append(handler)
     }
 
     func invokeOnReady() {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         for item in onReady {
             item();
         }
@@ -112,9 +102,7 @@ public final class Hooks: NSObject {
 
     func invokeOnConfigChanged(settings: [String: Setting]) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         for item in onConfigChanged {
             item(settings);
         }
@@ -122,9 +110,7 @@ public final class Hooks: NSObject {
 
     func invokeOnFlagEvaluated(details: EvaluationDetails) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         for item in onFlagEvaluated {
             item(details);
         }
@@ -132,9 +118,7 @@ public final class Hooks: NSObject {
 
     func invokeOnError(error: String) {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         for item in onError {
             item(error);
         }
@@ -142,9 +126,7 @@ public final class Hooks: NSObject {
 
     func clear() {
         mutex.lock()
-        defer {
-            mutex.unlock()
-        }
+        defer { mutex.unlock() }
         onError.removeAll()
         onFlagEvaluated.removeAll()
         onConfigChanged.removeAll()
