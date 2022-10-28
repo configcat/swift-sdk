@@ -20,7 +20,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetIntValueFailed() {
@@ -33,7 +33,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetIntValueFailedInvalidJson() {
@@ -46,7 +46,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetStringValue() {
@@ -59,7 +59,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetStringValueFailed() {
@@ -72,7 +72,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetDoubleValue() {
@@ -85,7 +85,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetDoubleValueFailed() {
@@ -98,7 +98,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetBoolValue() {
@@ -111,7 +111,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetBoolValueFailed() {
@@ -124,7 +124,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetValueWithInvalidTypeFailed() {
@@ -137,7 +137,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetLatestOnFail() {
@@ -151,7 +151,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -160,7 +160,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testForceRefreshLazy() {
@@ -174,7 +174,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("test", value)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -183,7 +183,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testForceRefreshAuto() {
@@ -197,7 +197,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("test", value)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
@@ -206,7 +206,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testFailingAutoPoll() {
@@ -217,7 +217,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("", value)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testRequestTimeout() {
@@ -231,7 +231,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("", value)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
@@ -253,7 +253,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("fake", value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testFromCacheOnlyRefresh() throws {
@@ -272,7 +272,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testFailingAutoPollRefresh() {
@@ -285,7 +285,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testFailingExpiringCache() {
@@ -296,7 +296,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("", value)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testGetAllValues() {
@@ -311,7 +311,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testAutoPollUserAgentHeader() {
@@ -324,7 +324,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual("ConfigCat-Swift/a-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
@@ -338,7 +338,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual("ConfigCat-Swift/l-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
@@ -352,7 +352,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("Config is not present. Returning defaultValue: [].", details.error)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testManualPollUserAgentHeader() {
@@ -365,7 +365,7 @@ class ConfigCatClientTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual("ConfigCat-Swift/m-" + Constants.version, MockHTTP.requests.last?.value(forHTTPHeaderField: "X-ConfigCat-UserAgent"))
     }
 
@@ -376,7 +376,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
         client.setOffline()
@@ -389,7 +389,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
         client.setOnline()
@@ -398,7 +398,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation3.fulfill()
         }
-        wait(for: [expectation3], timeout: 2)
+        wait(for: [expectation3], timeout: 5)
 
         XCTAssertEqual(2, MockHTTP.requests.count)
         XCTAssertFalse(client.isOffline)
@@ -411,7 +411,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         XCTAssertEqual(0, MockHTTP.requests.count)
         XCTAssertTrue(client.isOffline)
@@ -420,7 +420,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(0, MockHTTP.requests.count)
         client.setOnline()
@@ -429,7 +429,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation3.fulfill()
         }
-        wait(for: [expectation3], timeout: 2)
+        wait(for: [expectation3], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
         XCTAssertFalse(client.isOffline)
@@ -442,7 +442,7 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         let user1 = ConfigCatUser(identifier: "test@test1.com")
         let user2 = ConfigCatUser(identifier: "test@test2.com")
@@ -454,14 +454,14 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("fake1", val)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         let expectation3 = self.expectation(description: "wait for response")
         client.getValue(for: "key", defaultValue: "", user: user2) { val in
             XCTAssertEqual("fake2", val)
             expectation3.fulfill()
         }
-        wait(for: [expectation3], timeout: 2)
+        wait(for: [expectation3], timeout: 5)
 
         client.clearDefaultUser()
 
@@ -470,7 +470,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("def", val)
             expectation4.fulfill()
         }
-        wait(for: [expectation4], timeout: 2)
+        wait(for: [expectation4], timeout: 5)
     }
 
     func testHooks() {
@@ -495,13 +495,13 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertTrue(r.success)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { r in
             XCTAssertFalse(r.success)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         waitFor {
             changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
@@ -527,13 +527,13 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertTrue(r.success)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { r in
             XCTAssertFalse(r.success)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         waitFor {
             changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
@@ -556,7 +556,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual("", value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         waitFor {
             called
         }

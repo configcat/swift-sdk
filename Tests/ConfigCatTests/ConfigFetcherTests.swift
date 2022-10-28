@@ -19,7 +19,7 @@ class ConfigFetcherTests: XCTestCase {
             XCTAssertEqual("fakeValue", response.entry?.config.entries["fakeKey"]?.value as? String)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testSimpleFetchNotModified() throws {
@@ -32,7 +32,7 @@ class ConfigFetcherTests: XCTestCase {
             XCTAssertNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testSimpleFetchFailed() throws {
@@ -45,7 +45,7 @@ class ConfigFetcherTests: XCTestCase {
             XCTAssertNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testFetchNotModifiedEtag() throws {
@@ -62,7 +62,7 @@ class ConfigFetcherTests: XCTestCase {
             XCTAssertEqual(etag, response.entry?.eTag)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         let notModifiedExpectation = self.expectation(description: "wait for response")
         fetcher.fetch(eTag: etag) { response in
@@ -70,7 +70,7 @@ class ConfigFetcherTests: XCTestCase {
             XCTAssertNil(response.entry)
             notModifiedExpectation.fulfill()
         }
-        wait(for: [notModifiedExpectation], timeout: 2)
+        wait(for: [notModifiedExpectation], timeout: 5)
         XCTAssertEqual(etag, MockHTTP.requests.last?.value(forHTTPHeaderField: "If-None-Match"))
     }
 }

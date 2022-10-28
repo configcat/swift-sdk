@@ -26,7 +26,7 @@ class ManualPollingTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
@@ -65,7 +65,7 @@ class ManualPollingTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
@@ -76,7 +76,7 @@ class ManualPollingTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         waitFor {
             called
@@ -101,7 +101,7 @@ class ManualPollingTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(1, mockCache.store.count)
         XCTAssertTrue(mockCache.store.values.first?.contains("test") ?? false)
@@ -115,7 +115,7 @@ class ManualPollingTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, mockCache.store.count)
         XCTAssertTrue(mockCache.store.values.first?.contains("test2") ?? false)
@@ -138,7 +138,7 @@ class ManualPollingTests: XCTestCase {
                 expectation1.fulfill()
             }
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
@@ -149,7 +149,7 @@ class ManualPollingTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testEmptyCacheDoesNotInitiateHTTP() throws {
@@ -164,7 +164,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(settingsResult.settings.isEmpty)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(0, MockHTTP.requests.count)
     }
@@ -184,7 +184,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertNil(result.error)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
 
@@ -196,7 +196,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
 
@@ -208,7 +208,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertNil(result.error)
             expectation3.fulfill()
         }
-        wait(for: [expectation3], timeout: 2)
+        wait(for: [expectation3], timeout: 5)
 
         XCTAssertEqual(2, MockHTTP.requests.count)
     }
@@ -228,7 +228,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(0, MockHTTP.requests.count)
 
@@ -240,7 +240,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertNil(result.error)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, MockHTTP.requests.count)
     }

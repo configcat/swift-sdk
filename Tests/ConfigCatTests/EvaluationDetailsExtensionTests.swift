@@ -24,7 +24,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
             XCTAssertTrue(details.value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
 
@@ -40,7 +40,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
             XCTAssertEqual(42, details.value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
 
@@ -56,7 +56,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
             XCTAssertEqual(3.14, details.value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
 
@@ -72,7 +72,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
             XCTAssertEqual("fake", details.value)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
         XCTAssertEqual(1, MockHTTP.requests.count)
     }
 

@@ -22,7 +22,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         sleep(3)
 
@@ -31,7 +31,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testGetFailedRequest() throws {
@@ -47,7 +47,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         sleep(3)
 
@@ -56,7 +56,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testOnConfigChanged() throws {
@@ -83,7 +83,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testRequestTimeout() throws {
@@ -104,7 +104,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testInitWaitTimeTimeout() throws {
@@ -120,7 +120,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertTrue(settingsResult.settings.isEmpty)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
@@ -142,7 +142,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(1, mockCache.store.count)
         XCTAssertTrue(mockCache.store.values.first?.contains("test") ?? false)
@@ -154,7 +154,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, mockCache.store.count)
         XCTAssertTrue(mockCache.store.values.first?.contains("test2") ?? false)
@@ -173,7 +173,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         sleep(3)
 
@@ -182,7 +182,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
             expectation2.fulfill()
         }
-        wait(for: [expectation2], timeout: 2)
+        wait(for: [expectation2], timeout: 5)
     }
 
     func testPollIntervalRespectsCacheExpiration() {
@@ -199,7 +199,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         XCTAssertEqual(0, MockHTTP.requests.count)
 
@@ -267,7 +267,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertFalse(settingsResult.settings.isEmpty)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
@@ -289,7 +289,7 @@ class AutoPollingTests: XCTestCase {
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
             expectation1.fulfill()
         }
-        wait(for: [expectation1], timeout: 2)
+        wait(for: [expectation1], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)

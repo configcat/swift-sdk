@@ -23,7 +23,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(1, MockHTTP.requests.count)
@@ -43,7 +43,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(1, MockHTTP.requests.count)
@@ -63,7 +63,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(1, MockHTTP.requests.count)
@@ -85,7 +85,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(2, MockHTTP.requests.count)
@@ -108,7 +108,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(2, MockHTTP.requests.count)
@@ -132,7 +132,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(3, MockHTTP.requests.count)
@@ -157,7 +157,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(3, MockHTTP.requests.count)
@@ -179,7 +179,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(1, MockHTTP.requests.count)
@@ -201,7 +201,7 @@ class DataGovernanceTests: XCTestCase {
             XCTAssertNotNil(response.entry)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
 
         // Assert
         XCTAssertEqual(2, MockHTTP.requests.count)

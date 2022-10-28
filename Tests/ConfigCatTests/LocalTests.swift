@@ -24,7 +24,7 @@ class LocalTests: XCTestCase {
             XCTAssertEqual("test", values["stringSetting"] as? String ?? "")
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testLocalOverRemote() throws {
@@ -42,7 +42,7 @@ class LocalTests: XCTestCase {
             XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testRemoteOverLocal() throws {
@@ -60,6 +60,6 @@ class LocalTests: XCTestCase {
             XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
             expectation.fulfill()
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 }

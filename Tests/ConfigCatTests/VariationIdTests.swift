@@ -61,7 +61,7 @@ class VariationIdTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetVariationIdNotFound() {
@@ -74,7 +74,7 @@ class VariationIdTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetAllVariationIds() {
@@ -90,7 +90,7 @@ class VariationIdTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetAllVariationIdsEmpty() {
@@ -103,7 +103,7 @@ class VariationIdTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     func testGetKeyAndValue() {
@@ -142,7 +142,7 @@ class VariationIdTests: XCTestCase {
                 expectation3.fulfill()
             }
         }
-        wait(for: [expectation1, expectation2, expectation3], timeout: 2)
+        wait(for: [expectation1, expectation2, expectation3], timeout: 5)
     }
 
     func testGetKeyAndValueNotFound() {
@@ -155,7 +155,7 @@ class VariationIdTests: XCTestCase {
                 expectation.fulfill()
             }
         }
-        wait(for: [expectation], timeout: 2)
+        wait(for: [expectation], timeout: 5)
     }
 
     private func createClient() -> ConfigCatClient {
