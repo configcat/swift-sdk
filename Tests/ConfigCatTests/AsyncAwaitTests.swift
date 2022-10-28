@@ -66,7 +66,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
         let result = await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertTrue(result.success)
@@ -79,7 +79,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
         await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertFalse(value)
@@ -92,7 +92,6 @@ class AsyncAwaitTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
-        await client.forceRefresh()
         let details = await client.getValueDetails(for: "key2", defaultValue: true)
         XCTAssertFalse(details.isDefaultValue)
         XCTAssertFalse(details.value)

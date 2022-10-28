@@ -74,8 +74,7 @@ class SyncTests: XCTestCase {
     func testDetails() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
         let details = client.getValueDetailsSync(for: "key2", defaultValue: true)
         XCTAssertFalse(details.isDefaultValue)
         XCTAssertFalse(details.value)
