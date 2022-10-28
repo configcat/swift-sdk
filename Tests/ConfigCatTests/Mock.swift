@@ -39,7 +39,7 @@ class MockHTTP {
         capturedRequests.removeAll()
     }
 
-    static func session(config: URLSessionConfiguration = URLSessionConfiguration.default) -> URLSession {
+    static func session(config: URLSessionConfiguration = URLSessionConfiguration.ephemeral) -> URLSession {
         config.protocolClasses = [MockURLProtocol.self]
         return URLSession.init(configuration: config)
     }
