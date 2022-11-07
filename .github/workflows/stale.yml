@@ -1,0 +1,24 @@
+name: Mark stale issues
+
+on:
+  schedule:
+  - cron: '0 1 * * *'
+
+jobs:
+  stale:
+
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+    - uses: actions/stale@v6
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        stale-issue-message: 'This issue is marked stale because it has no activity in the last 3 weeks. The issue will be closed in one week. Please remove the stale flag to keep it open.'
+        close-issue-message: 'This issue was closed due to no activity.'
+        days-before-issue-stale: 90
+        days-before-issue-close: 10
+        stale-issue-label: 'stale'
+        days-before-pr-stale: -1
+        days-before-pr-close: -1
