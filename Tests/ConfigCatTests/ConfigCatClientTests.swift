@@ -436,6 +436,25 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertFalse(client.isOffline)
     }
 
+    func testInitOfflineCallsReady() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        var ready = false
+        let hooks = Hooks()
+        hooks.addOnReady {
+            ready = true
+        }
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: hooks, offline: true)
+        let expectation = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { _ in
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+
+        XCTAssertEqual(0, engine.requests.count)
+        XCTAssertTrue(ready)
+    }
+
     func testDefaultUser() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: createTestConfigWithRules().toJsonString(), statusCode: 200))

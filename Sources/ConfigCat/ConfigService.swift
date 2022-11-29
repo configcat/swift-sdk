@@ -33,7 +33,7 @@ class ConfigService {
     private let pollingMode: PollingMode
     private let hooks: Hooks
     private let cacheKey: String
-    private var initialized: Bool
+    private var initialized: Bool = false
     private var offline: Bool = false
     private var completions: MutableQueue<(FetchResult) -> Void>?
     private var cachedEntry: ConfigEntry = .empty
@@ -51,12 +51,9 @@ class ConfigService {
         let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
         cacheKey = String(keyToHash.sha1hex ?? keyToHash)
 
-        if let autoPoll = pollingMode as? AutoPollingMode {
-            initialized = false
+        if let autoPoll = pollingMode as? AutoPollingMode, !offline {
 
-            if !offline {
-                startPoll(mode: autoPoll)
-            }
+            startPoll(mode: autoPoll)
 
             // Waiting for the client initialization.
             // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
@@ -80,8 +77,7 @@ class ConfigService {
             })
             initTimer?.resume()
         } else {
-            initialized = true
-            hooks.invokeOnReady()
+            setInitialized()
         }
     }
 
@@ -170,10 +166,7 @@ class ConfigService {
             }
             // Cache isn't expired
             if cachedEntry.fetchTime > time {
-                if !initialized {
-                    initialized = true
-                    hooks.invokeOnReady()
-                }
+                setInitialized()
                 completion(.success(cachedEntry))
                 return
             }
@@ -207,10 +200,7 @@ class ConfigService {
         mutex.lock()
         defer { mutex.unlock() }
 
-        if !initialized {
-            initialized = true
-            hooks.invokeOnReady()
-        }
+        setInitialized()
         switch response {
         case .fetched(let entry):
             cachedEntry = entry
@@ -228,6 +218,13 @@ class ConfigService {
             callCompletions(result: .failure(error, cachedEntry))
         }
         completions = nil
+    }
+
+    private func setInitialized() {
+        if !initialized {
+            initialized = true
+            hooks.invokeOnReady()
+        }
     }
 
     private func callCompletions(result: FetchResult) {
