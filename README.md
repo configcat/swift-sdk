@@ -12,7 +12,6 @@ ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature fl
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
 [![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Supported Platforms](https://img.shields.io/cocoapods/p/ConfigCat.svg?style=flat)](https://configcat.com/docs/sdk-reference/ios)
-![License](https://img.shields.io/github/license/configcat/swift-sdk.svg)
 
 ## Getting started
 
