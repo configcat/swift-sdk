@@ -563,6 +563,30 @@ class ConfigCatClientTests: XCTestCase {
         }
     }
 
+    func testDefaultCache() {
+        let engine = MockEngine()
+        let cache = UserDefaultsCache()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "testDefaultCache", pollingMode: PollingModes.lazyLoad(), httpEngine: engine, configCache: cache)
+
+        let expectation = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { r in
+            XCTAssertEqual("fake", r)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { r in
+            XCTAssertEqual("fake", r)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 5)
+
+        XCTAssertEqual(1, engine.requests.count)
+        try XCTAssertFalse(cache.read(for: "ca67405a97c0f10ec01fdc65276fc6f4f009bc48").isEmpty)
+    }
+
     func testOnFlagEvaluationError() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
