@@ -22,3 +22,13 @@ import Foundation
      */
     func write(for key: String, value: String) throws
 }
+
+class UserDefaultsCache: ConfigCache {
+    func read(for key: String) throws -> String {
+        UserDefaults.standard.string(forKey: key) ?? ""
+    }
+
+    func write(for key: String, value: String) throws {
+        UserDefaults.standard.set(value, forKey: key)
+    }
+}

@@ -50,7 +50,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                                   flagOverrides: OverrideDataSource? = nil,
                                   logLevel: LogLevel = .warning) {
         self.init(sdkKey: sdkKey, pollingMode: refreshMode, httpEngine: URLSessionEngine(session: URLSession(configuration: sessionConfiguration)),
-                configCache: configCache, baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
+                configCache: configCache ?? UserDefaultsCache(), baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
     }
 
     init(sdkKey: String,
