@@ -22,13 +22,23 @@ public protocol ConfigCatClientProtocol {
      */
     func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (TypedEvaluationDetails<Value>) -> ())
 
+    /**
+     Gets the values along with evaluation details of all feature flags and settings.
+
+     - Parameter user: the user object to identify the caller.
+     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     */
+    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping ([EvaluationDetails]) -> ())
+
     /// Gets all the setting keys asynchronously.
     func getAllKeys(completion: @escaping ([String]) -> ())
 
     /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetails() instead.")
     func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser?, completion: @escaping (String?) -> ())
 
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetails() instead.")
     func getAllVariationIds(user: ConfigCatUser?, completion: @escaping ([String]) -> ())
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
@@ -85,10 +95,17 @@ public protocol ConfigCatClientProtocol {
      - Parameter key: the identifier of the feature flag or setting.
      - Parameter defaultValue: in case of any failure, this value will be returned.
      - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> TypedEvaluationDetails<Value>
+
+    /**
+     Gets the values along with evaluation details of all feature flags and settings.
+
+     - Parameter user: the user object to identify the caller.
+     */
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func getAllValueDetails(user: ConfigCatUser?) async -> [EvaluationDetails]
 
     /// Gets all the setting keys asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -96,10 +113,12 @@ public protocol ConfigCatClientProtocol {
 
     /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetails() instead.")
     func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser?) async -> String?
 
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetails() instead.")
     func getAllVariationIds(user: ConfigCatUser?) async -> [String]
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)

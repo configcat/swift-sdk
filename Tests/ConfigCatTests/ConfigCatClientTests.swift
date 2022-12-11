@@ -497,7 +497,7 @@ class ConfigCatClientTests: XCTestCase {
     func testHooks() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
-        engine.enqueueResponse(response: Response(body: "", statusCode: 500))
+        engine.enqueueResponse(response: Response(body: "", statusCode: 404))
         var error = ""
         var changed = false
         var ready = false
@@ -526,14 +526,14 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
+            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
     }
 
     func testHooksSub() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
-        engine.enqueueResponse(response: Response(body: "", statusCode: 500))
+        engine.enqueueResponse(response: Response(body: "", statusCode: 404))
         var error = ""
         var changed = false
         let hooks = Hooks()
@@ -559,7 +559,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
+            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
     }
 

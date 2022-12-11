@@ -79,6 +79,15 @@ extension ConfigCatClient {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func getAllValueDetails(user: ConfigCatUser? = nil) async -> [EvaluationDetails] {
+        await withCheckedContinuation { continuation in
+            getAllValueDetails(user: user) { details in
+                continuation.resume(returning: details)
+            }
+        }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllKeys() async -> [String] {
         await withCheckedContinuation { continuation in
             getAllKeys { keys in
@@ -88,6 +97,7 @@ extension ConfigCatClient {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetails() instead.")
     public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) async -> String? {
         await withCheckedContinuation { continuation in
             getVariationId(for: key, defaultVariationId: defaultVariationId, user: user) { variationId in
@@ -97,6 +107,7 @@ extension ConfigCatClient {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetails() instead.")
     public func getAllVariationIds(user: ConfigCatUser? = nil) async -> [String] {
         await withCheckedContinuation { continuation in
             getAllVariationIds(user: user) { variationIds in
@@ -165,7 +176,18 @@ extension ConfigCatClient {
             semaphore.signal()
         }
         semaphore.wait()
-        return result ?? TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: String(format: "Could not get the evaluation details for '%@'.", key))
+        return result ?? TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: String(format: "Could not get the evaluation details for '%@'.", key), user: user)
+    }
+
+    @objc public func getAllValueDetailsSync(user: ConfigCatUser? = nil) -> [EvaluationDetails] {
+        let semaphore = DispatchSemaphore(value: 0)
+        var result = [EvaluationDetails]()
+        getAllValueDetails(user: user) { details in
+            result = details
+            semaphore.signal()
+        }
+        semaphore.wait()
+        return result
     }
 
     @objc public func getAllKeysSync() -> [String] {
@@ -179,6 +201,7 @@ extension ConfigCatClient {
         return result
     }
 
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetailsSync() instead.")
     @objc public func getVariationIdSync(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil) -> String? {
         let semaphore = DispatchSemaphore(value: 0)
         var result: String?
@@ -190,6 +213,7 @@ extension ConfigCatClient {
         return result ?? defaultVariationId
     }
 
+    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetailsSync() instead.")
     @objc public func getAllVariationIdsSync(user: ConfigCatUser? = nil) -> [String] {
         let semaphore = DispatchSemaphore(value: 0)
         var result = [String]()

@@ -50,6 +50,14 @@ class SyncTests: XCTestCase {
         XCTAssertEqual(2, values.count)
     }
 
+    func testGetAllValueDetails() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let values = client.getAllValuesSync()
+        XCTAssertEqual(2, values.count)
+    }
+
     func testRefresh() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
