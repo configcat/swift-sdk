@@ -24,11 +24,13 @@ import Foundation
 }
 
 class UserDefaultsCache: ConfigCache {
+    private let prefix = "com.configcat-"
+
     func read(for key: String) throws -> String {
-        UserDefaults.standard.string(forKey: key) ?? ""
+        UserDefaults.standard.string(forKey: prefix + key) ?? ""
     }
 
     func write(for key: String, value: String) throws {
-        UserDefaults.standard.set(value, forKey: key)
+        UserDefaults.standard.set(value, forKey: prefix + key)
     }
 }
