@@ -214,7 +214,11 @@ class ConfigService {
             cachedEntry = cachedEntry.withFetchTime(time: Date())
             writeCache(entry: cachedEntry)
             callCompletions(result: .success(cachedEntry))
-        case .failure(let error):
+        case .failure(let error, let isTransient):
+            if !isTransient && !cachedEntry.isEmpty {
+                cachedEntry = cachedEntry.withFetchTime(time: Date())
+                writeCache(entry: cachedEntry)
+            }
             callCompletions(result: .failure(error, cachedEntry))
         }
         completions = nil

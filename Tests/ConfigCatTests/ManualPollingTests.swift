@@ -39,7 +39,7 @@ class ManualPollingTests: XCTestCase {
     func testGetFailedRefresh() throws {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
-        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 404))
 
         var called = false
         let hooks = Hooks()
@@ -67,7 +67,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("500") ?? false)
+            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
                 expectation2.fulfill()

@@ -497,7 +497,7 @@ class ConfigCatClientTests: XCTestCase {
     func testHooks() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
-        engine.enqueueResponse(response: Response(body: "", statusCode: 500))
+        engine.enqueueResponse(response: Response(body: "", statusCode: 404))
         var error = ""
         var changed = false
         var ready = false
@@ -526,14 +526,14 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
+            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
     }
 
     func testHooksSub() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
-        engine.enqueueResponse(response: Response(body: "", statusCode: 500))
+        engine.enqueueResponse(response: Response(body: "", statusCode: 404))
         var error = ""
         var changed = false
         let hooks = Hooks()
@@ -559,8 +559,32 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("500")
+            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
+    }
+
+    func testDefaultCache() {
+        let engine = MockEngine()
+        let cache = UserDefaultsCache()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "testDefaultCache", pollingMode: PollingModes.lazyLoad(), httpEngine: engine, configCache: cache)
+
+        let expectation = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { r in
+            XCTAssertEqual("fake", r)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 5)
+
+        let expectation2 = self.expectation(description: "wait for response")
+        client.getValue(for: "fakeKey", defaultValue: "") { r in
+            XCTAssertEqual("fake", r)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 5)
+
+        XCTAssertEqual(1, engine.requests.count)
+        try XCTAssertFalse(cache.read(for: "ca67405a97c0f10ec01fdc65276fc6f4f009bc48").isEmpty)
     }
 
     func testOnFlagEvaluationError() {

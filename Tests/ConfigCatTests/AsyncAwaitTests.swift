@@ -62,6 +62,16 @@ class AsyncAwaitTests: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testGetAllValueDetails() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let values = await client.getAllValueDetails()
+        XCTAssertEqual(2, values.count)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testRefresh() async {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))

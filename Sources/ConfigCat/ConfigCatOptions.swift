@@ -10,7 +10,7 @@ public final class ConfigCatOptions: NSObject {
     @objc public var dataGovernance: DataGovernance = .global
 
     /// The cache implementation used to cache the downloaded config.json.
-    @objc public var configCache: ConfigCache? = nil
+    @objc public var configCache: ConfigCache? = UserDefaultsCache()
 
     /// The polling mode.
     @objc public var pollingMode: PollingMode = PollingModes.autoPoll()
