@@ -9,7 +9,7 @@ enum RedirectMode: Int {
 enum FetchResponse: Equatable {
     case fetched(ConfigEntry)
     case notModified
-    case failure(String)
+    case failure(message: String, isTransient: Bool)
 
     public var entry: ConfigEntry? {
         switch self {
@@ -25,7 +25,7 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     switch (lhs, rhs) {
     case (.fetched(_), .fetched(_)),
          (.notModified, .notModified),
-         (.failure(_), .failure(_)):
+         (.failure(_, _), .failure(_, _)):
         return true
     default:
         return false
@@ -131,7 +131,7 @@ class ConfigFetcher: NSObject {
                 }
                 let message = String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
                 self.log.error(message: message)
-                completion(.failure(message))
+                completion(.failure(message: message, isTransient: true))
             } else {
                 let response = resp as! HTTPURLResponse
                 if response.statusCode >= 200 && response.statusCode < 300, let data = data {
@@ -145,17 +145,23 @@ class ConfigFetcher: NSObject {
                     case .failure(let error):
                         let message = String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)
                         self.log.error(message: message)
-                        completion(.failure(message))
+                        completion(.failure(message: message, isTransient: true))
                     }
                 } else if response.statusCode == 304 {
                     self.log.debug(message: "Fetch was successful: not modified")
                     completion(.notModified)
-                } else {
+                } else if response.statusCode == 404 || response.statusCode == 403 {
                     let message = String(format: """
-                                                 Double-check your SDK Key at https://app.configcat.com/sdkkey. Non success status code: %@
+                                                 Double-check your SDK Key at https://app.configcat.com/sdkkey. Status code: %@
                                                  """, String(response.statusCode))
                     self.log.error(message: message)
-                    completion(.failure(message))
+                    completion(.failure(message: message, isTransient: false))
+                } else {
+                    let message = String(format: """
+                                                 Unexpected HTTP response was received: %@
+                                                 """, String(response.statusCode))
+                    self.log.error(message: message)
+                    completion(.failure(message: message, isTransient: true))
                 }
             }
         }

@@ -45,8 +45,8 @@ public final class EvaluationDetails: EvaluationDetailsBase {
         super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedEvaluationRule: matchedEvaluationRule, matchedEvaluationPercentageRule: matchedEvaluationPercentageRule)
     }
 
-    static func fromError(key: String, value: Any, error: String) -> EvaluationDetails {
-        EvaluationDetails(key: key, value: value, variationId: "", isDefaultValue: true, error: error)
+    static func fromError(key: String, value: Any, error: String, user: ConfigCatUser?) -> EvaluationDetails {
+        EvaluationDetails(key: key, value: value, variationId: "", user: user, isDefaultValue: true, error: error)
     }
 }
 
@@ -106,8 +106,8 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
         super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedEvaluationRule: matchedEvaluationRule, matchedEvaluationPercentageRule: matchedEvaluationPercentageRule)
     }
 
-    static func fromError<Value>(key: String, value: Value, error: String) -> TypedEvaluationDetails<Value> {
-        TypedEvaluationDetails<Value>(key: key, value: value, variationId: "", isDefaultValue: true, error: error)
+    static func fromError<Value>(key: String, value: Value, error: String, user: ConfigCatUser?) -> TypedEvaluationDetails<Value> {
+        TypedEvaluationDetails<Value>(key: key, value: value, variationId: "", user: user, isDefaultValue: true, error: error)
     }
 
     func toStringDetails() -> StringEvaluationDetails {

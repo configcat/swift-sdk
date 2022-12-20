@@ -28,6 +28,18 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         wait(for: [expectation], timeout: 20)
     }
 
+    func testGetAllValueDetails() {
+        let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
+            options.pollingMode = PollingModes.lazyLoad()
+        }
+        let expectation = expectation(description: "wait for all values")
+        client.getAllValueDetails { details in
+            XCTAssertEqual(16, details.count)
+            expectation.fulfill()
+        }
+        wait(for: [expectation], timeout: 20)
+    }
+
     func testEvalDetails() {
         let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
             options.pollingMode = PollingModes.lazyLoad()

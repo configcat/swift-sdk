@@ -197,6 +197,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
+        let evalUser = user ?? defaultUser
         if Value.self != String.self &&
                    Value.self != String?.self &&
                    Value.self != Int.self &&
@@ -211,7 +212,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             log.error(message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                     value: defaultValue,
-                    error: message))
+                    error: message,
+                    user: evalUser))
             completion(defaultValue)
             return
         }
@@ -221,7 +223,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
-                        error: message))
+                        error: message,
+                        user: evalUser))
                 completion(defaultValue)
                 return
             }
@@ -230,12 +233,13 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
-                        error: message))
+                        error: message,
+                        user: evalUser))
                 completion(defaultValue)
                 return
             }
 
-            let evalDetails = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+            let evalDetails = self.evaluate(setting: setting, key: key, user: evalUser, fetchTime: result.fetchTime)
             completion(evalDetails.value as? Value ?? defaultValue)
         }
     }
@@ -252,6 +256,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
+        let evalUser = user ?? defaultUser
         if Value.self != String.self &&
                    Value.self != String?.self &&
                    Value.self != Int.self &&
@@ -264,16 +269,16 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Any?.self {
             let message = "Only String, Integer, Double, Bool or Any types are supported."
             log.error(message: message)
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
+            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
             return
         }
         getSettings { result in
             if result.settings.isEmpty {
                 let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
                 self.log.error(message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 return
             }
             guard let setting = result.settings[key] else {
@@ -281,12 +286,13 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 self.log.error(message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
-                        error: message))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                        error: message,
+                        user: evalUser))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 return
             }
 
-            let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+            let details = self.evaluate(setting: setting, key: key, user: evalUser, fetchTime: result.fetchTime)
             guard let typedValue = details.value as? Value else {
                 let message = String(format: """
                                              The value '%@' cannot be converted to the requested type.
@@ -294,8 +300,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                                              Here are the available keys: %@
                                              """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
                 self.log.error(message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message))
+                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
+                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 return
             }
 
@@ -308,6 +314,26 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                     matchedEvaluationRule: details.matchedEvaluationRule,
                     matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule))
 
+        }
+    }
+
+    /**
+     Gets the values along with evaluation details of all feature flags and settings.
+
+     - Parameter user: the user object to identify the caller.
+     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     */
+    @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
+        getSettings { result in
+            var detailsResult = [EvaluationDetails]()
+            for key in result.settings.keys {
+                guard let setting = result.settings[key] else {
+                    continue
+                }
+                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+                detailsResult.append(details)
+            }
+            completion(detailsResult)
         }
     }
 
