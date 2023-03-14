@@ -22,20 +22,20 @@ class Logger {
     }
 
     func debug(message: String) {
-        log(message: message, currentLevel: .debug)
+        log(message: "[0] \(message)", currentLevel: .debug)
     }
 
-    func warning(message: String) {
-        log(message: message, currentLevel: .warning)
+    func warning(eventId: Int, message: String) {
+        log(message: "[\(eventId)] \(message)", currentLevel: .warning)
     }
 
-    func info(message: String) {
-        log(message: message, currentLevel: .info)
+    func info(eventId: Int, message: String) {
+        log(message: "[\(eventId)] \(message)", currentLevel: .info)
     }
 
-    func error(message: String) {
+    func error(eventId: Int, message: String) {
         hooks.invokeOnError(error: message)
-        log(message: message, currentLevel: .error)
+        log(message: "[\(eventId)] \(message)", currentLevel: .error)
     }
 
     func log(message: String, currentLevel: LogLevel) {

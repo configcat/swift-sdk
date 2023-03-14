@@ -68,7 +68,7 @@ class ConfigService {
                 defer { this.mutex.unlock() }
                 // Max wait time expired without result, notify subscribers with the cached config.
                 if !this.initialized {
-                    this.log.warning(message: String(format: "Max init wait time for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
+                    this.log.warning(eventId: 4200, message: String(format: "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
                     this.initialized = true
                     hooks.invokeOnReady()
                     this.callCompletions(result: .success(this.cachedEntry))
@@ -111,8 +111,8 @@ class ConfigService {
 
     func refresh(completion: @escaping (RefreshResult) -> Void) {
         if isOffline {
-            let offlineWarning = "The SDK is in offline mode, it can't initiate HTTP calls."
-            log.warning(message: offlineWarning)
+            let offlineWarning = "Client is in offline mode, it cannot initiate HTTP calls."
+            log.warning(eventId: 3200, message: offlineWarning)
             completion(RefreshResult(success: false, error: offlineWarning))
             return
         }
@@ -133,7 +133,7 @@ class ConfigService {
         if let autoPoll = pollingMode as? AutoPollingMode {
             startPoll(mode: autoPoll)
         }
-        log.debug(message: "Switched to ONLINE mode.")
+        log.info(eventId: 5200, message: "Switched to ONLINE mode.")
     }
 
     func setOffline() {
@@ -143,7 +143,7 @@ class ConfigService {
         offline = true
         pollTimer?.cancel()
         pollTimer = nil
-        log.debug(message: "Switched to OFFLINE mode.")
+        log.info(eventId: 5200, message: "Switched to OFFLINE mode.")
     }
 
     var isOffline: Bool {
@@ -266,13 +266,13 @@ class ConfigService {
             let jsonMap = entry.toJsonMap()
             let json = try JSONSerialization.data(withJSONObject: jsonMap, options: [])
             guard let jsonString = String(data: json, encoding: .utf8) else {
-                log.error(message: "An error occurred during the cache write: Could not convert the JSON object to string.")
+                log.error(eventId: 2201, message: "Error occurred while writing the cache. Could not convert the JSON object to string.")
                 return
             }
             cachedJsonString = jsonString
             try cache.write(for: cacheKey, value: jsonString)
         } catch {
-            log.error(message: String(format: "An error occurred during the cache write: %@", error.localizedDescription))
+            log.error(eventId: 2201, message: String(format: "Error occurred while writing the cache. %@", error.localizedDescription))
         }
     }
 
@@ -286,17 +286,17 @@ class ConfigService {
                 return .empty
             }
             guard let data = json.data(using: .utf8) else {
-                log.error(message: "An error occurred during the cache read: Decode to utf8 data failed.")
+                log.error(eventId: 2200, message: "Error occurred while reading the cache. Decode to utf8 data failed.")
                 return .empty
             }
             guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                log.error(message: "An error occurred during the cache read: Convert to [String: Any] map failed.")
+                log.error(eventId: 2200, message: "Error occurred while reading the cache. Convert to [String: Any] map failed.")
                 return .empty
             }
             cachedJsonString = json
             return .fromJson(json: jsonObject)
         } catch {
-            log.error(message: String(format: "An error occurred during the cache read: %@", error.localizedDescription))
+            log.error(eventId: 2200, message: String(format: "Error occurred while reading the cache. %@", error.localizedDescription))
             return .empty
         }
     }

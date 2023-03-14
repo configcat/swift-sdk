@@ -38,13 +38,10 @@ class RolloutEvaluator {
     func evaluate(setting: Setting, key: String, user: ConfigCatUser?) -> (value: Any, variationId: String?, evaluateLog: String?, rollout: RolloutRule?, percentage: PercentageRule?) {
         guard let user = user else {
             if setting.rolloutRules.count > 0 || setting.percentageItems.count > 0 {
-                log.warning(message: String(format:
-                """
-                Evaluating getValue(%@). UserObject missing!
-                You should pass a UserObject to getValue(),
-                in order to make targeting work properly.
-                Read more: https://configcat.com/docs/advanced/user-object/
-                """, key))
+                log.warning(eventId: 3001, message: String(format: "Cannot evaluate targeting rules and %% options for setting '%@' (User Object is missing). "
+                    + "You should pass a User Object to the evaluation methods like `getValue()` in order to make targeting work properly. "
+                    + "Read more: https://configcat.com/docs/advanced/user-object/",
+                    key))
             }
 
             return (setting.value, setting.variationId, nil, nil, nil)
@@ -121,14 +118,14 @@ class RolloutEvaluator {
                     }) {
                         let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                 error: "Invalid semantic version: \(invalidValue)")
-                        log.warning(message: message)
+                        log.warning(eventId: 0, message: message)
                         evaluateLog += "\n" + message
                         continue
                     }
                     if Version(userValue) == nil {
                         let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                 error: "Invalid semantic version: \(userValue)")
-                        log.warning(message: message)
+                        log.warning(eventId: 0, message: message)
                         evaluateLog += "\n" + message
                         continue
                     }
@@ -137,7 +134,7 @@ class RolloutEvaluator {
                         if Version(userValue) == nil {
                             let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                     error: "Invalid semantic version: \(userValue)")
-                            log.warning(message: message)
+                            log.warning(eventId: 0, message: message)
                             evaluateLog += "\n" + message
                             continue
                         }
@@ -155,7 +152,7 @@ class RolloutEvaluator {
                         if Version(userValue) == nil {
                             let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                     error: "Invalid semantic version: \(userValue)")
-                            log.warning(message: message)
+                            log.warning(eventId: 0, message: message)
                             evaluateLog += "\n" + message
                             continue
                         }
@@ -166,7 +163,7 @@ class RolloutEvaluator {
                             }) {
                                 let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                         error: "Invalid semantic version: \(invalidValue)")
-                                log.warning(message: message)
+                                log.warning(eventId: 0, message: message)
                                 evaluateLog += "\n" + message
                                 continue
                             }
@@ -182,7 +179,7 @@ class RolloutEvaluator {
                     if Version(userValue) == nil {
                         let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                 error: "Invalid semantic version: \(userValue)")
-                        log.warning(message: message)
+                        log.warning(eventId: 0, message: message)
                         evaluateLog += "\n" + message
                         continue
                     }
@@ -190,7 +187,7 @@ class RolloutEvaluator {
                     if Version(comparison) == nil {
                         let message = formatValidationErrorRule(comparisonAttribute: comparisonAttribute, userValue: userValue, comparator: comparator, comparisonValue: comparisonValue,
                                 error: "Invalid semantic version: \(comparison)")
-                        log.warning(message: message)
+                        log.warning(eventId: 0, message: message)
                         evaluateLog += "\n" + message
                         continue
                     }

@@ -105,18 +105,14 @@ class ConfigFetcher: NSObject {
                 return
             }
             if redirect == RedirectMode.shouldRedirect.rawValue {
-                self.log.warning(message: """
-                                          Your dataGovernance parameter at ConfigCatClient
-                                          initialization is not in sync with your preferences on the ConfigCat
-                                          Dashboard: https://app.configcat.com/organization/data-governance.
-                                          Only Organization Admins can access this preference.
-                                          """)
+                self.log.warning(eventId: 3002, message: "The `dataGovernance` parameter specified at the client initialization is not in sync with the preferences on the ConfigCat Dashboard. "
+                    + "Read more: https://configcat.com/docs/advanced/data-governance/")
             }
             if executionCount > 0 {
                 self.executeFetch(url: newUrl, eTag: eTag, executionCount: executionCount - 1, completion: completion)
                 return
             }
-            self.log.error(message: "Redirect loop during config.json fetch. Please contact support@configcat.com.")
+            self.log.error(eventId: 1104, message: "Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/")
             completion(response)
         })
     }
@@ -125,12 +121,15 @@ class ConfigFetcher: NSObject {
         let request = getRequest(url: url, eTag: eTag)
         httpEngine.get(request: request) { (data, resp, error) in
             if let error = error {
-                var extraInfo = ""
+                var message: String
                 if error._code == NSURLErrorTimedOut, let engine = self.httpEngine as? URLSessionEngine {
-                    extraInfo = String(format: " Timeout interval for request: %.2f seconds.", engine.session.configuration.timeoutIntervalForRequest)
+                    message = String(format: "Request timed out while trying to fetch config JSON. Timeout value: %.2fs", engine.session.configuration.timeoutIntervalForRequest)
+                    self.log.error(eventId: 1102, message: message)
                 }
-                let message = String(format: "An error occurred during the config fetch: %@%@", error.localizedDescription, extraInfo)
-                self.log.error(message: message)
+                else {
+                    message = String(format: "Unexpected error occurred while trying to fetch config JSON. %@", error.localizedDescription)
+                    self.log.error(eventId: 1103, message: message)
+                }
                 completion(.failure(message: message, isTransient: true))
             } else {
                 let response = resp as! HTTPURLResponse
@@ -143,24 +142,24 @@ class ConfigFetcher: NSObject {
                     case .success(let config):
                         completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
                     case .failure(let error):
-                        let message = String(format: "An error occurred during JSON deserialization. %@", error.localizedDescription)
-                        self.log.error(message: message)
+                        let message = String(format: "Fetching config JSON was successful but the HTTP response content was invalid. "
+                            + "JSON parsing failed. %@", error.localizedDescription)
+                        self.log.error(eventId: 1105, message: message)
                         completion(.failure(message: message, isTransient: true))
                     }
                 } else if response.statusCode == 304 {
                     self.log.debug(message: "Fetch was successful: not modified")
                     completion(.notModified)
                 } else if response.statusCode == 404 || response.statusCode == 403 {
-                    let message = String(format: """
-                                                 Double-check your SDK Key at https://app.configcat.com/sdkkey. Status code: %@
-                                                 """, String(response.statusCode))
-                    self.log.error(message: message)
+                    let message = String(format: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. "
+                        + "Status code: %@",
+                        String(response.statusCode))
+                    self.log.error(eventId: 1100, message: message)
                     completion(.failure(message: message, isTransient: false))
                 } else {
-                    let message = String(format: """
-                                                 Unexpected HTTP response was received: %@
-                                                 """, String(response.statusCode))
-                    self.log.error(message: message)
+                    let message = String(format: "Unexpected HTTP response was received while trying to fetch config JSON: %@",
+                        String(response.statusCode))
+                    self.log.error(eventId: 1101, message: message)
                     completion(.failure(message: message, isTransient: true))
                 }
             }
