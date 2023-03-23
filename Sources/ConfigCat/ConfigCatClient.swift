@@ -231,7 +231,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             guard let setting = result.settings[key] else {
                 let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: %@.",
+                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
                     key, "\(defaultValue)", [String](result.settings.keys))
                 self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
@@ -286,7 +286,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             guard let setting = result.settings[key] else {
                 let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: %@.",
+                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
                     key, "\(defaultValue)", [String](result.settings.keys))
                 self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
@@ -360,7 +360,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             guard let setting = result.settings[key] else {
                 self.log.error(eventId: 1001, message: String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultVariationId` parameter that you specified in your application: '%@'. Available keys: %@.",
+                    + "Returning the `defaultVariationId` parameter that you specified in your application: '%@'. Available keys: [%@].",
                     key, "\(defaultVariationId ?? "")", [String](result.settings.keys)))
                 completion(defaultVariationId)
                 return
