@@ -347,7 +347,7 @@ class ConfigCatClientTests: XCTestCase {
         client.getValueDetails(for: "fakeKey", defaultValue: "") { details in
             XCTAssertEqual("", details.value)
             XCTAssertTrue(details.isDefaultValue)
-            XCTAssertEqual("Config JSON is not present. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
+            XCTAssertEqual("Config JSON is not present when evaluating setting 'fakeKey'. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -594,7 +594,7 @@ class ConfigCatClientTests: XCTestCase {
         var called = false
         hooks.addOnFlagEvaluated { details in
             XCTAssertEqual("", details.value as? String)
-            XCTAssertEqual("Config JSON is not present. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
+            XCTAssertEqual("Config JSON is not present when evaluating setting 'fakeKey'. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
             XCTAssertTrue(details.isDefaultValue)
             called = true
         }

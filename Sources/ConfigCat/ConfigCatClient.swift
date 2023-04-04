@@ -220,7 +220,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
         getSettings { result in
             if result.settings.isEmpty {
-                let message = String(format: "Config JSON is not present. Returning the `defaultValue` parameter that you specified in your application: '%@'.", "\(defaultValue)")
+                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultValue)")
                 self.log.error(eventId: 1000, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
@@ -278,7 +279,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
         getSettings { result in
             if result.settings.isEmpty {
-                let message = String(format: "Config JSON is not present. Returning the `defaultValue` parameter that you specified in your application: '%@'.", "\(defaultValue)")
+                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultValue)")
                 self.log.error(eventId: 1000, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
@@ -354,7 +356,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
         getSettings { result in
             if result.settings.isEmpty {
-                self.log.error(eventId: 1000, message: String(format: "Config JSON is not present. Returning the `defaultVariationId` parameter that you specified in your application: '%@'.", "\(defaultVariationId ?? "")"))
+                self.log.error(eventId: 1000, message: String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultVariationId` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultVariationId ?? "")"))
                 completion(defaultVariationId)
                 return
             }
