@@ -233,7 +233,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             guard let setting = result.settings[key] else {
                 let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
                     + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                    key, "\(defaultValue)", [String](result.settings.keys))
+                                     key, "\(defaultValue)", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", "))
                 self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
@@ -289,7 +291,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             guard let setting = result.settings[key] else {
                 let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
                     + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                    key, "\(defaultValue)", [String](result.settings.keys))
+                    key, "\(defaultValue)", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", "))
                 self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
