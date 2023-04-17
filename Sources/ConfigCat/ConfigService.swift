@@ -8,6 +8,14 @@ class SettingResult {
         self.settings = settings
         self.fetchTime = fetchTime
     }
+
+    var isEmpty: Bool {
+        get {
+            self === SettingResult.empty
+        }
+    }
+
+    static let empty = SettingResult(settings: [:], fetchTime: .distantPast)
 }
 
 public final class RefreshResult: NSObject {
@@ -95,15 +103,23 @@ class ConfigService {
         case let lazy as LazyLoadingMode:
             fetchIfOlder(time: Date().subtract(seconds: lazy.cacheRefreshIntervalInSeconds)!) { result in
                 switch result {
-                case .success(let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
-                case .failure(_, let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
+                case .success(let entry): completion(!entry.isEmpty
+                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
+                    : SettingResult.empty)
+                case .failure(_, let entry): completion(!entry.isEmpty
+                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
+                    : SettingResult.empty)
                 }
             }
         default:
             fetchIfOlder(time: .distantPast, preferCache: true) { result in
                 switch result {
-                case .success(let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
-                case .failure(_, let entry): completion(SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime))
+                case .success(let entry): completion(!entry.isEmpty
+                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
+                    : SettingResult.empty)
+                case .failure(_, let entry): completion(!entry.isEmpty
+                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
+                    : SettingResult.empty)
                 }
             }
         }

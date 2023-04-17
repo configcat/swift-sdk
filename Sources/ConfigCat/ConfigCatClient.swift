@@ -219,7 +219,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return
         }
         getSettings { result in
-            if result.settings.isEmpty {
+            if result.isEmpty {
                 let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
                     key, "\(defaultValue)")
                 self.log.error(eventId: 1000, message: message)
@@ -280,7 +280,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return
         }
         getSettings { result in
-            if result.settings.isEmpty {
+            if result.isEmpty {
                 let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
                     key, "\(defaultValue)")
                 self.log.error(eventId: 1000, message: message)
@@ -334,6 +334,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      */
     @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             var detailsResult = [EvaluationDetails]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -349,6 +354,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets all the setting keys asynchronously.
     @objc public func getAllKeys(completion: @escaping ([String]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             completion([String](result.settings.keys))
         }
     }
@@ -359,7 +369,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
         getSettings { result in
-            if result.settings.isEmpty {
+            if result.isEmpty {
                 self.log.error(eventId: 1000, message: String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultVariationId` parameter that you specified in your application: '%@'.",
                     key, "\(defaultVariationId ?? "")"))
                 completion(defaultVariationId)
@@ -368,7 +378,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             guard let setting = result.settings[key] else {
                 self.log.error(eventId: 1001, message: String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
                     + "Returning the `defaultVariationId` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                    key, "\(defaultVariationId ?? "")", [String](result.settings.keys)))
+                    key, "\(defaultVariationId ?? "")", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", ")))
                 completion(defaultVariationId)
                 return
             }
@@ -381,6 +393,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             var variationIds = [String]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -400,6 +417,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning nil.")
+                completion(nil)
+                return
+            }
             for (key, setting) in result.settings {
                 if variationId == setting.variationId {
                     completion(KeyValue(key: key, value: setting.value))
@@ -427,6 +449,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the values of all feature flags or settings asynchronously.
     @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([:])
+                return
+            }        
             var allValues = [String: Any]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -477,7 +504,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return
         }
         guard let configService = configService else {
-            completion(SettingResult(settings: [:], fetchTime: .distantPast))
+            completion(SettingResult.empty)
             return
         }
         if let overrideDataSource = overrideDataSource {
