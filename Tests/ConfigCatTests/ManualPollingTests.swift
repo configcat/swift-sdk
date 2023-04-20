@@ -45,7 +45,7 @@ class ManualPollingTests: XCTestCase {
         let hooks = Hooks()
         hooks.addOnError { error in
             called = true
-            XCTAssertTrue(error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey."))
+            XCTAssertTrue(error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
         }
         let logger = Logger(level: .warning, hooks: hooks)
 
@@ -67,7 +67,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertTrue(result.error?.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
+            XCTAssertTrue(result.error?.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
                 expectation2.fulfill()
@@ -194,7 +194,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
+            XCTAssertEqual("Client is in offline mode, it cannot initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -227,7 +227,7 @@ class ManualPollingTests: XCTestCase {
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
+            XCTAssertEqual("Client is in offline mode, it cannot initiate HTTP calls.", result.error)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)

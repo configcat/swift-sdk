@@ -347,7 +347,7 @@ class ConfigCatClientTests: XCTestCase {
         client.getValueDetails(for: "fakeKey", defaultValue: "") { details in
             XCTAssertEqual("", details.value)
             XCTAssertTrue(details.isDefaultValue)
-            XCTAssertEqual("Config is not present. Returning defaultValue: [].", details.error)
+            XCTAssertEqual("Config JSON is not present when evaluating setting 'fakeKey'. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -386,7 +386,7 @@ class ConfigCatClientTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         client.forceRefresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertEqual("The SDK is in offline mode, it can't initiate HTTP calls.", result.error)
+            XCTAssertEqual("Client is in offline mode, it cannot initiate HTTP calls.", result.error)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -526,7 +526,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && ready && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
+            changed && ready && error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
     }
 
@@ -559,7 +559,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && error.starts(with: "Double-check your SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
+            changed && error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
     }
 
@@ -594,7 +594,7 @@ class ConfigCatClientTests: XCTestCase {
         var called = false
         hooks.addOnFlagEvaluated { details in
             XCTAssertEqual("", details.value as? String)
-            XCTAssertEqual("Config is not present. Returning defaultValue: [].", details.error)
+            XCTAssertEqual("Config JSON is not present when evaluating setting 'fakeKey'. Returning the `defaultValue` parameter that you specified in your application: ''.", details.error)
             XCTAssertTrue(details.isDefaultValue)
             called = true
         }

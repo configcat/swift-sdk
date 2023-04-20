@@ -46,7 +46,7 @@ class ConfigEntry: Equatable, JsonSerializable {
 
     var isEmpty: Bool {
         get {
-            self == .empty
+            self === ConfigEntry.empty
         }
     }
 

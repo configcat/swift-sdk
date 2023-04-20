@@ -110,9 +110,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
         if let client = instances[sdkKey]?.get() {
             if options != nil {
-                client.log.warning(message: String(format: """
-                                                           Client for '%@' is already created and will be reused; options passed are being ignored.
-                                                           """, sdkKey))
+                client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
+                    + "No new client instance will be created and the specified configuration action is ignored. "
+                    + "Returning the existing client instance. SDK Key: '%@'.",
+                    sdkKey))
             }
             return client
         }
@@ -209,7 +210,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Any.self &&
                    Value.self != Any?.self {
             let message = "Only String, Integer, Double, Bool or Any types are supported."
-            log.error(message: message)
+            log.error(eventId: 2022, message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                     value: defaultValue,
                     error: message,
@@ -218,9 +219,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return
         }
         getSettings { result in
-            if result.settings.isEmpty {
-                let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
-                self.log.error(message: message)
+            if result.isEmpty {
+                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultValue)")
+                self.log.error(eventId: 1000, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
                         error: message,
@@ -229,8 +231,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 return
             }
             guard let setting = result.settings[key] else {
-                let message = String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))
-                self.log.error(message: message)
+                let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
+                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
+                                     key, "\(defaultValue)", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", "))
+                self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
                         error: message,
@@ -268,22 +274,27 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                    Value.self != Any.self &&
                    Value.self != Any?.self {
             let message = "Only String, Integer, Double, Bool or Any types are supported."
-            log.error(message: message)
+            log.error(eventId: 2022, message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
             completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
             return
         }
         getSettings { result in
-            if result.settings.isEmpty {
-                let message = String(format: "Config is not present. Returning defaultValue: [%@].", "\(defaultValue)")
-                self.log.error(message: message)
+            if result.isEmpty {
+                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultValue)")
+                self.log.error(eventId: 1000, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 return
             }
             guard let setting = result.settings[key] else {
-                let message = String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys))
-                self.log.error(message: message)
+                let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
+                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
+                    key, "\(defaultValue)", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", "))
+                self.log.error(eventId: 1001, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                         value: defaultValue,
                         error: message,
@@ -294,12 +305,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
             let details = self.evaluate(setting: setting, key: key, user: evalUser, fetchTime: result.fetchTime)
             guard let typedValue = details.value as? Value else {
-                let message = String(format: """
-                                             The value '%@' cannot be converted to the requested type.
-                                             Returning defaultValue: [%@].
-                                             Here are the available keys: %@
-                                             """, "\(details.value)", "\(defaultValue)", [String](result.settings.keys))
-                self.log.error(message: message)
+                let message = String(format: "Failed to evaluate setting '%@' (the value '%@' cannot be converted to the requested type). "
+                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'.",
+                    key, "\(details.value)", "\(defaultValue)")
+                self.log.error(eventId: 2002, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
                 return
@@ -325,6 +334,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      */
     @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             var detailsResult = [EvaluationDetails]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -340,6 +354,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets all the setting keys asynchronously.
     @objc public func getAllKeys(completion: @escaping ([String]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             completion([String](result.settings.keys))
         }
     }
@@ -350,13 +369,18 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             assert(false, "key cannot be empty")
         }
         getSettings { result in
-            if result.settings.isEmpty {
-                self.log.error(message: String(format: "Config is not present. Returning defaultVariationId: [%@].", "\(defaultVariationId ?? "")"))
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultVariationId` parameter that you specified in your application: '%@'.",
+                    key, "\(defaultVariationId ?? "")"))
                 completion(defaultVariationId)
                 return
             }
             guard let setting = result.settings[key] else {
-                self.log.error(message: String(format: "Value not found for key '%@'. Here are the available keys: %@", key, [String](result.settings.keys)))
+                self.log.error(eventId: 1001, message: String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
+                    + "Returning the `defaultVariationId` parameter that you specified in your application: '%@'. Available keys: [%@].",
+                    key, "\(defaultVariationId ?? "")", result.settings.keys.map { key in
+                    return "'"+key+"'"
+                }.joined(separator: ", ")))
                 completion(defaultVariationId)
                 return
             }
@@ -369,6 +393,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
     @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([])
+                return
+            }
             var variationIds = [String]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -378,7 +407,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 if let variationId = details.variationId {
                     variationIds.append(variationId)
                 } else {
-                    self.log.error(message: String(format: "Evaluating the variation id for the key '@' failed.", key))
+                    self.log.error(eventId: 2012, message: String(format: "Failed to evaluate the variation ID for the key '%@'.", key))
                 }
             }
             completion(variationIds)
@@ -388,6 +417,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning nil.")
+                completion(nil)
+                return
+            }
             for (key, setting) in result.settings {
                 if variationId == setting.variationId {
                     completion(KeyValue(key: key, value: setting.value))
@@ -407,7 +441,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 }
             }
 
-            self.log.error(message: String(format: "Could not find the setting for the given variationId: '%@'", variationId))
+            self.log.error(eventId: 2011, message: String(format: "Could not find the setting for the specified variation ID: '%@'.", variationId))
             completion(nil)
         }
     }
@@ -415,6 +449,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /// Gets the values of all feature flags or settings asynchronously.
     @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
         getSettings { result in
+            if result.isEmpty {
+                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
+                completion([:])
+                return
+            }        
             var allValues = [String: Any]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
@@ -439,7 +478,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 completion()
             }
         } else {
-            log.warning(message: "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect.")
+            log.warning(eventId: 3202, message: "Client is configured to use local-only mode, thus `.refresh()` has no effect.")
             completion()
         }
     }
@@ -453,8 +492,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if let configService = configService {
             configService.refresh(completion: completion)
         } else {
-            let message = "The ConfigCat SDK is in local-only mode. Calling .refresh() has no effect."
-            log.warning(message: message)
+            let message = "Client is configured to use local-only mode, thus `.refresh()` has no effect."
+            log.warning(eventId: 3202, message: message)
             completion(RefreshResult(success: false, error: message))
         }
     }
@@ -465,7 +504,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return
         }
         guard let configService = configService else {
-            completion(SettingResult(settings: [:], fetchTime: .distantPast))
+            completion(SettingResult.empty)
             return
         }
         if let overrideDataSource = overrideDataSource {
@@ -521,7 +560,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     func evaluate(setting: Setting, key: String, user: ConfigCatUser?, fetchTime: Date) -> EvaluationDetails {
         let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: setting, key: key, user: user)
         if let evaluateLog = evaluateLog {
-            log.info(message: evaluateLog)
+            log.info(eventId: 5000, message: evaluateLog)
         }
         let details = EvaluationDetails(key: key,
                 value: value,
