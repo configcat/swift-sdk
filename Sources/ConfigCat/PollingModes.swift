@@ -4,19 +4,6 @@ import Foundation
 public final class PollingModes: NSObject {
     /**
     Creates a new `AutoPollingMode`.
-    
-    - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
-    - Parameter maxInitWaitTimeInSeconds: maximum waiting time between initialization and the first config acquisition in seconds.
-    - Parameter onConfigChanged: the configuration changed event handler.
-    - Returns: A new `AutoPollingMode`.
-    */
-    @available(*, deprecated, message: "For subscribing the `onConfigChanged` event, use the `hooks` property of `ConfigCatClient`")
-    @objc public static func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) -> PollingMode {
-        AutoPollingMode(autoPollIntervalInSeconds: autoPollIntervalInSeconds, maxInitWaitTimeInSeconds: maxInitWaitTimeInSeconds, onConfigChanged: onConfigChanged)
-    }
-
-    /**
-    Creates a new `AutoPollingMode`.
 
     - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
     - Parameter maxInitWaitTimeInSeconds: maximum waiting time between initialization and the first config acquisition in seconds.

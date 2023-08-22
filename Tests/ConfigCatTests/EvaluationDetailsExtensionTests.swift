@@ -12,7 +12,11 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testBoolJson, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
+        let refreshExpectation = expectation(description: "wait for refresh")
+        client.forceRefresh { RefreshResult in
+            refreshExpectation.fulfill()
+        }
+        wait(for: [refreshExpectation], timeout: 5)
 
         let expectation = expectation(description: "wait for result")
         client.getBoolValueDetails(for: "key", defaultValue: true, user: nil) { details in
@@ -29,7 +33,11 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testIntJson, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
+        let refreshExpectation = expectation(description: "wait for refresh")
+        client.forceRefresh { RefreshResult in
+            refreshExpectation.fulfill()
+        }
+        wait(for: [refreshExpectation], timeout: 5)
 
         let expectation = expectation(description: "wait for result")
         client.getIntValueDetails(for: "key", defaultValue: 0, user: nil) { details in
@@ -46,7 +54,11 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testDoubleJson, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
+        let refreshExpectation = expectation(description: "wait for refresh")
+        client.forceRefresh { RefreshResult in
+            refreshExpectation.fulfill()
+        }
+        wait(for: [refreshExpectation], timeout: 5)
 
         let expectation = expectation(description: "wait for result")
         client.getDoubleValueDetails(for: "key", defaultValue: 0, user: nil) { details in
@@ -63,7 +75,11 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
+        let refreshExpectation = expectation(description: "wait for refresh")
+        client.forceRefresh { RefreshResult in
+            refreshExpectation.fulfill()
+        }
+        wait(for: [refreshExpectation], timeout: 5)
 
         let expectation = expectation(description: "wait for result")
         client.getStringValueDetails(for: "key", defaultValue: "", user: nil) { details in
@@ -72,54 +88,6 @@ class EvaluationDetailsExtensionTests: XCTestCase {
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
-        XCTAssertEqual(1, engine.requests.count)
-    }
-
-    func testBoolDetailsSync() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testBoolJson, statusCode: 200))
-
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
-        let details = client.getBoolValueDetailsSync(for: "key", defaultValue: true, user: nil)
-        XCTAssertFalse(details.isDefaultValue)
-        XCTAssertTrue(details.value)
-        XCTAssertEqual(1, engine.requests.count)
-    }
-
-    func testIntDetailsSync() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testIntJson, statusCode: 200))
-
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
-        let details = client.getIntValueDetailsSync(for: "key", defaultValue: 0, user: nil)
-        XCTAssertFalse(details.isDefaultValue)
-        XCTAssertEqual(42, details.value)
-        XCTAssertEqual(1, engine.requests.count)
-    }
-
-    func testDoubleDetailsSync() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testDoubleJson, statusCode: 200))
-
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
-        let details = client.getDoubleValueDetailsSync(for: "key", defaultValue: 0, user: nil)
-        XCTAssertFalse(details.isDefaultValue)
-        XCTAssertEqual(3.14, details.value)
-        XCTAssertEqual(1, engine.requests.count)
-    }
-
-    func testStringDetailsSync() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
-        client.forceRefreshSync()
-        let details = client.getStringValueDetailsSync(for: "key", defaultValue: "", user: nil)
-        XCTAssertFalse(details.isDefaultValue)
-        XCTAssertEqual("fake", details.value)
         XCTAssertEqual(1, engine.requests.count)
     }
 }

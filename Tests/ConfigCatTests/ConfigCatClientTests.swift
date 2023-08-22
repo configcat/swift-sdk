@@ -233,9 +233,8 @@ class ConfigCatClientTests: XCTestCase {
         let engine = MockEngine()
         let cache = InMemoryConfigCache()
         let sdkKey = "test"
-        let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
-        let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
-        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().toJsonString())
+        let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().serialize())
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), httpEngine: engine, configCache: cache)
@@ -251,9 +250,8 @@ class ConfigCatClientTests: XCTestCase {
         let engine = MockEngine()
         let cache = InMemoryConfigCache()
         let sdkKey = "test"
-        let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
-        let cacheKey = String(keyToHash.sha1hex ?? keyToHash)
-        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().toJsonString())
+        let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
+        try cache.write(for: cacheKey, value: String(format: testJsonFormat, "\"fake\"").toEntryFromConfigString().serialize())
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), httpEngine: engine, configCache: cache)
@@ -440,9 +438,11 @@ class ConfigCatClientTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
         var ready = false
+        var state = ClientReadyState.hasUpToDateFlagData
         let hooks = Hooks()
-        hooks.addOnReady {
+        hooks.addOnReady { st in
             ready = true
+            state = st
         }
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: hooks, offline: true)
         let expectation = self.expectation(description: "wait for response")
@@ -453,6 +453,7 @@ class ConfigCatClientTests: XCTestCase {
 
         XCTAssertEqual(0, engine.requests.count)
         XCTAssertTrue(ready)
+        XCTAssertEqual(ClientReadyState.noFlagData, state)
     }
 
     func testDefaultUser() {
@@ -505,8 +506,9 @@ class ConfigCatClientTests: XCTestCase {
         hooks.addOnError { e in
             error = e
         }
-        hooks.addOnReady {
+        hooks.addOnReady { state in
             ready = true
+            XCTAssertEqual(ClientReadyState.noFlagData, state)
         }
         hooks.addOnConfigChanged { _ in
             changed = true
@@ -528,6 +530,19 @@ class ConfigCatClientTests: XCTestCase {
         waitFor {
             changed && ready && error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
+        
+        let expectation3 = self.expectation(description: "wait for ready second time")
+        client.hooks.addOnReady { state in
+            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            expectation3.fulfill()
+        }
+        let expectation4 = self.expectation(description: "wait for ready third time")
+        client.hooks.addOnReady { state in
+            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            expectation4.fulfill()
+        }
+        
+        wait(for: [expectation3, expectation4], timeout: 5)
     }
 
     func testHooksSub() {

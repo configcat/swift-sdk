@@ -33,14 +33,6 @@ public protocol ConfigCatClientProtocol {
     /// Gets all the setting keys asynchronously.
     func getAllKeys(completion: @escaping ([String]) -> ())
 
-    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
-    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetails() instead.")
-    func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser?, completion: @escaping (String?) -> ())
-
-    /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
-    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetails() instead.")
-    func getAllVariationIds(user: ConfigCatUser?, completion: @escaping ([String]) -> ())
-
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ())
 
@@ -64,18 +56,14 @@ public protocol ConfigCatClientProtocol {
 
     /**
      Initiates a force refresh asynchronously on the cached configuration.
-     
-     - Parameter completion: the function which will be called when refresh completed successfully.
-     */
-    @available(*, deprecated, message: "Use `forceRefresh()` instead")
-    func refresh(completion: @escaping () -> ())
-
-    /**
-     Initiates a force refresh asynchronously on the cached configuration.
 
      - Parameter completion: the function which will be called when refresh completed.
      */
     func forceRefresh(completion: @escaping (RefreshResult) -> ())
+    
+    /// Returns a snapshot of the current state of the feature flag data within the SDK.
+    /// The snapshot allows synchronous feature flag evaluation on the captured feature flag data.
+    func snapshot() -> ConfigCatSnapshot
 
     /// Async/await interface
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -111,16 +99,6 @@ public protocol ConfigCatClientProtocol {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getAllKeys() async -> [String]
 
-    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getValueDetails() instead.")
-    func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser?) async -> String?
-
-    /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    @available(*, deprecated, message: "This method is obsolete and will be removed in a future major version. Please use getAllValueDetails() instead.")
-    func getAllVariationIds(user: ConfigCatUser?) async -> [String]
-
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getKeyAndValue(for variationId: String) async -> KeyValue?
@@ -131,12 +109,11 @@ public protocol ConfigCatClientProtocol {
 
     /// Initiates a force refresh asynchronously on the cached configuration.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    @available(*, deprecated, message: "Use `forceRefresh()` instead")
-    func refresh() async
-
-    /// Initiates a force refresh asynchronously on the cached configuration.
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func forceRefresh() async -> RefreshResult
+    
+    /// Awaits for SDK initialization.
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func waitForReady() async -> ClientReadyState
     #endif
 
     /// Objective-C interface

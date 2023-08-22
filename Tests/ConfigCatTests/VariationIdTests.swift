@@ -52,8 +52,8 @@ class VariationIdTests: XCTestCase {
 
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
-            client.getVariationId(for: "key1", defaultVariationId: nil) { variationId in
-                XCTAssertEqual("fakeId1", variationId)
+            client.getValueDetails(for: "key1", defaultValue: false) { details in
+                XCTAssertEqual("fakeId1", details.variationId)
                 expectation.fulfill()
             }
         }
@@ -66,39 +66,8 @@ class VariationIdTests: XCTestCase {
         let client = createClient(httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
-            client.getVariationId(for: "nonexisting", defaultVariationId: "def") { variationId in
-                XCTAssertEqual("def", variationId)
-                expectation.fulfill()
-            }
-        }
-        wait(for: [expectation], timeout: 5)
-    }
-
-    func testGetAllVariationIds() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testJson, statusCode: 200))
-        let client = createClient(httpEngine: engine)
-
-        let expectation = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
-            client.getAllVariationIds { variationIds in
-                XCTAssertEqual(2, variationIds.count)
-                XCTAssertTrue(variationIds.contains("fakeId1"))
-                XCTAssertTrue(variationIds.contains("fakeId2"))
-                expectation.fulfill()
-            }
-        }
-        wait(for: [expectation], timeout: 5)
-    }
-
-    func testGetAllVariationIdsEmpty() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: "{}", statusCode: 200))
-        let client = createClient(httpEngine: engine)
-        let expectation = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
-            client.getAllVariationIds { variationIds in
-                XCTAssertEqual(0, variationIds.count)
+            client.getValueDetails(for: "nonexisting", defaultValue: false) { details in
+                XCTAssertEqual("", details.variationId)
                 expectation.fulfill()
             }
         }

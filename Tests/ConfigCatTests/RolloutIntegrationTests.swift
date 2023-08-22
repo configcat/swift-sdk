@@ -168,10 +168,10 @@ class RolloutIntegrationTests: XCTestCase {
                         }
                     }
                 } else {
-                    client.getVariationId(for: settingKey, defaultVariationId: "", user: user) { stringValue in
+                    client.getValueDetails(for: settingKey, defaultValue: nil, user: user) { (details: TypedEvaluationDetails<Any?>) in
                         let expectedValue = testObjects[i + 4]
-                        if stringValue != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, stringValue ?? ""))
+                        if details.variationId != expectedValue {
+                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, details.variationId ?? ""))
                         }
                         expectation.fulfill()
                     }

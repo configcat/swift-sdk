@@ -24,10 +24,10 @@ class AsyncAwaitTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
-        let id = await client.getVariationId(for: "key1", defaultVariationId: "")
-        XCTAssertEqual("fakeId1", id)
-        let id2 = await client.getVariationId(for: "key2", defaultVariationId: "", user: user)
-        XCTAssertEqual("9f21c24c", id2)
+        let details = await client.getValueDetails(for: "key1", defaultValue: false)
+        XCTAssertEqual("fakeId1", details.variationId)
+        let details2 = await client.getValueDetails(for: "key2", defaultValue: false, user: user)
+        XCTAssertEqual("9f21c24c", details2.variationId)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -106,6 +106,96 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertFalse(details.isDefaultValue)
         XCTAssertFalse(details.value)
         XCTAssertEqual(1, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyCache() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        
+        let initValue = testJsonMultiple.asEntryString()
+        let cache = SingleValueCache(initValue: initValue)
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+        XCTAssertEqual(0, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyExpiredCacheDownload() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        
+        let initValue = testJsonMultiple.asEntryString(date: Date().subtract(minutes: 5)!)
+        let cache = SingleValueCache(initValue: initValue)
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+        XCTAssertEqual(1, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyExpiredCacheFailedDownload() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
+        
+        let initValue = testJsonMultiple.asEntryString(date: Date().subtract(minutes: 5)!)
+        let cache = SingleValueCache(initValue: initValue)
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.hasCachedFlagDataOnly, state)
+        XCTAssertEqual(1, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyNoCacheFailedDownload() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.noFlagData, state)
+        XCTAssertEqual(1, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyManualNoCacheFailedDownload() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.noFlagData, state)
+        XCTAssertEqual(0, engine.requests.count)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testReadyManualCached() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
+        
+        let initValue = testJsonMultiple.asEntryString()
+        let cache = SingleValueCache(initValue: initValue)
+
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine, configCache: cache)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientReadyState.hasCachedFlagDataOnly, state)
+        XCTAssertEqual(0, engine.requests.count)
     }
     #endif
 }
