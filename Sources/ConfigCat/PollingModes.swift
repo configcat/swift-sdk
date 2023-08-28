@@ -7,7 +7,6 @@ public final class PollingModes: NSObject {
 
     - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
     - Parameter maxInitWaitTimeInSeconds: maximum waiting time between initialization and the first config acquisition in seconds.
-    - Parameter onConfigChanged: the configuration changed event handler.
     - Returns: A new `AutoPollingMode`.
     */
     @objc public static func autoPoll(autoPollIntervalInSeconds: Int = 60, maxInitWaitTimeInSeconds: Int = 5) -> PollingMode {
