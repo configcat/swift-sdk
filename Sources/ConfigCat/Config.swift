@@ -4,44 +4,68 @@ protocol JsonSerializable {
     func toJsonMap() -> [String: Any]
 }
 
-class ConfigEntry: Equatable, JsonSerializable {
+class ConfigEntry: Equatable {
     static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
         lhs.eTag == rhs.eTag
     }
 
     let config: Config
+    let configJson: String
     let eTag: String
     let fetchTime: Date
 
-    init(config: Config = Config.empty, eTag: String = "", fetchTime: Date = .distantPast) {
+    init(config: Config = Config.empty, configJson: String = "", eTag: String = "", fetchTime: Date = .distantPast) {
         self.config = config
         self.eTag = eTag
         self.fetchTime = fetchTime
+        self.configJson = configJson
     }
 
     func withFetchTime(time: Date) -> ConfigEntry {
-        ConfigEntry(config: config, eTag: eTag, fetchTime: time)
+        ConfigEntry(config: config, configJson: configJson, eTag: eTag, fetchTime: time)
+    }
+    
+    func isExpired(seconds: Int) -> Bool {
+        return Date().subtract(seconds: seconds)! > fetchTime;
     }
 
-    static func fromJson(json: [String: Any]) -> ConfigEntry {
-        let eTag = json["eTag"] as? String ?? ""
-        var config: Config = .empty
-        var fetchTime: Date = .distantPast
-        if let configFromMap = json["config"] as? [String: Any] {
-            config = Config.fromJson(json: configFromMap)
+    static func fromConfigJson(json: String, eTag: String, fetchTime: Date) -> Result<ConfigEntry, Error>  {
+        do {
+            guard let data = json.data(using: .utf8) else {
+                return .failure(ParseError(message: "Decode to utf8 data failed."))
+            }
+            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
+                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
+            }
+            
+            return .success(ConfigEntry(config: Config.fromJson(json: jsonObject), configJson: json, eTag: eTag, fetchTime: fetchTime))
+        } catch {
+            return .failure(error)
         }
-        if let fetchIntervalSince1970 = json["fetchTime"] as? Double {
-            fetchTime = Date(timeIntervalSince1970: fetchIntervalSince1970)
+    }
+    
+    static func fromCached(cached: String) -> Result<ConfigEntry, Error> {
+        guard let timeIndex = cached.firstIndex(of: "\n") else {
+            return .failure(ParseError(message: "Number of values is fewer than expected."))
         }
-        return ConfigEntry(config: config, eTag: eTag, fetchTime: fetchTime)
+        let withoutTime = String(cached.suffix(from: cached.index(timeIndex, offsetBy: 1)))
+        guard let eTagIndex = withoutTime.firstIndex(of: "\n") else {
+            return .failure(ParseError(message: "Number of values is fewer than expected."))
+        }
+        
+        let timeString = String(cached[..<timeIndex])
+        guard let time = Double(timeString) else {
+            return .failure(ParseError(message: String(format: "Invalid fetch time: %@", timeString)))
+        }
+        
+        let configJson = String(withoutTime.suffix(from: withoutTime.index(eTagIndex, offsetBy: 1)))
+        let eTag = String(withoutTime[..<eTagIndex])
+        
+        return fromConfigJson(json: configJson, eTag: eTag, fetchTime: Date(timeIntervalSince1970: time / 1000))
     }
 
-    func toJsonMap() -> [String: Any] {
-        [
-            "eTag": eTag,
-            "fetchTime": fetchTime.timeIntervalSince1970,
-            "config": config.toJsonMap()
-        ]
+    func serialize() -> String {
+        String(format: "%.0f", floor(fetchTime.timeIntervalSince1970 * 1000)) + "\n" + eTag + "\n" + configJson
     }
 
     var isEmpty: Bool {

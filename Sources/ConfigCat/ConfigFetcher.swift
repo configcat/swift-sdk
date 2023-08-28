@@ -137,10 +137,10 @@ class ConfigFetcher: NSObject {
                     self.log.debug(message: "Fetch was successful: new config fetched")
                     let etag = response.allHeaderFields["Etag"] as? String ?? ""
                     let jsonString = String(data: data, encoding: .utf8) ?? ""
-                    let configResult = self.parseConfigFromJson(json: jsonString)
-                    switch configResult {
-                    case .success(let config):
-                        completion(.fetched(ConfigEntry(config: config, eTag: etag, fetchTime: Date())))
+                    let result = ConfigEntry.fromConfigJson(json: jsonString, eTag: etag, fetchTime: Date())
+                    switch result {
+                    case .success(let entry):
+                        completion(.fetched(entry))
                     case .failure(let error):
                         let message = String(format: "Fetching config JSON was successful but the HTTP response content was invalid. "
                             + "JSON parsing failed. %@", error.localizedDescription)
@@ -167,26 +167,12 @@ class ConfigFetcher: NSObject {
     }
 
     private func getRequest(url: String, eTag: String) -> URLRequest {
-        var request = URLRequest(url: URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName + ".json")!)
+        var request = URLRequest(url: URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName)!)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.addValue("ConfigCat-Swift/" + mode + "-" + Constants.version, forHTTPHeaderField: "X-ConfigCat-UserAgent")
         if !eTag.isEmpty {
             request.addValue(eTag, forHTTPHeaderField: "If-None-Match")
         }
         return request
-    }
-
-    private func parseConfigFromJson(json: String) -> Result<Config, Error> {
-        do {
-            guard let data = json.data(using: .utf8) else {
-                return .failure(ParseError(message: "Decode to utf8 data failed."))
-            }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
-            }
-            return .success(Config.fromJson(json: jsonObject))
-        } catch {
-            return .failure(error)
-        }
     }
 }

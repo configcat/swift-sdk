@@ -1,10 +1,6 @@
 import Foundation
 import os.log
 
-extension ConfigCatClient {
-    public typealias ConfigChangedHandler = () -> ()
-}
-
 /// Describes the location of your feature flag and setting data within the ConfigCat CDN.
 @objc public enum DataGovernance: Int {
     /// Select this if your feature flags are published to all global CDN nodes.
@@ -16,7 +12,7 @@ extension ConfigCatClient {
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let log: Logger
-    private let evaluator: RolloutEvaluator
+    private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
@@ -25,33 +21,6 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
     private static let mutex = Mutex()
     private static var instances: [String: Weak<ConfigCatClient>] = [:]
-
-    /**
-     Initializes a new `ConfigCatClient`.
-     
-     - Parameter sdkKey: the SDK Key for to communicate with the ConfigCat services.
-     - Parameter dataGovernance: default: Global. Set this parameter to be in sync with the Data Governance preference on the Dashboard:
-     https://app.configcat.com/organization/data-governance
-     - Parameter configCache: a cache implementation, see `ConfigCache`.
-     - Parameter refreshMode: the polling mode, `autoPoll`, `lazyLoad` or `manualPoll`.
-     - Parameter sessionConfiguration: the url session configuration.
-     - Parameter baseUrl: use this if you want to use a proxy server between your application and ConfigCat.
-     - Parameter flagOverrides: An OverrideDataSource implementation used to override feature flags & settings.
-     - Parameter logLevel: default: warning. Internal log level.
-     - Returns: A new `ConfigCatClient`.
-     */
-    @available(*, deprecated, message: "Use `ConfigCatClient.get()` instead")
-    @objc public convenience init(sdkKey: String,
-                                  dataGovernance: DataGovernance = DataGovernance.global,
-                                  configCache: ConfigCache? = nil,
-                                  refreshMode: PollingMode = PollingModes.autoPoll(),
-                                  sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default,
-                                  baseUrl: String = "",
-                                  flagOverrides: OverrideDataSource? = nil,
-                                  logLevel: LogLevel = .warning) {
-        self.init(sdkKey: sdkKey, pollingMode: refreshMode, httpEngine: URLSessionEngine(session: URLSession(configuration: sessionConfiguration)),
-                configCache: configCache ?? UserDefaultsCache(), baseUrl: baseUrl, dataGovernance: dataGovernance, flagOverrides: flagOverrides, logLevel: logLevel)
-    }
 
     init(sdkKey: String,
          pollingMode: PollingMode,
@@ -64,20 +33,20 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          defaultUser: ConfigCatUser? = nil,
          logLevel: LogLevel = .warning,
          offline: Bool = false) {
-        if sdkKey.isEmpty {
-            assert(false, "sdkKey cannot be empty")
-        }
+        
+        assert(!sdkKey.isEmpty, "sdkKey cannot be empty")
 
         self.sdkKey = sdkKey
         self.hooks = hooks ?? Hooks()
         self.defaultUser = defaultUser
         log = Logger(level: logLevel, hooks: self.hooks)
         overrideDataSource = flagOverrides
-        evaluator = RolloutEvaluator(logger: log)
+        flagEvaluator = FlagEvaluator(log: log, evaluator: RolloutEvaluator(logger: log), hooks: self.hooks)
 
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
             // configService is not needed in localOnly mode
             configService = nil
+            hooks?.invokeOnReady(state: .hasLocalOverrideFlagDataOnly)
         } else {
             let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
@@ -195,58 +164,17 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
      */
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
+        assert(!key.isEmpty, "key cannot be empty")
         let evalUser = user ?? defaultUser
-        if Value.self != String.self &&
-                   Value.self != String?.self &&
-                   Value.self != Int.self &&
-                   Value.self != Int?.self &&
-                   Value.self != Double.self &&
-                   Value.self != Double?.self &&
-                   Value.self != Bool.self &&
-                   Value.self != Bool?.self &&
-                   Value.self != Any.self &&
-                   Value.self != Any?.self {
-            let message = "Only String, Integer, Double, Bool or Any types are supported."
-            log.error(eventId: 2022, message: message)
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                    value: defaultValue,
-                    error: message,
-                    user: evalUser))
+        
+        if let _ = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
             completion(defaultValue)
             return
         }
+        
         getSettings { result in
-            if result.isEmpty {
-                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
-                    key, "\(defaultValue)")
-                self.log.error(eventId: 1000, message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                        value: defaultValue,
-                        error: message,
-                        user: evalUser))
-                completion(defaultValue)
-                return
-            }
-            guard let setting = result.settings[key] else {
-                let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                                     key, "\(defaultValue)", result.settings.keys.map { key in
-                    return "'"+key+"'"
-                }.joined(separator: ", "))
-                self.log.error(eventId: 1001, message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                        value: defaultValue,
-                        error: message,
-                        user: evalUser))
-                completion(defaultValue)
-                return
-            }
-
-            let evalDetails = self.evaluate(setting: setting, key: key, user: evalUser, fetchTime: result.fetchTime)
-            completion(evalDetails.value as? Value ?? defaultValue)
+            let evalDetails = self.flagEvaluator.evaluateFlag(result: result, key: key, defaultValue: defaultValue, user: evalUser)
+            completion(evalDetails.value)
         }
     }
 
@@ -259,70 +187,17 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
      */
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
+        assert(!key.isEmpty, "key cannot be empty")
         let evalUser = user ?? defaultUser
-        if Value.self != String.self &&
-                   Value.self != String?.self &&
-                   Value.self != Int.self &&
-                   Value.self != Int?.self &&
-                   Value.self != Double.self &&
-                   Value.self != Double?.self &&
-                   Value.self != Bool.self &&
-                   Value.self != Bool?.self &&
-                   Value.self != Any.self &&
-                   Value.self != Any?.self {
-            let message = "Only String, Integer, Double, Bool or Any types are supported."
-            log.error(eventId: 2022, message: message)
-            hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
+        
+        if let error = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
+            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, user: evalUser))
             return
         }
+        
         getSettings { result in
-            if result.isEmpty {
-                let message = String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",
-                    key, "\(defaultValue)")
-                self.log.error(eventId: 1000, message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-                return
-            }
-            guard let setting = result.settings[key] else {
-                let message = String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                    key, "\(defaultValue)", result.settings.keys.map { key in
-                    return "'"+key+"'"
-                }.joined(separator: ", "))
-                self.log.error(eventId: 1001, message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
-                        value: defaultValue,
-                        error: message,
-                        user: evalUser))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-                return
-            }
-
-            let details = self.evaluate(setting: setting, key: key, user: evalUser, fetchTime: result.fetchTime)
-            guard let typedValue = details.value as? Value else {
-                let message = String(format: "Failed to evaluate setting '%@' (the value '%@' cannot be converted to the requested type). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'.",
-                    key, "\(details.value)", "\(defaultValue)")
-                self.log.error(eventId: 2002, message: message)
-                self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-                completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: message, user: evalUser))
-                return
-            }
-
-            self.hooks.invokeOnFlagEvaluated(details: details)
-            completion(TypedEvaluationDetails<Value>(key: key,
-                    value: typedValue,
-                    variationId: details.variationId ?? "",
-                    fetchTime: result.fetchTime,
-                    user: user,
-                    matchedEvaluationRule: details.matchedEvaluationRule,
-                    matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule))
-
+            let evalDetails = self.flagEvaluator.evaluateFlag(result: result, key: key, defaultValue: defaultValue, user: evalUser)
+            completion(evalDetails)
         }
     }
 
@@ -344,7 +219,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
                 detailsResult.append(details)
             }
             completion(detailsResult)
@@ -360,57 +235,6 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 return
             }
             completion([String](result.settings.keys))
-        }
-    }
-
-    /// Gets the Variation ID (analytics) of a feature flag or setting based on it's key asynchronously.
-    @objc public func getVariationId(for key: String, defaultVariationId: String?, user: ConfigCatUser? = nil, completion: @escaping (String?) -> ()) {
-        if key.isEmpty {
-            assert(false, "key cannot be empty")
-        }
-        getSettings { result in
-            if result.isEmpty {
-                self.log.error(eventId: 1000, message: String(format: "Config JSON is not present when evaluating setting '%@'. Returning the `defaultVariationId` parameter that you specified in your application: '%@'.",
-                    key, "\(defaultVariationId ?? "")"))
-                completion(defaultVariationId)
-                return
-            }
-            guard let setting = result.settings[key] else {
-                self.log.error(eventId: 1001, message: String(format: "Failed to evaluate setting '%@' (the key was not found in config JSON). "
-                    + "Returning the `defaultVariationId` parameter that you specified in your application: '%@'. Available keys: [%@].",
-                    key, "\(defaultVariationId ?? "")", result.settings.keys.map { key in
-                    return "'"+key+"'"
-                }.joined(separator: ", ")))
-                completion(defaultVariationId)
-                return
-            }
-
-            let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-            completion(details.variationId ?? defaultVariationId)
-        }
-    }
-
-    /// Gets the Variation IDs (analytics) of all feature flags or settings asynchronously.
-    @objc public func getAllVariationIds(user: ConfigCatUser? = nil, completion: @escaping ([String]) -> ()) {
-        getSettings { result in
-            if result.isEmpty {
-                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
-                completion([])
-                return
-            }
-            var variationIds = [String]()
-            for key in result.settings.keys {
-                guard let setting = result.settings[key] else {
-                    continue
-                }
-                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-                if let variationId = details.variationId {
-                    variationIds.append(variationId)
-                } else {
-                    self.log.error(eventId: 2012, message: String(format: "Failed to evaluate the variation ID for the key '%@'.", key))
-                }
-            }
-            completion(variationIds)
         }
     }
 
@@ -459,27 +283,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.evaluate(setting: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
+                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
                 allValues[key] = details.value
             }
             completion(allValues)
-        }
-    }
-
-    /**
-     Initiates a force refresh asynchronously on the cached configuration.
-
-     - Parameter completion: the function which will be called when refresh completed successfully.
-     */
-    @available(*, deprecated, message: "Use `forceRefresh()` instead")
-    @objc public func refresh(completion: @escaping () -> ()) {
-        if let configService = configService {
-            configService.refresh { _ in
-                completion()
-            }
-        } else {
-            log.warning(eventId: 3202, message: "Client is configured to use local-only mode, thus `.refresh()` has no effect.")
-            completion()
         }
     }
 
@@ -497,6 +304,26 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             completion(RefreshResult(success: false, error: message))
         }
     }
+    
+    @objc public func snapshot() -> ConfigCatSnapshot {
+        return ConfigCatSnapshot(flagEvaluator: flagEvaluator, settingsSnapshot: getInMemorySettings(), defaultUser: defaultUser, log: log)
+    }
+    
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    @discardableResult
+    public func waitForReady() async -> ClientReadyState {
+        await withCheckedContinuation { continuation in
+            guard let configService = self.configService else {
+                continuation.resume(returning: .hasLocalOverrideFlagDataOnly)
+                return
+            }
+            configService.onReady { state in
+                continuation.resume(returning: state)
+            }
+        }
+    }
+    #endif
 
     func getSettings(completion: @escaping (SettingResult) -> Void) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
@@ -529,6 +356,32 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             completion(settings)
         }
     }
+    
+    func getInMemorySettings() -> SettingResult {
+        if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
+            return SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
+        }
+        guard let configService = configService else {
+            return SettingResult.empty
+        }
+        
+        let inMemory = configService.inMemory
+        
+        if let overrideDataSource = overrideDataSource {
+            if overrideDataSource.behaviour == .localOverRemote {
+                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (_, new) in
+                    new
+                }, fetchTime: inMemory.fetchTime)
+            }
+            if overrideDataSource.behaviour == .remoteOverLocal {
+                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (current, _) in
+                    current
+                }, fetchTime: inMemory.fetchTime)
+            }
+        }
+        
+        return SettingResult(settings: inMemory.config.entries, fetchTime: inMemory.fetchTime)
+    }
 
     /// Sets the default user.
     @objc public func setDefaultUser(user: ConfigCatUser) {
@@ -555,21 +408,5 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         get {
             configService?.isOffline ?? true
         }
-    }
-
-    func evaluate(setting: Setting, key: String, user: ConfigCatUser?, fetchTime: Date) -> EvaluationDetails {
-        let (value, variationId, evaluateLog, rolloutRule, percentageRule): (Any, String?, String?, RolloutRule?, PercentageRule?) = evaluator.evaluate(setting: setting, key: key, user: user)
-        if let evaluateLog = evaluateLog {
-            log.info(eventId: 5000, message: evaluateLog)
-        }
-        let details = EvaluationDetails(key: key,
-                value: value,
-                variationId: variationId,
-                fetchTime: fetchTime,
-                user: user,
-                matchedEvaluationRule: rolloutRule,
-                matchedEvaluationPercentageRule: percentageRule)
-        hooks.invokeOnFlagEvaluated(details: details)
-        return details
     }
 }

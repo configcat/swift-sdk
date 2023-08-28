@@ -56,8 +56,7 @@ class ConfigService {
         self.pollingMode = pollingMode
         self.hooks = hooks
         self.offline = offline
-        let keyToHash = "swift_" + Constants.configJsonName + "_" + sdkKey
-        cacheKey = String(keyToHash.sha1hex ?? keyToHash)
+        cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
 
         if let autoPoll = pollingMode as? AutoPollingMode, !offline {
 
@@ -78,13 +77,15 @@ class ConfigService {
                 if !this.initialized {
                     this.log.warning(eventId: 4200, message: String(format: "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
                     this.initialized = true
-                    hooks.invokeOnReady()
+                    hooks.invokeOnReady(state: this.determineReadyState())
                     this.callCompletions(result: .success(this.cachedEntry))
                     this.completions = nil
                 }
             })
             initTimer?.resume()
         } else {
+            // Sync up with cache before reporting ready state
+            cachedEntry = readCache()
             setInitialized()
         }
     }
@@ -100,8 +101,8 @@ class ConfigService {
 
     func settings(completion: @escaping (SettingResult) -> Void) {
         switch pollingMode {
-        case let lazy as LazyLoadingMode:
-            fetchIfOlder(time: Date().subtract(seconds: lazy.cacheRefreshIntervalInSeconds)!) { result in
+        case let lazyMode as LazyLoadingMode:
+            fetchIfOlder(time: Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!) { result in
                 switch result {
                 case .success(let entry): completion(!entry.isEmpty
                     ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
@@ -169,6 +170,24 @@ class ConfigService {
             return offline
         }
     }
+    
+    func onReady(completion: @escaping (ClientReadyState) -> Void) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        if initialized {
+            completion(determineReadyState())
+        } else {
+            hooks.addOnReady(handler: completion)
+        }
+    }
+    
+    var inMemory: ConfigEntry {
+        get {
+            mutex.lock()
+            defer { mutex.unlock() }
+            return cachedEntry
+        }
+    }
 
     private func fetchIfOlder(time: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
         mutex.lock()
@@ -216,14 +235,10 @@ class ConfigService {
         mutex.lock()
         defer { mutex.unlock() }
 
-        setInitialized()
         switch response {
         case .fetched(let entry):
             cachedEntry = entry
             writeCache(entry: entry)
-            if let auto = pollingMode as? AutoPollingMode {
-                auto.onConfigChanged?()
-            }
             hooks.invokeOnConfigChanged(settings: entry.config.entries)
             callCompletions(result: .success(entry))
         case .notModified:
@@ -238,12 +253,13 @@ class ConfigService {
             callCompletions(result: .failure(error, cachedEntry))
         }
         completions = nil
+        setInitialized()
     }
 
     private func setInitialized() {
         if !initialized {
             initialized = true
-            hooks.invokeOnReady()
+            hooks.invokeOnReady(state: determineReadyState())
         }
     }
 
@@ -279,12 +295,7 @@ class ConfigService {
             return
         }
         do {
-            let jsonMap = entry.toJsonMap()
-            let json = try JSONSerialization.data(withJSONObject: jsonMap, options: [])
-            guard let jsonString = String(data: json, encoding: .utf8) else {
-                log.error(eventId: 2201, message: "Error occurred while writing the cache. Could not convert the JSON object to string.")
-                return
-            }
+            let jsonString = entry.serialize()
             cachedJsonString = jsonString
             try cache.write(for: cacheKey, value: jsonString)
         } catch {
@@ -301,19 +312,39 @@ class ConfigService {
             if json.isEmpty || json == cachedJsonString {
                 return .empty
             }
-            guard let data = json.data(using: .utf8) else {
-                log.error(eventId: 2200, message: "Error occurred while reading the cache. Decode to utf8 data failed.")
+            let cached = ConfigEntry.fromCached(cached: json)
+            switch cached {
+            case .success(let entry):
+                cachedJsonString = json
+                return entry
+            case .failure(let error):
+                log.error(eventId: 2200, message: String(format: "Error occurred while reading the cache. %@", error.localizedDescription))
                 return .empty
             }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                log.error(eventId: 2200, message: "Error occurred while reading the cache. Convert to [String: Any] map failed.")
-                return .empty
-            }
-            cachedJsonString = json
-            return .fromJson(json: jsonObject)
         } catch {
             log.error(eventId: 2200, message: String(format: "Error occurred while reading the cache. %@", error.localizedDescription))
             return .empty
         }
+    }
+    
+    private func determineReadyState() -> ClientReadyState {
+        if cachedEntry.isEmpty {
+            return .noFlagData
+        }
+        
+        switch pollingMode {
+        case let lazyMode as LazyLoadingMode:
+            if cachedEntry.isExpired(seconds: lazyMode.cacheRefreshIntervalInSeconds) {
+                return .hasCachedFlagDataOnly
+            }
+        case let autoMode as AutoPollingMode:
+            if cachedEntry.isExpired(seconds: autoMode.autoPollIntervalInSeconds) {
+                return .hasCachedFlagDataOnly
+            }
+        default: // manual polling
+            return .hasCachedFlagDataOnly
+        }
+        
+        return .hasUpToDateFlagData
     }
 }

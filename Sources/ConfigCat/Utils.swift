@@ -38,8 +38,16 @@ extension Date {
 }
 
 class Constants {
-    static let version: String = "9.4.0"
-    static let configJsonName: String = "config_v5"
+    static let version: String = "10.0.0"
+    static let configJsonName: String = "config_v5.json"
+    static let configJsonCacheVersion: String = "v2"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
+}
+
+class Utils {
+    public static func generateCacheKey(sdkKey: String) -> String {
+        let keyToHash = sdkKey + "_" + Constants.configJsonName + "_" + Constants.configJsonCacheVersion
+        return String(keyToHash.sha1hex ?? keyToHash)
+    }
 }

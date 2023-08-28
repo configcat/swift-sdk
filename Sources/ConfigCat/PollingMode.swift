@@ -8,16 +8,14 @@ import Foundation
 class AutoPollingMode: PollingMode {
     let autoPollIntervalInSeconds: Int
     let maxInitWaitTimeInSeconds: Int
-    let onConfigChanged: ConfigCatClient.ConfigChangedHandler?
 
-    init(autoPollIntervalInSeconds: Int, maxInitWaitTimeInSeconds: Int, onConfigChanged: ConfigCatClient.ConfigChangedHandler? = nil) {
+    init(autoPollIntervalInSeconds: Int, maxInitWaitTimeInSeconds: Int) {
         self.autoPollIntervalInSeconds = autoPollIntervalInSeconds < 1
                 ? 1
                 : autoPollIntervalInSeconds
         self.maxInitWaitTimeInSeconds = maxInitWaitTimeInSeconds < 1
                 ? 1
                 : maxInitWaitTimeInSeconds
-        self.onConfigChanged = onConfigChanged
     }
 
     var identifier: String {

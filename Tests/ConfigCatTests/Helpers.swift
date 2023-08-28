@@ -4,14 +4,11 @@ import XCTest
 
 extension String {
     func toEntryFromConfigString() -> ConfigEntry {
-        let data = data(using: .utf8)!
-        let jsonObject = try! JSONSerialization.jsonObject(with: data, options: []) as! [String: Any]
-        let config = Config.fromJson(json: jsonObject)
-        return ConfigEntry(config: config)
+        return try! ConfigEntry.fromConfigJson(json: self, eTag: "", fetchTime: .distantPast).get()
     }
 
     func asEntryString(date: Date = Date()) -> String {
-        toEntryFromConfigString().withFetchTime(time: date).toJsonString()
+        toEntryFromConfigString().withFetchTime(time: date).serialize()
     }
 }
 
