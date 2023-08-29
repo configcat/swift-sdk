@@ -551,6 +551,7 @@ class ConfigCatClientTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: "", statusCode: 404))
         var error = ""
         var changed = false
+        var ready = false
         let hooks = Hooks()
         let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine, hooks: hooks)
         client.hooks.addOnError { e in
@@ -558,6 +559,10 @@ class ConfigCatClientTests: XCTestCase {
         }
         client.hooks.addOnConfigChanged { _ in
             changed = true
+        }
+        client.hooks.addOnReady { state in
+            ready = true
+            XCTAssertEqual(ClientReadyState.noFlagData, state)
         }
 
         let expectation = self.expectation(description: "wait for response")
@@ -574,8 +579,44 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         waitFor {
-            changed && error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
+            changed && ready && error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") && error.contains("404")
         }
+    }
+    
+    func testReadyHookGetValue() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        
+        let expectation = self.expectation(description: "wait for response")
+        
+        client.hooks.addOnReady { state in
+            XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+            client.getValue(for: "fakeKey", defaultValue: "") { val in
+                XCTAssertEqual("fake", val)
+                expectation.fulfill()
+            }
+        }
+
+        wait(for: [expectation], timeout: 5)
+    }
+    
+    func testReadyHookGetValueSnapshot() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "\"fake\""), statusCode: 200))
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        
+        let expectation = self.expectation(description: "wait for response")
+        
+        client.hooks.addOnReady { state in
+            XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+            let snapshot = client.snapshot()
+            let val = snapshot.getValue(for: "fakeKey", defaultValue: "")
+            XCTAssertEqual("fake", val)
+            expectation.fulfill()
+        }
+
+        wait(for: [expectation], timeout: 5)
     }
 
     func testLazyCache() throws {
