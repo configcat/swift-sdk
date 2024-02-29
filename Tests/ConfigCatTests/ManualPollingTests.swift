@@ -18,7 +18,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -29,7 +29,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -58,7 +58,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -69,7 +69,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertFalse(result.success)
             XCTAssertTrue(result.error?.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -95,7 +95,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -109,7 +109,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -133,7 +133,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -144,7 +144,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }

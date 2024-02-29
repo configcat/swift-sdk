@@ -15,14 +15,14 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -34,7 +34,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation3 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue)
             expectation3.fulfill()
         }
         wait(for: [expectation3], timeout: 4)
@@ -51,14 +51,14 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -70,7 +70,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation3 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation3.fulfill()
         }
         wait(for: [expectation3], timeout: 5)
@@ -88,7 +88,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -101,7 +101,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -121,7 +121,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test", result.settings["fakeKey"]?.value.stringValue)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -131,7 +131,7 @@ class LazyLoadingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { result in
-            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue as? String)
+            XCTAssertEqual("test2", result.settings["fakeKey"]?.value.stringValue)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
