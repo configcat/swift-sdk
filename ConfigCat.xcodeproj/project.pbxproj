@@ -69,7 +69,6 @@
 		F17DEE2D288876F7009C3E48 /* ConfigService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE26288876F6009C3E48 /* ConfigService.swift */; };
 		F17DEE2E288876F7009C3E48 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE27288876F6009C3E48 /* Utils.swift */; };
 		F17DEE2F288876F7009C3E48 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = F17DEE27288876F6009C3E48 /* Utils.swift */; };
-		F183A1912B8F823E0015967E /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F183A1902B8F823E0015967E /* Info.plist */; };
 		F183A19E2B8F824F0015967E /* testmatrix_variationid.csv in Resources */ = {isa = PBXBuildFile; fileRef = F183A1922B8F824F0015967E /* testmatrix_variationid.csv */; };
 		F183A19F2B8F824F0015967E /* testmatrix_segments_old.csv in Resources */ = {isa = PBXBuildFile; fileRef = F183A1932B8F824F0015967E /* testmatrix_segments_old.csv */; };
 		F183A1A02B8F824F0015967E /* testmatrix_semantic_2.csv in Resources */ = {isa = PBXBuildFile; fileRef = F183A1942B8F824F0015967E /* testmatrix_semantic_2.csv */; };
@@ -149,7 +148,6 @@
 		F17DEE25288876F6009C3E48 /* Mutex.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Mutex.swift; sourceTree = "<group>"; };
 		F17DEE26288876F6009C3E48 /* ConfigService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigService.swift; sourceTree = "<group>"; };
 		F17DEE27288876F6009C3E48 /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
-		F183A1902B8F823E0015967E /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Resources/Info.plist; sourceTree = "<group>"; };
 		F183A1922B8F824F0015967E /* testmatrix_variationid.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_variationid.csv; path = Resources/testmatrix_variationid.csv; sourceTree = "<group>"; };
 		F183A1932B8F824F0015967E /* testmatrix_segments_old.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_segments_old.csv; path = Resources/testmatrix_segments_old.csv; sourceTree = "<group>"; };
 		F183A1942B8F824F0015967E /* testmatrix_semantic_2.csv */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = testmatrix_semantic_2.csv; path = Resources/testmatrix_semantic_2.csv; sourceTree = "<group>"; };
@@ -267,7 +265,6 @@
 		3F880A43207BE92000087A6B /* Tests */ = {
 			isa = PBXGroup;
 			children = (
-				F183A1902B8F823E0015967E /* Info.plist */,
 				F183A18F2B8F82290015967E /* Data */,
 				F14961CE28FF71400095A72A /* EvaluationDetailsExtensionTests.swift */,
 				F1BC414B28E1D6C900F2230A /* Helpers.swift */,
@@ -425,7 +422,6 @@
 				F183A2042B8FAC090015967E /* json in Resources */,
 				F183A1A12B8F824F0015967E /* testmatrix_semantic.csv in Resources */,
 				F183A19F2B8F824F0015967E /* testmatrix_segments_old.csv in Resources */,
-				F183A1912B8F823E0015967E /* Info.plist in Resources */,
 				F183A1A22B8F824F0015967E /* testmatrix_comparators_v6.csv in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
