@@ -4,14 +4,14 @@ import XCTest
 class ConfigFetcherTests: XCTestCase {
     func testSimpleFetchSuccess() throws {
         let engine = MockEngine()
-        let testBody = #"{ "f": { "fakeKey": { "v": "fakeValue", "p": [], "r": [] } } }"#
+        let testBody = #"{ "f": { "fakeKey": { "v": { "s": "fakeValue" }, "t":1 } } }"#
         engine.enqueueResponse(response: Response(body: testBody, statusCode: 200))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
-            XCTAssertEqual("fakeValue", response.entry?.config.entries["fakeKey"]?.value as? String)
+            XCTAssertEqual("fakeValue", response.entry?.config.settings["fakeKey"]?.value.stringValue)
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -22,7 +22,7 @@ class ConfigFetcherTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: "", statusCode: 304))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.notModified, response)
             XCTAssertNil(response.entry)
@@ -36,7 +36,7 @@ class ConfigFetcherTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: "", statusCode: 404))
 
         let expectation = self.expectation(description: "wait for response")
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.failure(message: "", isTransient: false), response)
             XCTAssertNil(response.entry)
@@ -48,11 +48,11 @@ class ConfigFetcherTests: XCTestCase {
     func testFetchNotModifiedEtag() throws {
         let engine = MockEngine()
         let etag = "test"
-        let testBody = #"{ "f": { "fakeKey": { "v": "fakeValue", "p": [], "r": [] } } }"#
+        let testBody = #"{ "f": { "fakeKey": { "v": { "s": "fakeValue" }, "t":1 } } }"#
         engine.enqueueResponse(response: Response(body: testBody, statusCode: 200, headers: ["Etag": etag]))
         engine.enqueueResponse(response: Response(body: "", statusCode: 304))
 
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         let expectation = self.expectation(description: "wait for response")
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)

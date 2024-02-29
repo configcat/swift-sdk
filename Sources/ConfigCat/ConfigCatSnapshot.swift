@@ -2,11 +2,11 @@ import Foundation
 
 public final class ConfigCatSnapshot: NSObject {
     private let flagEvaluator: FlagEvaluator
-    private let settingsSnapshot: SettingResult
+    private let settingsSnapshot: SettingsResult
     private let defaultUser: ConfigCatUser?
-    private let log: Logger
+    private let log: InternalLogger
     
-    init(flagEvaluator: FlagEvaluator, settingsSnapshot: SettingResult, defaultUser: ConfigCatUser?, log: Logger) {
+    init(flagEvaluator: FlagEvaluator, settingsSnapshot: SettingsResult, defaultUser: ConfigCatUser?, log: InternalLogger) {
         self.flagEvaluator = flagEvaluator
         self.settingsSnapshot = settingsSnapshot
         self.defaultUser = defaultUser

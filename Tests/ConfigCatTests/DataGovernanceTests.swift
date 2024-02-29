@@ -2,7 +2,7 @@ import XCTest
 @testable import ConfigCat
 
 class DataGovernanceTests: XCTestCase {
-    private let jsonTemplate: String = #"{ "p": { "u": "%@", "r": %@ }, "f": {} }"#
+    private let jsonTemplate: String = #"{ "p": { "u": "%@", "r": %@, "s":"" }, "f": {} }"#
     private let customCdnUrl: String = "https://custom-cdn.configcat.com"
 
     func testShouldStayOnServer() throws {
@@ -215,7 +215,7 @@ class DataGovernanceTests: XCTestCase {
 
     private func createFetcher(http: HttpEngine, url: String = "") -> ConfigFetcher {
         ConfigFetcher(httpEngine: http,
-                logger: Logger.noLogger,
+                logger: InternalLogger.noLogger,
                 sdkKey: "",
                 mode: "",
                 dataGovernance: DataGovernance.global,

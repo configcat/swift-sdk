@@ -7,8 +7,8 @@ public class EvaluationDetailsBase: NSObject {
     @objc public let isDefaultValue: Bool
     @objc public let error: String?
     @objc public let fetchTime: Date
-    @objc public let matchedEvaluationRule: RolloutRule?
-    @objc public let matchedEvaluationPercentageRule: PercentageRule?
+    @objc public let matchedTargetingRule: TargetingRule?
+    @objc public let matchedPercentageOption: PercentageOption?
 
     init(key: String,
          variationId: String?,
@@ -16,16 +16,16 @@ public class EvaluationDetailsBase: NSObject {
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
          error: String? = nil,
-         matchedEvaluationRule: RolloutRule? = nil,
-         matchedEvaluationPercentageRule: PercentageRule? = nil) {
+         matchedTargetingRule: TargetingRule? = nil,
+         matchedPercentageOption: PercentageOption? = nil) {
         self.key = key
         self.variationId = variationId
         self.user = user
         self.fetchTime = fetchTime
         self.isDefaultValue = isDefaultValue
         self.error = error
-        self.matchedEvaluationRule = matchedEvaluationRule
-        self.matchedEvaluationPercentageRule = matchedEvaluationPercentageRule
+        self.matchedTargetingRule = matchedTargetingRule
+        self.matchedPercentageOption = matchedPercentageOption
     }
 }
 
@@ -39,10 +39,10 @@ public final class EvaluationDetails: EvaluationDetailsBase {
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
          error: String? = nil,
-         matchedEvaluationRule: RolloutRule? = nil,
-         matchedEvaluationPercentageRule: PercentageRule? = nil) {
+         matchedTargetingRule: TargetingRule? = nil,
+         matchedPercentageOption: PercentageOption? = nil) {
         self.value = value
-        super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedEvaluationRule: matchedEvaluationRule, matchedEvaluationPercentageRule: matchedEvaluationPercentageRule)
+        super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedTargetingRule: matchedTargetingRule, matchedPercentageOption: matchedPercentageOption)
     }
 
     static func fromError(key: String, value: Any, error: String, user: ConfigCatUser?) -> EvaluationDetails {
@@ -56,7 +56,7 @@ public final class StringEvaluationDetails: EvaluationDetailsBase {
     init(value: String,
          base: EvaluationDetailsBase) {
         self.value = value
-        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedTargetingRule: base.matchedTargetingRule, matchedPercentageOption: base.matchedPercentageOption)
     }
 }
 
@@ -66,7 +66,7 @@ public final class BoolEvaluationDetails: EvaluationDetailsBase {
     init(value: Bool,
          base: EvaluationDetailsBase) {
         self.value = value
-        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedTargetingRule: base.matchedTargetingRule, matchedPercentageOption: base.matchedPercentageOption)
     }
 }
 
@@ -76,7 +76,7 @@ public final class IntEvaluationDetails: EvaluationDetailsBase {
     init(value: Int,
          base: EvaluationDetailsBase) {
         self.value = value
-        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedTargetingRule: base.matchedTargetingRule, matchedPercentageOption: base.matchedPercentageOption)
     }
 }
 
@@ -86,7 +86,7 @@ public final class DoubleEvaluationDetails: EvaluationDetailsBase {
     init(value: Double,
          base: EvaluationDetailsBase) {
         self.value = value
-        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedEvaluationRule: base.matchedEvaluationRule, matchedEvaluationPercentageRule: base.matchedEvaluationPercentageRule)
+        super.init(key: base.key, variationId: base.variationId, fetchTime: base.fetchTime, user: base.user, isDefaultValue: base.isDefaultValue, error: base.error, matchedTargetingRule: base.matchedTargetingRule, matchedPercentageOption: base.matchedPercentageOption)
     }
 }
 
@@ -100,13 +100,13 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
          user: ConfigCatUser? = nil,
          isDefaultValue: Bool = false,
          error: String? = nil,
-         matchedEvaluationRule: RolloutRule? = nil,
-         matchedEvaluationPercentageRule: PercentageRule? = nil) {
+         matchedTargetingRule: TargetingRule? = nil,
+         matchedPercentageOption: PercentageOption? = nil) {
         self.value = value
-        super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedEvaluationRule: matchedEvaluationRule, matchedEvaluationPercentageRule: matchedEvaluationPercentageRule)
+        super.init(key: key, variationId: variationId, fetchTime: fetchTime, user: user, isDefaultValue: isDefaultValue, error: error, matchedTargetingRule: matchedTargetingRule, matchedPercentageOption: matchedPercentageOption)
     }
 
-    static func fromError<Value>(key: String, value: Value, error: String, user: ConfigCatUser?) -> TypedEvaluationDetails<Value> {
+    static func fromError(key: String, value: Value, error: String, user: ConfigCatUser?) -> TypedEvaluationDetails<Value> {
         TypedEvaluationDetails<Value>(key: key, value: value, variationId: "", user: user, isDefaultValue: true, error: error)
     }
 

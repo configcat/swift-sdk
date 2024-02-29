@@ -1,11 +1,5 @@
 import Foundation
 
-enum RedirectMode: Int {
-    case noRedirect
-    case shouldRedirect
-    case forceRedirect
-}
-
 enum FetchResponse: Equatable {
     case fetched(ConfigEntry)
     case notModified
@@ -51,14 +45,14 @@ class URLSessionEngine: HttpEngine {
 }
 
 class ConfigFetcher: NSObject {
-    private let log: Logger
+    private let log: InternalLogger
     private let httpEngine: HttpEngine
     @Synced private var baseUrl: String
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
 
-    init(httpEngine: HttpEngine, logger: Logger, sdkKey: String, mode: String,
+    init(httpEngine: HttpEngine, logger: InternalLogger, sdkKey: String, mode: String,
          dataGovernance: DataGovernance, baseUrl: String = "") {
         log = logger
         self.httpEngine = httpEngine
@@ -75,7 +69,7 @@ class ConfigFetcher: NSObject {
     func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
         let cachedUrl = baseUrl
         executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
-            if let newUrl = response.entry?.config.preferences?.preferencesUrl, !newUrl.isEmpty && newUrl != cachedUrl {
+            if let newUrl = response.entry?.config.preferences.preferencesUrl, !newUrl.isEmpty && newUrl != cachedUrl {
                 self._baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
             }
             completion(response)
@@ -88,23 +82,21 @@ class ConfigFetcher: NSObject {
                 completion(response)
                 return
             }
-            guard let newUrl = entry.config.preferences?.preferencesUrl, !newUrl.isEmpty, newUrl != url else {
+            let newUrl = entry.config.preferences.preferencesUrl
+            if newUrl.isEmpty || newUrl == url {
                 completion(response)
                 return
             }
-            guard let redirect = entry.config.preferences?.preferencesRedirect else {
+            let redirect = entry.config.preferences.preferencesRedirect
+            if self.urlIsCustom && redirect != .forceRedirect {
                 completion(response)
                 return
             }
-            if self.urlIsCustom && redirect != RedirectMode.forceRedirect.rawValue {
+            if redirect == .noRedirect {
                 completion(response)
                 return
             }
-            if redirect == RedirectMode.noRedirect.rawValue {
-                completion(response)
-                return
-            }
-            if redirect == RedirectMode.shouldRedirect.rawValue {
+            if redirect == .shouldRedirect {
                 self.log.warning(eventId: 3002, message: "The `dataGovernance` parameter specified at the client initialization is not in sync with the preferences on the ConfigCat Dashboard. "
                     + "Read more: https://configcat.com/docs/advanced/data-governance/")
             }

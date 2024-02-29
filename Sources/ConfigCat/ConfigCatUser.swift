@@ -2,7 +2,7 @@ import Foundation
 
 /// An object containing attributes to properly identify a given user for rollout evaluation.
 public final class ConfigCatUser: NSObject {
-    private var attributes: [String: String]
+    private var attributes: [String: Any]
     private(set) var identifier: String
 
     /**
@@ -17,7 +17,7 @@ public final class ConfigCatUser: NSObject {
     @objc public init(identifier: String,
                       email: String? = nil,
                       country: String? = nil,
-                      custom: [String: String]? = nil) {
+                      custom: [String: Any]? = nil) {
 
         attributes = [:]
         self.identifier = identifier
@@ -37,24 +37,25 @@ public final class ConfigCatUser: NSObject {
             }
         }
     }
+    
+    init(custom: [String: Any]) {
+        self.attributes = custom
+        self.identifier = custom["Identifier"] as? String ?? ""
+    }
 
-    func getAttribute(for key: String) -> String? {
+    func attribute(for key: String) -> Any? {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
-
-        if let value = attributes[key] {
-            return value
+        guard let value = attributes[key] else {
+            return nil
         }
-
-        return nil
+        return value
     }
-
+    
     public override var description: String {
-        let jsonEncoder = JSONEncoder()
-        jsonEncoder.outputFormatting = .prettyPrinted
         do {
-            let jsonData = try jsonEncoder.encode(attributes)
+            let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: [])
             return String(data: jsonData, encoding: .utf8) ?? ""
         } catch {
             return ""

@@ -2,16 +2,16 @@ import XCTest
 @testable import ConfigCat
 
 class EvaluationDetailsExtensionTests: XCTestCase {
-    let testBoolJson = #"{ "f": { "key": { "v": true, "i": "fakeId1", "p": [], "r": [] } } }"#
-    let testIntJson = #"{ "f": { "key": { "v": 42, "i": "fakeId1", "p": [], "r": [] } } }"#
-    let testDoubleJson = #"{ "f": { "key": { "v": 3.14, "i": "fakeId1", "p": [], "r": [] } } }"#
-    let testStringJson = #"{ "f": { "key": { "v": "fake", "i": "fakeId1", "p": [], "r": [] } } }"#
+    let testBoolJson = #"{ "f": { "key": { "v": { "b": true }, "i": "fakeId1", "t":0 } } }"#
+    let testIntJson = #"{ "f": { "key": { "v": { "i": 42 }, "i": "fakeId1", "t":2 } } }"#
+    let testDoubleJson = #"{ "f": { "key": { "v": { "d": 3.14 }, "i": "fakeId1", "t":3 } } }"#
+    let testStringJson = #"{ "f": { "key": { "v": { "s": "fake" }, "i": "fakeId1", "t":1 } } }"#
 
     func testBoolDetails() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testBoolJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -32,7 +32,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testIntJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -53,7 +53,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testDoubleJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -74,7 +74,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()

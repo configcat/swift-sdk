@@ -2,7 +2,7 @@ import XCTest
 @testable import ConfigCat
 
 class AutoPollingTests: XCTestCase {
-    private let testJsonFormat = #"{ "f": { "fakeKey": { "v": "%@", "p": [], "r": [] } } }"#
+    private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 1, "v": { "s": "%@" } } } }"#
 
     func testGet() throws {
         let engine = MockEngine()
@@ -10,12 +10,12 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -24,7 +24,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -36,12 +36,12 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 500))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -50,7 +50,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -67,8 +67,8 @@ class AutoPollingTests: XCTestCase {
         hooks.addOnConfigChanged { _ in
             called = true
         }
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
         sleep(1)
 
@@ -78,7 +78,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -89,8 +89,8 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 3))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         sleep(2)
 
@@ -100,7 +100,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -112,8 +112,8 @@ class AutoPollingTests: XCTestCase {
 
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -135,12 +135,12 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -152,7 +152,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -167,12 +167,12 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -181,7 +181,7 @@ class AutoPollingTests: XCTestCase {
 
         let expectation2 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -194,12 +194,12 @@ class AutoPollingTests: XCTestCase {
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -216,8 +216,8 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         Thread.sleep(forTimeInterval: 1.5)
 
@@ -241,8 +241,8 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         XCTAssertTrue(service.isOffline)
         Thread.sleep(forTimeInterval: 2)
@@ -265,8 +265,8 @@ class AutoPollingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -293,8 +293,8 @@ class AutoPollingTests: XCTestCase {
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -315,12 +315,12 @@ class AutoPollingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue as? String)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)

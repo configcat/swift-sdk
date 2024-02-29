@@ -1,6 +1,6 @@
 import Foundation
 
-class SettingResult {
+class SettingsResult {
     let settings: [String: Setting]
     let fetchTime: Date
 
@@ -11,11 +11,11 @@ class SettingResult {
 
     var isEmpty: Bool {
         get {
-            self === SettingResult.empty
+            self === SettingsResult.empty
         }
     }
 
-    static let empty = SettingResult(settings: [:], fetchTime: .distantPast)
+    static let empty = SettingsResult(settings: [:], fetchTime: .distantPast)
 }
 
 public final class RefreshResult: NSObject {
@@ -34,14 +34,14 @@ enum FetchResult {
 }
 
 class ConfigService {
-    private let log: Logger
+    private let log: InternalLogger
     private let fetcher: ConfigFetcher
     private let mutex: Mutex = Mutex(recursive: true)
     private let cache: ConfigCache?
     private let pollingMode: PollingMode
     private let hooks: Hooks
     private let cacheKey: String
-    private var initialized: Bool = false
+    @Synced private var initialized: Bool = false
     private var offline: Bool = false
     private var completions: MutableQueue<(FetchResult) -> Void>?
     private var cachedEntry: ConfigEntry = .empty
@@ -49,7 +49,7 @@ class ConfigService {
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
 
-    init(log: Logger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
+    init(log: InternalLogger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
         self.log = log
         self.fetcher = fetcher
         self.cache = cache
@@ -74,9 +74,8 @@ class ConfigService {
                 this.mutex.lock()
                 defer { this.mutex.unlock() }
                 // Max wait time expired without result, notify subscribers with the cached config.
-                if !this.initialized {
+                if this._initialized.testAndSet(expect: false, new: true) {
                     this.log.warning(eventId: 4200, message: String(format: "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
-                    this.initialized = true
                     hooks.invokeOnReady(state: this.determineReadyState())
                     this.callCompletions(result: .success(this.cachedEntry))
                     this.completions = nil
@@ -99,28 +98,28 @@ class ConfigService {
         initTimer?.cancel()
     }
 
-    func settings(completion: @escaping (SettingResult) -> Void) {
+    func settings(completion: @escaping (SettingsResult) -> Void) {
         switch pollingMode {
         case let lazyMode as LazyLoadingMode:
-            fetchIfOlder(time: Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!) { result in
+            fetchIfOlder(threshold: Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!) { result in
                 switch result {
                 case .success(let entry): completion(!entry.isEmpty
-                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
-                    : SettingResult.empty)
+                                                     ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                     : .empty)
                 case .failure(_, let entry): completion(!entry.isEmpty
-                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
-                    : SettingResult.empty)
+                                                        ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                        : .empty)
                 }
             }
         default:
-            fetchIfOlder(time: .distantPast, preferCache: true) { result in
+            fetchIfOlder(threshold: .distantPast, preferCache: initialized) { result in
                 switch result {
                 case .success(let entry): completion(!entry.isEmpty
-                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
-                    : SettingResult.empty)
+                                                     ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                     : .empty)
                 case .failure(_, let entry): completion(!entry.isEmpty
-                    ? SettingResult(settings: entry.config.entries, fetchTime: entry.fetchTime)
-                    : SettingResult.empty)
+                                                        ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                        : .empty)
                 }
             }
         }
@@ -134,7 +133,7 @@ class ConfigService {
             return
         }
 
-        fetchIfOlder(time: .distantFuture) { result in
+        fetchIfOlder(threshold: .distantFuture) { result in
             switch result {
             case .success: completion(RefreshResult(success: true))
             case .failure(let error, _): completion(RefreshResult(success: false, error: error))
@@ -189,32 +188,23 @@ class ConfigService {
         }
     }
 
-    private func fetchIfOlder(time: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
+    private func fetchIfOlder(threshold: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
         mutex.lock()
         defer { mutex.unlock() }
         // Sync up with the cache and use it when it's not expired.
-        if cachedEntry.isEmpty || cachedEntry.fetchTime > time {
-            let entry = readCache()
-            if !entry.isEmpty && entry != cachedEntry {
-                cachedEntry = entry
-                hooks.invokeOnConfigChanged(settings: entry.config.entries)
-            }
-            // Cache isn't expired
-            if cachedEntry.fetchTime > time {
-                setInitialized()
-                completion(.success(cachedEntry))
-                return
-            }
+        let entry = readCache()
+        if cachedEntry.isEmpty && entry != cachedEntry {
+            cachedEntry = entry
+            hooks.invokeOnConfigChanged(config: entry.config)
         }
-        // Use cache anyway (get calls on auto & manual poll must not initiate fetch).
-        // The initialized check ensures that we subscribe for the ongoing fetch during the
-        // max init wait time window in case of auto poll.
-        if preferCache && initialized {
+        // Cache isn't expired
+        if cachedEntry.fetchTime > threshold {
+            setInitialized()
             completion(.success(cachedEntry))
             return
         }
-        // If we are in offline mode we are not allowed to initiate fetch.
-        if offline {
+        // If we are in offline mode or the caller prefers cached values, do not initiate fetch.
+        if offline || preferCache {
             completion(.success(cachedEntry))
             return
         }
@@ -239,7 +229,7 @@ class ConfigService {
         case .fetched(let entry):
             cachedEntry = entry
             writeCache(entry: entry)
-            hooks.invokeOnConfigChanged(settings: entry.config.entries)
+            hooks.invokeOnConfigChanged(config: entry.config)
             callCompletions(result: .success(entry))
         case .notModified:
             cachedEntry = cachedEntry.withFetchTime(time: Date())
@@ -257,8 +247,7 @@ class ConfigService {
     }
 
     private func setInitialized() {
-        if !initialized {
-            initialized = true
+        if _initialized.testAndSet(expect: false, new: true) {
             hooks.invokeOnReady(state: determineReadyState())
         }
     }
@@ -283,7 +272,7 @@ class ConfigService {
                 return
             }
             this.log.debug(message: "Polling for config.json changes.")
-            this.fetchIfOlder(time: Date().subtract(seconds: ageThreshold)!) { _ in
+            this.fetchIfOlder(threshold: Date().subtract(seconds: ageThreshold)!) { _ in
                 // we don't have to do anything with the result in the timer ticks.
             }
         })

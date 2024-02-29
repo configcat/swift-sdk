@@ -2,7 +2,7 @@ import os.log
 import os
 import Foundation
 
-@objc public enum LogLevel: Int {
+@objc public enum ConfigCatLogLevel: Int {
     case debug
     case info
     case warning
@@ -10,52 +10,89 @@ import Foundation
     case nolog
 }
 
-class Logger {
-    static let noLogger: Logger = Logger(level: .nolog, hooks: Hooks())
-    private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
-    private let level: LogLevel
-    private let hooks: Hooks
+@objc public protocol ConfigCatLogger {
+    func debug(message: String)
+    func warning(message: String)
+    func info(message: String)
+    func error(message: String)
+}
 
-    init(level: LogLevel, hooks: Hooks) {
+class InternalLogger {
+    static let noLogger: InternalLogger = InternalLogger(log: NoLogger(), level: .nolog, hooks: Hooks())
+    let log: ConfigCatLogger
+    let level: ConfigCatLogLevel
+    let hooks: Hooks
+    
+    init(log: ConfigCatLogger, level: ConfigCatLogLevel, hooks: Hooks) {
+        self.log = log
         self.level = level
         self.hooks = hooks
     }
-
+    
     func debug(message: String) {
-        log(message: "[0] \(message)", currentLevel: .debug)
+        if ConfigCatLogLevel.debug.rawValue >= level.rawValue {
+            log.debug(message: "[0] \(message)")
+        }
     }
 
     func warning(eventId: Int, message: String) {
-        log(message: "[\(eventId)] \(message)", currentLevel: .warning)
+        if ConfigCatLogLevel.warning.rawValue >= level.rawValue {
+            log.warning(message: "[\(eventId)] \(message)")
+        }
     }
 
     func info(eventId: Int, message: String) {
-        log(message: "[\(eventId)] \(message)", currentLevel: .info)
+        if ConfigCatLogLevel.info.rawValue >= level.rawValue {
+            log.info(message: "[\(eventId)] \(message)")
+        }
     }
 
     func error(eventId: Int, message: String) {
         hooks.invokeOnError(error: message)
-        log(message: "[\(eventId)] \(message)", currentLevel: .error)
-    }
-
-    func log(message: String, currentLevel: LogLevel) {
-        if currentLevel.rawValue >= level.rawValue {
-            os_log("%{public}@", log: Logger.log, type: getLogType(level: currentLevel), message)
+        if ConfigCatLogLevel.error.rawValue >= level.rawValue {
+            log.error(message: "[\(eventId)] \(message)")
         }
     }
+    
+    func enabled(level: ConfigCatLogLevel) -> Bool {
+        return level.rawValue >= self.level.rawValue
+    }
+}
 
-    func getLogType(level: LogLevel) -> OSLogType {
-        switch level {
-        case .debug:
-            return OSLogType.debug
-        case .error:
-            return OSLogType.error
-        case .warning:
-            return OSLogType.info
-        case .info:
-            return OSLogType.info
-        default:
-            return OSLogType.default
-        }
+class OSLogger: ConfigCatLogger {
+    private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
+    
+    func debug(message: String) {
+        os_log("%{public}@", log: OSLogger.log, type: .debug, message)
+    }
+    
+    func warning(message: String) {
+        os_log("%{public}@", log: OSLogger.log, type: .info, message)
+    }
+    
+    func info(message: String) {
+        os_log("%{public}@", log: OSLogger.log, type: .info, message)
+    }
+    
+    func error(message: String) {
+        os_log("%{public}@", log: OSLogger.log, type: .error, message)
+    }
+}
+
+class NoLogger: ConfigCatLogger {
+    func debug(message: String) {
+        // do nothing
+    }
+    
+    func warning(message: String) {
+        // do nothing
+    }
+    
+    func info(message: String) {
+        // do nothing
+    }
+    
+    func error(message: String) {
+        // do nothing
     }
 }

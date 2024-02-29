@@ -11,7 +11,7 @@ import os.log
 
 /// A client for handling configurations provided by ConfigCat.
 public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
-    private let log: Logger
+    private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
     private let sdkKey: String
@@ -24,6 +24,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
     init(sdkKey: String,
          pollingMode: PollingMode,
+         logger: ConfigCatLogger,
          httpEngine: HttpEngine?,
          hooks: Hooks? = nil,
          configCache: ConfigCache? = nil,
@@ -31,7 +32,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          dataGovernance: DataGovernance = DataGovernance.global,
          flagOverrides: OverrideDataSource? = nil,
          defaultUser: ConfigCatUser? = nil,
-         logLevel: LogLevel = .warning,
+         logLevel: ConfigCatLogLevel = .warning,
          offline: Bool = false) {
         
         assert(!sdkKey.isEmpty, "sdkKey cannot be empty")
@@ -39,7 +40,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         self.sdkKey = sdkKey
         self.hooks = hooks ?? Hooks()
         self.defaultUser = defaultUser
-        log = Logger(level: logLevel, hooks: self.hooks)
+        log = InternalLogger(log: logger, level: logLevel, hooks: self.hooks)
         overrideDataSource = flagOverrides
         flagEvaluator = FlagEvaluator(log: log, evaluator: RolloutEvaluator(logger: log), hooks: self.hooks)
 
@@ -86,18 +87,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             return client
         }
-        let opts = options ?? ConfigCatOptions.default
+        let opts = options ?? .default
         let client = ConfigCatClient(sdkKey: sdkKey,
-                pollingMode: opts.pollingMode,
-                httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
-                hooks: opts.hooks,
-                configCache: opts.configCache,
-                baseUrl: opts.baseUrl,
-                dataGovernance: opts.dataGovernance,
-                flagOverrides: opts.flagOverrides,
-                defaultUser: opts.defaultUser,
-                logLevel: opts.logLevel,
-                offline: opts.offline)
+                                     pollingMode: opts.pollingMode,
+                                     logger: opts.logger,
+                                     httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
+                                     hooks: opts.hooks,
+                                     configCache: opts.configCache,
+                                     baseUrl: opts.baseUrl,
+                                     dataGovernance: opts.dataGovernance,
+                                     flagOverrides: opts.flagOverrides,
+                                     defaultUser: opts.defaultUser,
+                                     logLevel: opts.logLevel,
+                                     offline: opts.offline)
         instances[sdkKey] = Weak(value: client)
         return client
     }
@@ -219,8 +221,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-                detailsResult.append(details)
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                    detailsResult.append(details)
+                }
             }
             completion(detailsResult)
         }
@@ -248,18 +251,24 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             for (key, setting) in result.settings {
                 if variationId == setting.variationId {
-                    completion(KeyValue(key: key, value: setting.value))
+                    completion(KeyValue(key: key, value: setting.value.val))
                     return
                 }
-                for rule in setting.rolloutRules {
-                    if variationId == rule.variationId {
-                        completion(KeyValue(key: key, value: rule.value))
+                for rule in setting.targetingRules {
+                    if variationId == rule.servedValue.variationId {
+                        completion(KeyValue(key: key, value: rule.servedValue.value.val))
                         return
                     }
+                    for opt in rule.percentageOptions {
+                        if variationId == opt.variationId {
+                            completion(KeyValue(key: key, value: opt.servedValue.val))
+                            return
+                        }
+                    }
                 }
-                for rule in setting.percentageItems {
-                    if variationId == rule.variationId {
-                        completion(KeyValue(key: key, value: rule.value))
+                for opt in setting.percentageOptions {
+                    if variationId == opt.variationId {
+                        completion(KeyValue(key: key, value: opt.servedValue.val))
                         return
                     }
                 }
@@ -283,8 +292,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-                allValues[key] = details.value
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                    allValues[key] = details.value
+                }
             }
             completion(allValues)
         }
@@ -325,19 +335,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
     #endif
 
-    func getSettings(completion: @escaping (SettingResult) -> Void) {
+    func getSettings(completion: @escaping (SettingsResult) -> Void) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            completion(SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
+            completion(SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
             return
         }
         guard let configService = configService else {
-            completion(SettingResult.empty)
+            completion(.empty)
             return
         }
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
                 configService.settings { result in
-                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
+                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                         new
                     }, fetchTime: result.fetchTime))
                 }
@@ -345,7 +355,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
                 configService.settings { result in
-                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
+                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                         current
                     }, fetchTime: result.fetchTime))
                 }
@@ -357,30 +367,30 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
     
-    func getInMemorySettings() -> SettingResult {
+    func getInMemorySettings() -> SettingsResult {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            return SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
+            return SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
         }
         guard let configService = configService else {
-            return SettingResult.empty
+            return .empty
         }
         
         let inMemory = configService.inMemory
         
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
-                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (_, new) in
+                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                     new
                 }, fetchTime: inMemory.fetchTime)
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
-                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (current, _) in
+                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                     current
                 }, fetchTime: inMemory.fetchTime)
             }
         }
         
-        return SettingResult(settings: inMemory.config.entries, fetchTime: inMemory.fetchTime)
+        return SettingsResult(settings: inMemory.config.settings, fetchTime: inMemory.fetchTime)
     }
 
     /// Sets the default user.
