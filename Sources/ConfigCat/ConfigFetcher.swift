@@ -119,7 +119,7 @@ class ConfigFetcher: NSObject {
                     self.log.error(eventId: 1102, message: message)
                 }
                 else {
-                    message = String(format: "Unexpected error occurred while trying to fetch config JSON. %@", error.localizedDescription)
+                    message = String(format: "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP. %@", error.localizedDescription)
                     self.log.error(eventId: 1103, message: message)
                 }
                 completion(.failure(message: message, isTransient: true))
