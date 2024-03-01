@@ -84,6 +84,7 @@ class RolloutEvaluator {
         evalLogger?.incIndent()
         
         let result = evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
+        
         switch result {
         case .success(let val, _, _, _):
             evalLogger?.newLine(msg: "Returning '\(val)'.")
@@ -91,10 +92,12 @@ class RolloutEvaluator {
             evalLogger?.resetIndent().incIndent()
             evalLogger?.newLine(msg: "Returning '\(defaultValue ?? "nil")'.")
         }
+        
         evalLogger?.decIndent()
         if log.enabled(level: .info) {
             log.info(eventId: 5000, message: evalLogger?.content ?? "")
         }
+        
         return result
     }
     
@@ -207,6 +210,7 @@ class RolloutEvaluator {
     private func evalConditions(targetingRule: TargetingRule, key: String, user: ConfigCatUser?, salt: String, ctxSalt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
         evalLogger?.newLine(msg: "- ")
         var newLineBeforeThen = false
+        
         for (index, cond) in targetingRule.conditions.enumerated() {
             var condResult: EvalConditionResult = .fatal("Condition isn't a type of user, segment, or prerequisite flag condition")
             var matched = true
@@ -266,9 +270,11 @@ class RolloutEvaluator {
         guard let userConditions = cond.segment?.conditions else {
             return .fatal("Segment reference is invalid")
         }
+        
         evalLogger?.newLine(msg: "(").incIndent().newLine(msg: "Evaluating segment '\(name)':")
         var result: EvalConditionResult = .fatal("")
         let needsTrue = cond.segmentComparator == .isIn
+        
         for (index, userCondition) in userConditions.enumerated() {
             evalLogger?.newLine(msg: "- ")
             if index == 0 {
@@ -284,6 +290,7 @@ class RolloutEvaluator {
                 break
             }
         }
+        
         evalLogger?.newLine(msg: "Segment evaluation result: ")
             .append(value: !result.isSuccess ? result.err : "User \(result.isMatch ? SegmentComparator.isIn.text : SegmentComparator.isNotIn.text)")
             .append(value: ".")
@@ -292,6 +299,7 @@ class RolloutEvaluator {
             .append(value: ".")
             .decIndent()
             .newLine(msg: ")")
+        
         switch result {
         case .success(let match):
             return .success(match == needsTrue)
@@ -302,6 +310,7 @@ class RolloutEvaluator {
     
     private func evalPrerequisiteCondition(cond: PrerequisiteFlagCondition, key: String, user: ConfigCatUser?, salt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
         evalLogger?.append(value: cond)
+        
         guard let prereq = settings[cond.flagKey] else {
             return .fatal("Prerequisite flag is missing or invalid")
         }
@@ -311,6 +320,7 @@ class RolloutEvaluator {
         if prereq.settingType != .unknown && prereq.settingType != cond.flagValue.settingType {
             return .fatal("Type mismatch between comparison value '\(cond.flagValue.val ?? "")' and prerequisite flag '\(cond.flagKey)'.")
         }
+        
         cycleTracker.append(key)
         if cycleTracker.contains(cond.flagKey) {
             cycleTracker.append(cond.flagKey)
@@ -319,8 +329,8 @@ class RolloutEvaluator {
             }.joined(separator: " -> ")
             return .fatal("Circular dependency detected between the following depending flags: [\(output)].")
         }
-        let needsTrue = cond.prerequisiteComparator == .eq
         
+        let needsTrue = cond.prerequisiteComparator == .eq
         evalLogger?.newLine(msg: "(").incIndent().newLine(msg: "Evaluating prerequisite flag '\(cond.flagKey)':")
         
         let evalResult = evalSetting(setting: prereq, key: cond.flagKey, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
