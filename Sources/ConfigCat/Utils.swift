@@ -43,11 +43,28 @@ class Constants {
     static let configJsonCacheVersion: String = "v2"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
+    static let proxyPrefix: String = "configcat-proxy/"
+    static let sdkKeyCompSize: Int = 22
 }
 
 class Utils {
     public static func generateCacheKey(sdkKey: String) -> String {
         let keyToHash = sdkKey + "_" + Constants.configJsonName + "_" + Constants.configJsonCacheVersion
         return String(keyToHash.sha1hex)
+    }
+    
+    static func validateSdkKey(sdkKey: String, isCustomUrl: Bool) -> Bool {
+        if isCustomUrl && sdkKey.count > Constants.proxyPrefix.count && sdkKey.hasPrefix(Constants.proxyPrefix) {
+            return true
+        }
+        let comps = sdkKey.split(separator: "/")
+        switch comps.count {
+        case 2:
+            return comps[0].count == Constants.sdkKeyCompSize && comps[1].count == Constants.sdkKeyCompSize
+        case 3:
+            return comps[0] == "configcat-sdk-1" && comps[1].count == Constants.sdkKeyCompSize && comps[2].count == Constants.sdkKeyCompSize
+        default:
+            return false
+        }
     }
 }

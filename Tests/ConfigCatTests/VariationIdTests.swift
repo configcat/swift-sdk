@@ -161,6 +161,6 @@ class VariationIdTests: XCTestCase {
     }
 
     private func createClient(httpEngine: HttpEngine) -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: httpEngine)
+        ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: httpEngine)
     }
 }

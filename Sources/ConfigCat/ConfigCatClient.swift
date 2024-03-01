@@ -35,8 +35,6 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          logLevel: ConfigCatLogLevel = .warning,
          offline: Bool = false) {
         
-        assert(!sdkKey.isEmpty, "sdkKey cannot be empty")
-
         self.sdkKey = sdkKey
         self.hooks = hooks ?? Hooks()
         self.defaultUser = defaultUser
@@ -48,6 +46,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             // configService is not needed in localOnly mode
             configService = nil
             hooks?.invokeOnReady(state: .hasLocalOverrideFlagDataOnly)
+        } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
+            log.error(eventId: 0, message: "ConfigCat SDK Key '\(sdkKey)' is invalid.")
+            configService = nil
+            hooks?.invokeOnReady(state: .noFlagData)
         } else {
             let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
@@ -78,6 +80,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         mutex.lock()
         defer { mutex.unlock() }
 
+        let isCustomUrl = !(options?.baseUrl ?? "").isEmpty
+        if options?.flagOverrides == nil || options?.flagOverrides?.behaviour != .localOnly {
+            assert(Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: isCustomUrl), "invalid 'sdkKey' passed to the ConfigCatClient")
+        }
+        
         if let client = instances[sdkKey]?.get() {
             if options != nil {
                 client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "

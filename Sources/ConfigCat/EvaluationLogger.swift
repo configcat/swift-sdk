@@ -41,11 +41,6 @@ class EvaluationLogger {
     }
     
     @discardableResult
-    func appendSegmentCondition(cond: SegmentCondition) -> EvaluationLogger {
-        return self
-    }
-    
-    @discardableResult
     func appendThen(newLine: Bool, result: EvalConditionResult, targetingRule: TargetingRule) -> EvaluationLogger {
         self.incIndent()
         

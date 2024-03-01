@@ -17,6 +17,11 @@ extension String {
         }
         return self
     }
+    
+    static func random(len: Int) -> String {
+        let letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        return String((0..<len).map{ _ in letters.randomElement()! })
+    }
 }
 
 extension JsonSerializable {
@@ -65,7 +70,7 @@ func createTestConfigWithRules() -> Config {
 }
 
 func randomSdkKey() -> String {
-    return "\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))/\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+    return "\(String.random(len: 22))/\(String.random(len: 22))"
 }
 
 func anyEq(a: Any?, b: Any?) -> Bool {

@@ -175,7 +175,7 @@ class ConfigCatClientTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "s", "\"test\"", "1"), statusCode: 200))
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "s", "\"test2\"", "1"), statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
 
         let expectation1 = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -199,7 +199,7 @@ class ConfigCatClientTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "s", "\"test\"", "1"), statusCode: 200))
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "s", "\"test2\"", "1"), statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
 
         let expectation1 = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -221,7 +221,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingAutoPoll() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
         let expectation1 = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { value in
             XCTAssertEqual("", value)
@@ -233,7 +233,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFromCacheOnly() throws {
         let engine = MockEngine()
         let cache = InMemoryConfigCache()
-        let sdkKey = "test"
+        let sdkKey = randomSdkKey()
         let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
         try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().serialize())
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
@@ -250,7 +250,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFromCacheOnlyRefresh() throws {
         let engine = MockEngine()
         let cache = InMemoryConfigCache()
-        let sdkKey = "test"
+        let sdkKey = randomSdkKey()
         let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
         try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().serialize())
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
@@ -269,7 +269,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingAutoPollRefresh() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
         let expectation1 = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -283,7 +283,7 @@ class ConfigCatClientTests: XCTestCase {
     func testFailingExpiringCache() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine)
         let expectation1 = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { value in
             XCTAssertEqual("", value)
@@ -311,7 +311,7 @@ class ConfigCatClientTests: XCTestCase {
     func testAutoPollUserAgentHeader() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -326,7 +326,7 @@ class ConfigCatClientTests: XCTestCase {
     func testLazyUserAgentHeader() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -341,7 +341,7 @@ class ConfigCatClientTests: XCTestCase {
     func testGetValueDetailsWithError() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.getValueDetails(for: "fakeKey", defaultValue: "") { details in
             XCTAssertEqual("", details.value)
@@ -355,7 +355,7 @@ class ConfigCatClientTests: XCTestCase {
     func testManualPollUserAgentHeader() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             client.getValue(for: "fakeKey", defaultValue: "") { value in
@@ -445,7 +445,7 @@ class ConfigCatClientTests: XCTestCase {
             ready = true
             state = st
         }
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, offline: true)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, offline: true)
         let expectation = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { _ in
             expectation.fulfill()
@@ -460,7 +460,7 @@ class ConfigCatClientTests: XCTestCase {
     func testDefaultUser() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: createTestConfigWithRules().toJsonString(), statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
             expectation.fulfill()
@@ -514,7 +514,7 @@ class ConfigCatClientTests: XCTestCase {
         hooks.addOnConfigChanged { _ in
             changed = true
         }
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { r in
             XCTAssertTrue(r.success)
@@ -554,7 +554,7 @@ class ConfigCatClientTests: XCTestCase {
         var changed = false
         var ready = false
         let hooks = Hooks()
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
         client.hooks.addOnError { e in
             error = e
         }
@@ -587,7 +587,7 @@ class ConfigCatClientTests: XCTestCase {
     func testReadyHookGetValue() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         
         let expectation = self.expectation(description: "wait for response")
         
@@ -605,7 +605,7 @@ class ConfigCatClientTests: XCTestCase {
     func testReadyHookGetValueSnapshot() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         
         let expectation = self.expectation(description: "wait for response")
         
@@ -623,8 +623,10 @@ class ConfigCatClientTests: XCTestCase {
     func testLazyCache() throws {
         let engine = MockEngine()
         let cache = InMemoryConfigCache()
+        let sdkKey = randomSdkKey()
+        let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: "test1", pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: sdkKey, pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine, configCache: cache)
 
         let expectation = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { r in
@@ -641,7 +643,7 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [expectation2], timeout: 5)
 
         XCTAssertEqual(1, engine.requests.count)
-        try XCTAssertFalse(cache.read(for: "7f845c43ecc95e202b91e271435935e6d1391e5d").isEmpty)
+        try XCTAssertFalse(cache.read(for: cacheKey).isEmpty)
     }
 
     func testOnFlagEvaluationError() {
@@ -655,7 +657,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertTrue(details.isDefaultValue)
             called = true
         }
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
         let expectation = self.expectation(description: "wait for response")
         client.getValue(for: "fakeKey", defaultValue: "") { value in
             XCTAssertEqual("", value)
@@ -668,34 +670,70 @@ class ConfigCatClientTests: XCTestCase {
     }
 
     func testSingleton() {
-        var client1 = ConfigCatClient.get(sdkKey: "test")
-        let client2 = ConfigCatClient.get(sdkKey: "test")
+        let sdkKey = randomSdkKey()
+        var client1 = ConfigCatClient.get(sdkKey: sdkKey)
+        let client2 = ConfigCatClient.get(sdkKey: sdkKey)
 
         XCTAssertEqual(client1, client2)
 
         ConfigCatClient.closeAll()
-        client1 = ConfigCatClient.get(sdkKey: "test")
+        client1 = ConfigCatClient.get(sdkKey: sdkKey)
 
         XCTAssertNotEqual(client1, client2)
     }
 
     func testSingletonRemovesOnlyTheClosingInstance() {
-        let client1 = ConfigCatClient.get(sdkKey: "test")
+        let sdkKey = randomSdkKey()
+        
+        let client1 = ConfigCatClient.get(sdkKey: sdkKey)
 
         client1.close()
 
-        let client2 = ConfigCatClient.get(sdkKey: "test")
+        let client2 = ConfigCatClient.get(sdkKey: sdkKey)
 
         XCTAssertNotEqual(client1, client2)
 
         client1.close()
 
-        let client3 = ConfigCatClient.get(sdkKey: "test")
+        let client3 = ConfigCatClient.get(sdkKey: sdkKey)
 
         XCTAssertEqual(client2, client3)
     }
+    
+    func testSdkKeyValidation() {
+        let tests = [
+            ("sdk-key-90123456789012", false, false),
+            ("sdk-key-9012345678901/1234567890123456789012", false, false),
+            ("sdk-key-90123456789012/123456789012345678901", false, false),
+            ("sdk-key-90123456789012/12345678901234567890123", false, false),
+            ("sdk-key-901234567890123/1234567890123456789012", false, false),
+            ("sdk-key-90123456789012/1234567890123456789012", false, true),
+            ("configcat-sdk-1/sdk-key-90123456789012", false, false),
+            ("configcat-sdk-1/sdk-key-9012345678901/1234567890123456789012", false, false),
+            ("configcat-sdk-1/sdk-key-90123456789012/123456789012345678901", false, false),
+            ("configcat-sdk-1/sdk-key-90123456789012/12345678901234567890123", false, false),
+            ("configcat-sdk-1/sdk-key-901234567890123/1234567890123456789012", false, false),
+            ("configcat-sdk-1/sdk-key-90123456789012/1234567890123456789012", false, true),
+            ("configcat-sdk-2/sdk-key-90123456789012/1234567890123456789012", false, false),
+            ("configcat-proxy/", false, false),
+            ("configcat-proxy/", true, false),
+            ("configcat-proxy/sdk-key-90123456789012", false, false),
+            ("configcat-proxy/sdk-key-90123456789012", true, true),
+        ]
+        
+        for test in tests {
+            let logger = RecordingLogger()
+            let customUrl = test.1 ? "https://my-configcat-proxy" : ""
+            let client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, baseUrl: customUrl)
+            
+            XCTAssertEqual(test.2, !client.isOffline)
+            if !test.2 {
+                XCTAssertEqual("ERROR [0] ConfigCat SDK Key '\(test.0)' is invalid.", logger.entries.last)
+            }
+        }
+    }
 
     private func createClient(http: HttpEngine, offline: Bool = false) -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: http, offline: offline)
+        ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: http, offline: offline)
     }
 }

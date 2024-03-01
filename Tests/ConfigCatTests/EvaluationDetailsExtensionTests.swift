@@ -11,7 +11,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testBoolJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -32,7 +32,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testIntJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -53,7 +53,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testDoubleJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
@@ -74,7 +74,7 @@ class EvaluationDetailsExtensionTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let refreshExpectation = expectation(description: "wait for refresh")
         client.forceRefresh { RefreshResult in
             refreshExpectation.fulfill()
