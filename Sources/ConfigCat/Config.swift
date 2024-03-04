@@ -13,12 +13,7 @@ enum RedirectMode: Int {
     case isNotIn
     
     var text: String {
-        switch self {
-        case .isIn:
-            return "IS IN SEGMENT"
-        default:
-            return "IS NOT IN SEGMENT"
-        }
+        return self == .isIn ? "IS IN SEGMENT" : "IS NOT IN SEGMENT"
     }
 }
 
@@ -29,12 +24,7 @@ enum RedirectMode: Int {
     case notEq
     
     var text: String {
-        switch self {
-        case .eq:
-            return "EQUALS"
-        default:
-            return "NOT EQUALS"
-        }
+        return self == .eq ? "EQUALS" : "NOT EQUALS"
     }
 }
 

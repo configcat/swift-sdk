@@ -15,21 +15,17 @@ enum EvalConditionResult {
     case fatal(String)
     
     var isSuccess: Bool {
-        switch self {
-        case .success(_):
+        if case .success(_) = self {
             return true
-        default:
-            return false
         }
+        return false
     }
     
     var isMatch: Bool {
-        switch self {
-        case .success(let match):
+        if case .success(let match) = self {
             return match
-        default:
-            return false
         }
+        return false
     }
     
     var err: String {
@@ -300,12 +296,10 @@ class RolloutEvaluator {
             .decIndent()
             .newLine(msg: ")")
         
-        switch result {
-        case .success(let match):
+        if case let .success(match) = result {
             return .success(match == needsTrue)
-        default:
-            return result
         }
+        return result
     }
     
     private func evalPrerequisiteCondition(cond: PrerequisiteFlagCondition, key: String, user: ConfigCatUser?, salt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
@@ -682,24 +676,20 @@ class RolloutEvaluator {
     }
     
     private func asDate(value: Any) -> Date? {
-        switch value {
-        case let val as Date:
+        if case let val as Date = value {
             return val
-        default:
-            if let doubleVal = asDouble(value: value) {
-                return Date(timeIntervalSince1970: doubleVal)
-            }
-            return nil
         }
+        if let doubleVal = asDouble(value: value) {
+            return Date(timeIntervalSince1970: doubleVal)
+        }
+        return nil
     }
     
     private func asSemver(value: Any) -> Version? {
-        switch value {
-        case let val as String:
+        if case let val as String = value {
             return val.toVersion()
-        default:
-            return nil
         }
+        return nil
     }
     
     private func asSlice(value: Any) -> [String]? {
