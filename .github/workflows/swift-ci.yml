@@ -35,7 +35,7 @@ jobs:
           xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: tests
@@ -57,7 +57,7 @@ jobs:
           xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
         if: failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: tests
