@@ -70,7 +70,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onReady` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnReady(handler: @escaping (ClientReadyState) -> ()) {
         mutex.lock()
@@ -84,7 +84,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onFlagEvaluated` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnFlagEvaluated(handler: @escaping (EvaluationDetails) -> ()) {
         mutex.lock()
@@ -94,7 +94,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onConfigChanged` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnConfigChanged(handler: @escaping (ConfigProtocol) -> ()) {
         mutex.lock()
@@ -104,7 +104,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onError` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnError(handler: @escaping (String) -> ()) {
         mutex.lock()

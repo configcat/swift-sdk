@@ -9,7 +9,7 @@ import os.log
     case euOnly
 }
 
-/// A client for handling configurations provided by ConfigCat.
+/// ConfigCat SDK client.
 public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
@@ -69,12 +69,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
+     Creates a new or gets an already existing `ConfigCatClient` for the given sdkKey.
 
      - Parameters:
-       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
-       - options: the configuration options.
-     - Returns: the ConfigCatClient instance.
+       - sdkKey: The SDK Key for to communicate with the ConfigCat services.
+       - options: The configuration options.
+     - Returns: The ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, options: ConfigCatOptions? = nil) -> ConfigCatClient {
         mutex.lock()
@@ -115,9 +115,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
 
      - Parameters:
-       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
-       - configurator: the configuration callback.
-     - Returns: the ConfigCatClient instance.
+       - sdkKey: The SDK Key for to communicate with the ConfigCat services.
+       - configurator: The configuration callback.
+     - Returns: The ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, configurator: (ConfigCatOptions) -> ()) -> ConfigCatClient {
         let options = ConfigCatOptions.default
@@ -167,10 +167,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Gets the value of a feature flag or setting identified by the given `key`.
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
@@ -190,10 +190,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
@@ -213,8 +213,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Gets the values along with evaluation details of all feature flags and settings.
 
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
         getSettings { result in
@@ -310,7 +310,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Initiates a force refresh asynchronously on the cached configuration.
 
-     - Parameter completion: the function which will be called when refresh completed successfully.
+     - Parameter completion: The function which will be called when refresh completed successfully.
      */
     @objc public func forceRefresh(completion: @escaping (RefreshResult) -> ()) {
         if let configService = configService {

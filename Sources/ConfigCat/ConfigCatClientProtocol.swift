@@ -5,28 +5,28 @@ public protocol ConfigCatClientProtocol {
     /**
      Gets the value of a feature flag or setting identified by the given `key`.
      
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ())
 
     /**
      Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (TypedEvaluationDetails<Value>) -> ())
 
     /**
      Gets the values along with evaluation details of all feature flags and settings.
 
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     func getAllValueDetails(user: ConfigCatUser?, completion: @escaping ([EvaluationDetails]) -> ())
 
@@ -57,7 +57,7 @@ public protocol ConfigCatClientProtocol {
     /**
      Initiates a force refresh asynchronously on the cached configuration.
 
-     - Parameter completion: the function which will be called when refresh completed.
+     - Parameter completion: The function which will be called when refresh completed.
      */
     func forceRefresh(completion: @escaping (RefreshResult) -> ())
     
@@ -70,9 +70,9 @@ public protocol ConfigCatClientProtocol {
     /**
      Gets a value asynchronously as `Value` from the configuration identified by the given `key`.
 
-     - Parameter key: the identifier of the configuration value.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
+     - Parameter key: The identifier of the configuration value.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> Value
@@ -80,9 +80,9 @@ public protocol ConfigCatClientProtocol {
     /**
      Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> TypedEvaluationDetails<Value>
@@ -90,7 +90,7 @@ public protocol ConfigCatClientProtocol {
     /**
      Gets the values along with evaluation details of all feature flags and settings.
 
-     - Parameter user: the user object to identify the caller.
+     - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getAllValueDetails(user: ConfigCatUser?) async -> [EvaluationDetails]
