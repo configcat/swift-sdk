@@ -19,23 +19,20 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        include:
-          - sdk: iphonesimulator15.2
-            destination: OS=15.2,name=iPhone 8
+        destination:
+          - destination: platform=iOS Simulator,name=iPhone 8
             platform: iphone
-          - sdk: appletvsimulator15.2
-            destination: OS=15.2,name=Apple TV
+          - destination: platform=tvOS Simulator,name=Apple TV
             platform: appletv
-          - sdk: watchsimulator8.3
-            destination: OS=8.3,name=Apple Watch Series 7 - 45mm
-            platform: appletv
+          - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
+            platform: watch
     steps:
       - uses: actions/checkout@v4
       - name: Tests
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
-          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
+          xcodebuild build-for-testing -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
+          xcodebuild test-without-building -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
         if: failure()
         uses: actions/upload-artifact@v3
@@ -69,6 +66,11 @@ jobs:
   coverage:
     needs: [test-ios, test-osx]
     runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - sdk: macosx12.1
+            destination: arch=x86_64
     steps:
       - uses: actions/checkout@v4
       
@@ -78,8 +80,8 @@ jobs:
       - name: Execute Coverage
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
-          xcodebuild test-without-building -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
           slather
           bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
 
