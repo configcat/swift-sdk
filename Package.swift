@@ -18,7 +18,6 @@ let package = Package(
                 exclude: ["LICENSE" , "version.txt"]),
         .target(name: "ConfigCat",
                 dependencies: ["Version"],
-                resources: [.copy("Resources/PrivacyInfo.xcprivacy")],
                 exclude: ["Resources/ConfigCat.h", "Resources/Info.plist"],
                 swiftSettings: [
                     .define("DEBUG", .when(configuration: .debug))
