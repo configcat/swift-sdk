@@ -13,7 +13,9 @@ on:
 
 jobs:
   test-ios:
-    runs-on: macos-latest
+    runs-on: macos-14
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_15.2.app
     strategy:
       matrix:
         include:
@@ -22,6 +24,8 @@ jobs:
           - destination: platform=tvOS Simulator,name=Apple TV
             platform: appletv
           - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
+            platform: watch
+          - destination: platform=visionOS Simulator,name=Apple Vision Pro
             platform: watch
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +86,7 @@ jobs:
           slather
           bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
 
-  lint:
+  pod-lint:
     needs: coverage
     runs-on: macos-latest
     steps:

@@ -13,7 +13,8 @@ Pod::Spec.new do |spec|
   spec.ios.deployment_target      = "12.0"
   spec.watchos.deployment_target  = "4.0"
   spec.tvos.deployment_target     = "12.0"
-  spec.osx.deployment_target      = '10.13'
+  spec.osx.deployment_target      = "10.13"
+  spec.visionos.deployment_target = "1.0"
 
   spec.source            = { :git => "https://github.com/configcat/swift-sdk.git", :tag => spec.version }
   spec.source_files      = "Sources/ConfigCat/*.swift", "Sources/Version/*.swift"
