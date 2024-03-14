@@ -28,6 +28,13 @@ enum EvalConditionResult {
         return false
     }
     
+    var isAttributeMissing: Bool {
+        if case .attributeMissing(_) = self {
+            return true
+        }
+        return false
+    }
+    
     var err: String {
         switch self {
         case .success(_):
@@ -42,15 +49,6 @@ enum EvalConditionResult {
             return "cannot evaluate, (\(err ?? "comparison value is missing or invalid"))"
         case .fatal(let err):
             return "cannot evaluate (\(err))"
-        }
-    }
-    
-    var isAttributeMissing: Bool {
-        switch self {
-        case .attributeMissing(_):
-            return true
-        default:
-            return false
         }
     }
 }
