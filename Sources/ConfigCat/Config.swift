@@ -7,9 +7,9 @@ enum RedirectMode: Int {
 }
 
 @objc public enum SegmentComparator: Int {
-    /// Matches when the conditions of the specified segment are evaluated to true.
+    /// Checks whether the conditions of the specified segment are evaluated to true.
     case isIn
-    /// Matches when the conditions of the specified segment are evaluated to false.
+    /// Checks whether the conditions of the specified segment are evaluated to false.
     case isNotIn
     
     var text: String {
@@ -18,9 +18,9 @@ enum RedirectMode: Int {
 }
 
 @objc public enum PrerequisiteComparator: Int {
-    /// Matches when the evaluated value of the specified prerequisite flag is equal to the comparison value.
+    /// Checks whether the evaluated value of the specified prerequisite flag is equal to the comparison value.
     case eq
-    /// Matches when the evaluated value of the specified prerequisite flag is not equal to the comparison value.
+    /// Checks whether the evaluated value of the specified prerequisite flag is not equal to the comparison value.
     case notEq
     
     var text: String {
@@ -41,77 +41,77 @@ enum RedirectMode: Int {
 }
 
 @objc public enum Comparator: Int {
-    /// Matches when the comparison attribute is equal to any of the comparison values.
+    /// Checks whether the comparison attribute is equal to any of the comparison values.
     case oneOf
-    /// Matches when the comparison attribute is not equal to any of the comparison values.
+    /// Checks whether the comparison attribute is not equal to any of the comparison values.
     case notOneOf
-    /// Matches when the comparison attribute contains any comparison values as a substring.
+    /// Checks whether the comparison attribute contains any comparison values as a substring.
     case contains
-    /// Matches when the comparison attribute does not contain any comparison values as a substring.
+    /// Checks whether the comparison attribute does not contain any comparison values as a substring.
     case notContains
-    /// Matches when the comparison attribute interpreted as a semantic version is equal to any of the comparison values.
+    /// Checks whether the comparison attribute interpreted as a semantic version is equal to any of the comparison values.
     case oneOfSemver
-    /// Matches when the comparison attribute interpreted as a semantic version is not equal to any of the comparison values.
+    /// Checks whether the comparison attribute interpreted as a semantic version is not equal to any of the comparison values.
     case notOneOfSemver
-    /// Matches when the comparison attribute interpreted as a semantic version is less than the comparison value.
+    /// Checks whether the comparison attribute interpreted as a semantic version is less than the comparison value.
     case lessSemver
-    /// Matches when the comparison attribute interpreted as a semantic version is less than or equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a semantic version is less than or equal to the comparison value.
     case lessEqSemver
-    /// Matches when the comparison attribute interpreted as a semantic version is greater than the comparison value.
+    /// Checks whether the comparison attribute interpreted as a semantic version is greater than the comparison value.
     case greaterSemver
-    /// Matches when the comparison attribute interpreted as a semantic version is greater than or equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a semantic version is greater than or equal to the comparison value.
     case greaterEqSemver
-    /// Matches when the comparison attribute interpreted as a decimal number is equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is equal to the comparison value.
     case eqNum
-    /// Matches when the comparison attribute interpreted as a decimal number is not equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is not equal to the comparison value.
     case notEqNum
-    /// Matches when the comparison attribute interpreted as a decimal number is less than the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is less than the comparison value.
     case lessNum
-    /// Matches when the comparison attribute interpreted as a decimal number is less than or equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is less than or equal to the comparison value.
     case lessEqNum
-    /// Matches matches when the comparison attribute interpreted as a decimal number is greater than the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is greater than the comparison value.
     case greaterNum
-    /// Matches when the comparison attribute interpreted as a decimal number is greater than or equal to the comparison value.
+    /// Checks whether the comparison attribute interpreted as a decimal number is greater than or equal to the comparison value.
     case greaterEqNum
-    /// Matches when the comparison attribute is equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute is equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case oneOfHashed
-    /// Matches when the comparison attribute is not equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute is not equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case notOneOfHashed
-    /// Matches matches when the comparison attribute interpreted as the seconds elapsed since Unix Epoch is less than the comparison value.
+    /// Checks whether the comparison attribute interpreted as the seconds elapsed since Unix Epoch is less than the comparison value.
     case beforeDateTime
-    /// Matches when the comparison attribute interpreted as the seconds elapsed since Unix Epoch is greater than the comparison value.
+    /// Checks whether the comparison attribute interpreted as the seconds elapsed since Unix Epoch is greater than the comparison value.
     case afterDateTime
-    /// Matches when the comparison attribute is equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute is equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
     case eqHashed
-    /// Matches when the comparison attribute is not equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute is not equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
     case notEqHashed
-    /// Matches when the comparison attribute starts with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute starts with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case startsWithAnyOfHashed
-    /// Matches when the comparison attribute does not start with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute does not start with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case notStartsWithAnyOfHashed
-    /// Matches when the comparison attribute ends with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute ends with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case endsWithAnyOfHashed
-    /// Matches when the comparison attribute does not end with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute does not end with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case notEndsWithAnyOfHashed
-    /// Matches when the comparison attribute interpreted as a string list contains any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute interpreted as a string list contains any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case arrayContainsAnyOfHashed
-    /// Matches when the comparison attribute interpreted as a string list does not contain any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
+    /// Checks whether the comparison attribute interpreted as a string list does not contain any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
     case arrayNotContainsAnyOfHashed
-    //// Matches when the comparison attribute is equal to the comparison value.
+    //// Checks whether the comparison attribute is equal to the comparison value.
     case eq
-    /// Matches when the comparison attribute is not equal to the comparison value.
+    /// Checks whether the comparison attribute is not equal to the comparison value.
     case notEq
-    /// Matches when the comparison attribute starts with any of the comparison values.
+    /// Checks whether the comparison attribute starts with any of the comparison values.
     case startsWithAnyOf
-    /// Matches when the comparison attribute does not start with any of the comparison values.
+    /// Checks whether the comparison attribute does not start with any of the comparison values.
     case notStartsWithAnyOf
-    /// Matches when the comparison attribute ends with any of the comparison values.
+    /// Checks whether the comparison attribute ends with any of the comparison values.
     case endsWithAnyOf
-    /// Matches when the comparison attribute does not end with any of the comparison values.
+    /// Checks whether the comparison attribute does not end with any of the comparison values.
     case notEndsWithAnyOf
-    /// Matches when the comparison attribute interpreted as a string list contains any of the comparison values.
+    /// Checks whether the comparison attribute interpreted as a string list contains any of the comparison values.
     case arrayContainsAnyOf
-    /// Matches when the comparison attribute interpreted as a string list does not contain any of the comparison values.
+    /// Checks whether the comparison attribute interpreted as a string list does not contain any of the comparison values.
     case arrayNotContainsAnyOf
     
     var isSensitive: Bool {
