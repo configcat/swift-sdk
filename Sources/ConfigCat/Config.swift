@@ -103,7 +103,7 @@ enum RedirectMode: Int {
     case notEq
     /// Matches when the comparison attribute starts with any of the comparison values.
     case startsWithAnyOf
-    /// OpNotStartsWithAnyOf matches when the comparison attribute does not start with any of the comparison values.
+    /// Matches when the comparison attribute does not start with any of the comparison values.
     case notStartsWithAnyOf
     /// Matches when the comparison attribute ends with any of the comparison values.
     case endsWithAnyOf
