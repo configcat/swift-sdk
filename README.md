@@ -12,40 +12,40 @@ ConfigCat SDK for Swift provides easy integration for your application to [Confi
 
 ### 1. Install the package
 
-**CocoaPods:**
+- **CocoaPods**
 
-Add the following to your `Podfile`:
-```ruby
-target '<YOUR TARGET>' do
-pod 'ConfigCat'
-end
-```
-Then, run the following command to install your dependencies:
-```bash
-pod install
-```
+  Add the following to your `Podfile`:
+  ```ruby
+  target '<YOUR TARGET>' do
+  pod 'ConfigCat'
+  end
+  ```
+  Then, run the following command to install your dependencies:
+  ```bash
+  pod install
+  ```
 
-**Carthage:**
+- **Carthage**
 
-Add the following to your `Cartfile`:
-```
-github "configcat/swift-sdk"
-```
-Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
+  Add the following to your `Cartfile`:
+  ```
+  github "configcat/swift-sdk"
+  ```
+  Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
-**Swift Package Manager:**
+- **Swift Package Manager**
 
-You can add ConfigCat to an Xcode project by adding it as a package dependency.
+  You can add ConfigCat to an Xcode project by adding it as a package dependency.
 
-> https://github.com/configcat/swift-sdk
+  > https://github.com/configcat/swift-sdk
 
-If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
+  If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
 
-``` swift
-dependencies: [
-  .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.0")
-]
-```
+  ``` swift
+  dependencies: [
+    .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.0")
+  ]
+  ```
 
 ### 2. Go to the <a href="https://app.configcat.com/sdkkey" target="_blank">ConfigCat Dashboard</a> to get your *SDK Key*:
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme02-3.png  "SDK-KEY")
