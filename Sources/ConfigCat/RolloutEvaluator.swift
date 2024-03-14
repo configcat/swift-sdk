@@ -241,10 +241,9 @@ class RolloutEvaluator {
             
             evalLogger?.decIndent()
             
-            switch condResult {
-            case .success(let match):
+            if case .success(let match) = condResult {
                 matched = match
-            default:
+            } else {
                 matched = false
             }
             
