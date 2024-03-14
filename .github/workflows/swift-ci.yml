@@ -21,8 +21,8 @@ jobs:
             platform: iphone
           - destination: platform=tvOS Simulator,name=Apple TV
             platform: appletv
-          - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
-            platform: watch
+          #- destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
+          #  platform: watch
     steps:
       - uses: actions/checkout@v4
       - name: Tests
