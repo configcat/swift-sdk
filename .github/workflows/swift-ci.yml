@@ -26,6 +26,9 @@ jobs:
           - sdk: appletvsimulator15.2
             destination: OS=15.2,name=Apple TV
             platform: appletv
+          - sdk: watchsimulator8.3
+            destination: OS=8.3,name=Apple Watch Series 7 - 45mm
+            platform: appletv
     steps:
       - uses: actions/checkout@v4
       - name: Tests

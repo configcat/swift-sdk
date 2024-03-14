@@ -6,10 +6,10 @@
 // compilation.
 TARGETED_DEVICE_FAMILY = 1,2,3,4
 
-IPHONEOS_DEPLOYMENT_TARGET = 10.0
-MACOSX_DEPLOYMENT_TARGET = 10.12
-TVOS_DEPLOYMENT_TARGET = 10.0
-WATCHOS_DEPLOYMENT_TARGET = 3.0
+IPHONEOS_DEPLOYMENT_TARGET = 12.0
+MACOSX_DEPLOYMENT_TARGET = 10.13
+TVOS_DEPLOYMENT_TARGET = 12.0
+WATCHOS_DEPLOYMENT_TARGET = 4.0
 
 // Product Bundle Identifier
 //
@@ -25,18 +25,6 @@ PRODUCT_BUNDLE_IDENTIFIER[sdk=macosx*] = com.configcat.macOS.client
 PRODUCT_BUNDLE_IDENTIFIER[sdk=watchos*] = com.configcat.watchOS.client
 PRODUCT_BUNDLE_IDENTIFIER[sdk=watchsimulator*] = com.configcat.watchOS.client
 
-// Base SDK
-//
-// The name or path of the base SDK being used during the build. The product will be
-// built against the headers and libraries located inside the indicated SDK. This path
-// will be prepended to all search paths, and will be passed through the environment to
-// the compiler and linker. Additional SDKs can be specified in the `ADDITIONAL_SDKS`
-// setting.
-SDKROOT[sdk=macosx*] = macosx
-SDKROOT[sdk=iphoneos*] = iphoneos
-SDKROOT[sdk=watchos*] = watchos
-SDKROOT[sdk=appletvos*] = appletvos
-
 // Supported Platforms
 //
 // The list of supported platforms from which a base SDK can be used. This setting is
@@ -44,7 +32,7 @@ SDKROOT[sdk=appletvos*] = appletvos
 SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator watchos watchsimulator appletvos appletvsimulator
 
 // Swift Language Version
-SWIFT_VERSION = 4.2
+SWIFT_VERSION = 5.0
 
 // ConfigCat SDK version
 MARKETING_VERSION = 11.0.0

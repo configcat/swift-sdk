@@ -165,6 +165,7 @@
 		F183A2022B8FAC090015967E /* json */ = {isa = PBXFileReference; lastKnownFileType = folder; name = json; path = Resources/json; sourceTree = "<group>"; };
 		F183A2052B8FBABD0015967E /* EvaluationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationTests.swift; sourceTree = "<group>"; };
 		F183A2072B9096A30015967E /* EvaluationLogTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EvaluationLogTests.swift; sourceTree = "<group>"; };
+		F183A2092BA273AC0015967E /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		F1B1D8B428FF2C830034165E /* ConfigCatOptions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCatOptions.swift; sourceTree = "<group>"; };
 		F1BC414428E1D54800F2230A /* EvaluationDetails.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = EvaluationDetails.swift; sourceTree = "<group>"; };
 		F1BC414B28E1D6C900F2230A /* Helpers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Helpers.swift; sourceTree = "<group>"; };
@@ -223,6 +224,7 @@
 			isa = PBXGroup;
 			children = (
 				B4BD2B64258CA9A2007371E2 /* Info.plist */,
+				F183A2092BA273AC0015967E /* PrivacyInfo.xcprivacy */,
 				3F880A2C207BE8F000087A6B /* ConfigCat.h */,
 			);
 			path = Resources;
