@@ -12,7 +12,7 @@ ConfigCat SDK for Swift provides easy integration for your application to [Confi
 
 ### 1. Install the package
 
-- **CocoaPods**
+- ### CocoaPods
 
   Add the following to your `Podfile`:
   ```ruby
@@ -25,15 +25,7 @@ ConfigCat SDK for Swift provides easy integration for your application to [Confi
   pod install
   ```
 
-- **Carthage**
-
-  Add the following to your `Cartfile`:
-  ```
-  github "configcat/swift-sdk"
-  ```
-  Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
-
-- **Swift Package Manager**
+- ### Swift Package Manager
 
   You can add ConfigCat to an Xcode project by adding it as a package dependency.
 
@@ -46,6 +38,14 @@ ConfigCat SDK for Swift provides easy integration for your application to [Confi
     .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.0")
   ]
   ```
+
+- ### Carthage
+
+  Add the following to your `Cartfile`:
+  ```
+  github "configcat/swift-sdk"
+  ```
+  Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
 ### 2. Go to the <a href="https://app.configcat.com/sdkkey" target="_blank">ConfigCat Dashboard</a> to get your *SDK Key*:
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme02-3.png  "SDK-KEY")
