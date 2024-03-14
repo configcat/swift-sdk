@@ -19,7 +19,7 @@ jobs:
     runs-on: macos-latest
     strategy:
       matrix:
-        destination:
+        include:
           - destination: platform=iOS Simulator,name=iPhone 8
             platform: iphone
           - destination: platform=tvOS Simulator,name=Apple TV
