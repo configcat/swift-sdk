@@ -99,7 +99,7 @@ jobs:
         run: pod lib lint
         
   publish:
-    needs: lint
+    needs: pod-lint
     runs-on: macos-latest
     if: startsWith(github.ref, 'refs/tags')
     steps:
