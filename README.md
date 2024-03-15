@@ -1,10 +1,10 @@
 # ConfigCat SDK for Swift
 
 [![Build Status](https://github.com/configcat/swift-sdk/actions/workflows/swift-ci.yml/badge.svg?branch=master)](https://github.com/configcat/swift-sdk/actions/workflows/swift-ci.yml)
-[![Coverage Status](https://img.shields.io/codecov/c/github/ConfigCat/swift-sdk.svg)](https://codecov.io/gh/ConfigCat/swift-sdk)
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Supported Platforms](https://img.shields.io/cocoapods/p/ConfigCat.svg?style=flat)](https://configcat.com/docs/sdk-reference/ios)
+[![Coverage Status](https://img.shields.io/sonar/coverage/configcat_swift-sdk?logo=SonarCloud&server=https%3A%2F%2Fsonarcloud.io)](https://sonarcloud.io/project/overview?id=configcat_swift-sdk)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=configcat_swift-sdk&metric=alert_status)](https://sonarcloud.io/dashboard?id=configcat_swift-sdk)
 
 ConfigCat SDK for Swift provides easy integration for your application to [ConfigCat](https://configcat.com).
 
