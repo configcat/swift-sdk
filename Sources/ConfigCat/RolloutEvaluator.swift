@@ -79,10 +79,9 @@ class RolloutEvaluator {
         
         let result = evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
         
-        switch result {
-        case .success(let val, _, _, _):
+        if case .success(let val, _, _, _) = result {
             evalLogger?.newLine(msg: "Returning '\(val)'.")
-        default:
+        } else {
             evalLogger?.resetIndent().incIndent()
             evalLogger?.newLine(msg: "Returning '\(defaultValue ?? "nil")'.")
         }
@@ -156,7 +155,6 @@ class RolloutEvaluator {
             } else {
                 if !userMissingLogged {
                     logUserObjectMissing(key: key)
-                    userMissingLogged = true
                 }
                 evalLogger?.newLine(msg: "Skipping % options because the User Object is missing.")
             }
@@ -217,7 +215,7 @@ class RolloutEvaluator {
             if let userCondition = cond.userCondition {
                 evalLogger?.append(value: userCondition)
                 if let usr = user {
-                    condResult = evalUserCondition(cond: userCondition, key: key, user: usr, salt: salt, ctxSalt: ctxSalt, evalLogger: evalLogger)
+                    condResult = evalUserCondition(cond: userCondition, key: key, user: usr, salt: salt, ctxSalt: ctxSalt)
                 } else {
                     condResult = .noUser
                 }
@@ -231,7 +229,7 @@ class RolloutEvaluator {
                 }
                 newLineBeforeThen = condResult.isSuccess || condResult.isAttributeMissing || targetingRule.conditions.count > 1
             } else if let prerequisiteFlagCondition = cond.prerequisiteFlagCondition {
-                condResult = evalPrerequisiteCondition(cond: prerequisiteFlagCondition, key: key, user: user, salt: salt, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
+                condResult = evalPrerequisiteCondition(cond: prerequisiteFlagCondition, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
                 newLineBeforeThen = true
             }
             
@@ -276,7 +274,7 @@ class RolloutEvaluator {
                 evalLogger?.incIndent().newLine(msg: "AND ")
             }
             evalLogger?.append(value: userCondition)
-            result = evalUserCondition(cond: userCondition, key: key, user: user, salt: salt, ctxSalt: name, evalLogger: evalLogger)
+            result = evalUserCondition(cond: userCondition, key: key, user: user, salt: salt, ctxSalt: name)
             evalLogger?.append(value: " => ").append(value: result.isMatch ? "true" : "false").append(value: result.isMatch ? "" : ", skipping the remaining AND conditions").decIndent()
             
             if !result.isSuccess || !result.isMatch {
@@ -299,7 +297,7 @@ class RolloutEvaluator {
         return result
     }
     
-    private func evalPrerequisiteCondition(cond: PrerequisiteFlagCondition, key: String, user: ConfigCatUser?, salt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
+    private func evalPrerequisiteCondition(cond: PrerequisiteFlagCondition, key: String, user: ConfigCatUser?, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
         evalLogger?.append(value: cond)
         
         guard let prereq = settings[cond.flagKey] else {
@@ -340,7 +338,7 @@ class RolloutEvaluator {
         }
     }
     
-    private func evalUserCondition(cond: UserCondition, key: String, user: ConfigCatUser, salt: String, ctxSalt: String, evalLogger: EvaluationLogger?) -> EvalConditionResult {
+    private func evalUserCondition(cond: UserCondition, key: String, user: ConfigCatUser, salt: String, ctxSalt: String) -> EvalConditionResult {
         switch cond.comparator {
         case .eq, .notEq, .eqHashed, .notEqHashed:
             guard let compVal = cond.stringValue else {
