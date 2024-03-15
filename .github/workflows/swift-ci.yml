@@ -79,15 +79,23 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: Install Slather
-        run: gem install slather
+        run: |
+          gem install slather
+          brew install sonar-scanner
       
       - name: Execute Coverage
         run: |
           set -o pipefail
           xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
           xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
-          slather
-          bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
+          slather coverage --sonarqube-xml
+
+      - name: Run Sonar
+        run: |
+          git fetch --unshallow --no-tags
+          sonar-scanner -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   pod-lint:
     needs: coverage
