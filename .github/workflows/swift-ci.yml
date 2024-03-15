@@ -88,7 +88,7 @@ jobs:
           set -o pipefail
           xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
           xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
-          slather coverage --sonarqube-xml
+          slather
 
       - name: Run Sonar
         run: |
