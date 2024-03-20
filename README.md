@@ -8,6 +8,16 @@
 
 ConfigCat SDK for Swift provides easy integration for your application to [ConfigCat](https://configcat.com).
 
+## Supported device platforms
+
+| Platform | Version |
+| -------- | ------- |
+| iOS      | 12.0    |
+| watchOS  | 4.0     |
+| tvOS     | 12.0    |
+| macOS    | 10.13   |
+| visionOS | 1.0     |
+
 ## Getting started
 
 ### 1. Install the package
