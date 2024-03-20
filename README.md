@@ -8,7 +8,7 @@
 
 ConfigCat SDK for Swift provides easy integration for your application to [ConfigCat](https://configcat.com).
 
-## Supported device platforms
+The following device platform versions are supported:
 
 | Platform | Version |
 | -------- | ------- |
