@@ -613,7 +613,7 @@ class RolloutEvaluator {
         case let val as String:
             return (val, false)
         case let val as [String]:
-            return (arrToJson(arr: val), true)
+            return (Utils.toJson(obj: val), true)
         case let val as Int:
             return (val.description, true)
         case let val as Int8:
@@ -715,33 +715,9 @@ class RolloutEvaluator {
         case let val as [String]:
             return val
         case let val as String:
-            return decodeSliceFromJson(json: val)
+            return Utils.fromJson(json: val)
         default:
             return nil
-        }
-    }
-    
-    private func decodeSliceFromJson(json: String) -> [String]? {
-        do {
-            guard let data = json.data(using: .utf8) else {
-                return nil
-            }
-            guard let result = try JSONSerialization.jsonObject(with: data, options: []) as? [String] else {
-                return nil
-            }
-            return result
-        } catch {
-            return nil
-        }
-    }
-    
-    private func arrToJson(arr: [String]) -> String {
-        let jsonEncoder = JSONEncoder()
-        do {
-            let jsonData = try jsonEncoder.encode(arr)
-            return String(data: jsonData, encoding: .utf8) ?? ""
-        } catch {
-            return ""
         }
     }
     

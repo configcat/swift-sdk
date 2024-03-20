@@ -231,18 +231,10 @@ class ConfigEntry: Equatable {
     }
 
     static func fromConfigJson(json: String, eTag: String, fetchTime: Date) -> Result<ConfigEntry, Error>  {
-        do {
-            guard let data = json.data(using: .utf8) else {
-                return .failure(ParseError(message: "Decode to utf8 data failed."))
-            }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                return .failure(ParseError(message: "Convert to [String: Any] map failed."))
-            }
-            
-            return .success(ConfigEntry(config: .fromJson(json: jsonObject), configJson: json, eTag: eTag, fetchTime: fetchTime))
-        } catch {
-            return .failure(error)
+        guard let jsonObject: [String: Any] = Utils.fromJson(json: json) else {
+            return .failure(ParseError(message: "Config JSON parsing failed."))
         }
+        return .success(ConfigEntry(config: .fromJson(json: jsonObject), configJson: json, eTag: eTag, fetchTime: fetchTime))
     }
     
     static func fromCached(cached: String) -> Result<ConfigEntry, Error> {

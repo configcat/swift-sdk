@@ -86,4 +86,27 @@ class Utils {
         }
         return eq1.isEqual(eq2)
     }
+    
+    static func toJson(obj: Any) -> String {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: obj, options: [])
+            return String(data: jsonData, encoding: .utf8) ?? ""
+        } catch {
+            return ""
+        }
+    }
+    
+    static func fromJson<T>(json: String) -> T? {
+        do {
+            guard let data = json.data(using: .utf8) else {
+                return nil
+            }
+            guard let result = try JSONSerialization.jsonObject(with: data, options: []) as? T else {
+                return nil
+            }
+            return result
+        } catch {
+            return nil
+        }
+    }
 }

@@ -165,17 +165,10 @@ class TestSuite {
     }
     
     static func fromJsonString(json: String) -> TestSuite? {
-        do {
-            guard let data = json.data(using: .utf8) else {
-                return nil
-            }
-            guard let jsonObject = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else {
-                return nil
-            }
-            return .fromJson(json: jsonObject)
-        } catch {
+        guard let jsonObject: [String: Any] = Utils.fromJson(json: json) else {
             return nil
         }
+        return .fromJson(json: jsonObject)
     }
     
     static func fromJson(json: [String: Any]) -> TestSuite {

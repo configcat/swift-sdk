@@ -26,9 +26,7 @@ extension String {
 
 extension JsonSerializable {
     func toJsonString() -> String {
-        let jsonMap = toJsonMap()
-        let json = try! JSONSerialization.data(withJSONObject: jsonMap, options: [])
-        return String(data: json, encoding: .utf8)!
+        return Utils.toJson(obj: toJsonMap())
     }
 }
 

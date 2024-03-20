@@ -91,11 +91,15 @@ public final class ConfigCatUser: NSObject {
     }
     
     public override var description: String {
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: attributes, options: [])
-            return String(data: jsonData, encoding: .utf8) ?? ""
-        } catch {
-            return ""
+        var map = [String: Any]()
+        for (key, value) in attributes {
+            switch value {
+            case is String, is [String], is Int, is Int8, is Int16, is Int32, is Int64, is UInt, is UInt8, is UInt16, is UInt32, is UInt64, is Float, is Float32, is Float64, is Double:
+                map[key] = value
+            default:
+                map[key] = "\(value)"
+            }
         }
+        return Utils.toJson(obj: map)
     }
 }
