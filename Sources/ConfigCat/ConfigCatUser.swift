@@ -2,9 +2,9 @@ import Foundation
 
 /// User Object. Contains user attributes which are used for evaluating targeting rules and percentage options.
 public final class ConfigCatUser: NSObject {
-    static let IdKey: String = "Identifier"
-    static let EmailKey: String = "Email"
-    static let CountryKey: String = "Country"
+    static let idKey: String = "Identifier"
+    static let emailKey: String = "Email"
+    static let countryKey: String = "Country"
     
     private var attributes: [String: Any]
     private(set) var identifier: String
@@ -52,14 +52,14 @@ public final class ConfigCatUser: NSObject {
         
         attributes = [:]
         self.identifier = identifier
-        attributes[ConfigCatUser.IdKey] = identifier
+        attributes[ConfigCatUser.idKey] = identifier
         
         if let email = email {
-            attributes[ConfigCatUser.EmailKey] = email
+            attributes[ConfigCatUser.emailKey] = email
         }
         
         if let country = country {
-            attributes[ConfigCatUser.CountryKey] = country
+            attributes[ConfigCatUser.countryKey] = country
         }
         
         if let custom = custom {
@@ -73,7 +73,7 @@ public final class ConfigCatUser: NSObject {
     
     init(custom: [String: Any]) {
         self.attributes = custom
-        self.identifier = custom[ConfigCatUser.IdKey] as? String ?? ""
+        self.identifier = custom[ConfigCatUser.idKey] as? String ?? ""
     }
     
     func attribute(for key: String) -> Any? {
@@ -87,7 +87,7 @@ public final class ConfigCatUser: NSObject {
     }
     
     static func isPredefinedKey(key: String) -> Bool {
-        return key == ConfigCatUser.IdKey || key == ConfigCatUser.EmailKey || key == ConfigCatUser.CountryKey
+        return key == ConfigCatUser.idKey || key == ConfigCatUser.emailKey || key == ConfigCatUser.countryKey
     }
     
     public override var description: String {

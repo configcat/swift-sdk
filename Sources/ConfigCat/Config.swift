@@ -429,7 +429,7 @@ public final class Setting: NSObject, JsonSerializable {
 
         return Setting(value: .fromJson(json: json[self.valueKey] as? [String: Any] ?? [:]),
                        variationId: json[self.variationIdKey] as? String,
-                       percentageAttribute: json[self.percentageAttributeKey] as? String ?? ConfigCatUser.IdKey,
+                       percentageAttribute: json[self.percentageAttributeKey] as? String ?? ConfigCatUser.idKey,
                        settingType: SettingType(rawValue: (json[self.settingTypeKey] as? Int ?? -1)) ?? .unknown,
                        percentageOptions: percentageOptions.map { opt in
                            .fromJson(json: opt)
