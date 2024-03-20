@@ -277,7 +277,7 @@ public class Config: NSObject, JsonSerializable {
 
     /// The dictionary of settings.
     @objc public let settings: [String: Setting]
-    /// The dictionary of settings.
+    /// The list of segments.
     @objc public let segments: [Segment]
     /// The salt that was used to hash sensitive comparison values.
     @objc public let salt: String?
@@ -386,7 +386,7 @@ public final class Setting: NSObject, JsonSerializable {
     static let targetingRulesKey = "r"
     static let variationIdKey = "i"
 
-    /// The setting's default value used when no targeting rules are matching during an evaluation process.
+    /// The value that is returned when none of the targeting rules or percentage options yield a result.
     @objc public let value: SettingValue
 
     /// The list of percentage options.
@@ -401,7 +401,7 @@ public final class Setting: NSObject, JsonSerializable {
     /// The User Object attribute which serves as the basis of percentage options evaluation.
     @objc public let percentageAttribute: String
     
-    /// The setting's type. It can be Bool, String, Int, Float.
+    /// The setting's type. It can be `bool`, `string`, `int` or `double`.
     @objc public let settingType: SettingType
     
     var salt: String?
@@ -507,7 +507,7 @@ public final class TargetingRule: NSObject, JsonSerializable {
     /// The list of conditions that are combined with the AND logical operator.
     @objc public let conditions: [Condition]
 
-    /// The list of percentage options associated with the targeting rule or nil if the targeting rule has a served value THEN part.
+    /// The list of percentage options associated with the targeting rule or empty if the targeting rule has a served value THEN part.
     @objc public let percentageOptions: [PercentageOption]
 
     init(servedValue: ServedValue?, conditions: [Condition], percentageOptions: [PercentageOption]) {
@@ -603,16 +603,16 @@ public final class UserCondition: NSObject, JsonSerializable {
     static let doubleValKey = "d"
     static let stringArrValKey = "l"
 
-    /// Value in text format that the User Object attribute is compared to.
+    /// The value that the User Object attribute is compared to, when the comparator works with a single text comparison value.
     @objc public let stringValue: String?
     
-    /// Value in numeric format that the User Object attribute is compared to.
+    /// The value that the User Object attribute is compared to, when the comparator works with a numeric comparison value.
     public let doubleValue: Double?
     
-    /// Value in numeric Objective-C format that the User Object attribute is compared to.
+    /// The value in Objective-C format that the User Object attribute is compared to, when the comparator works with a numeric comparison value.
     @objc public let doubleValueObjC: NSNumber?
     
-    /// Value in text array format that the User Object attribute is compared to.
+    /// The value that the User Object attribute is compared to, when the comparator works with an array of text comparison value.
     @objc public let stringArrayValue: [String]?
 
     /// The operator which defines the relation between the comparison attribute and the comparison value.
@@ -934,10 +934,10 @@ public final class ServedValue: NSObject, JsonSerializable {
     static let valueKey = "v"
     static let idKey = "i"
 
-    /// The value associated with the targeting rule. It's empty (its `isEmpty` property is `true`) when the targeting rule has percentage options THEN part.
+    /// The value associated with the targeting rule.
     @objc public let value: SettingValue
     
-    /// Variation ID.
+    /// Variation ID (for analytical purposes).
     @objc public let variationId: String?
 
     init(value: SettingValue, variationId: String?) {
@@ -967,10 +967,10 @@ public final class PercentageOption: NSObject, JsonSerializable {
     /// The served value of the percentage option.
     @objc public let servedValue: SettingValue
 
-    /// The rule's percentage value.
+    /// A number between 0 and 100 that represents a randomly allocated fraction of the users.
     @objc public let percentage: Int
 
-    /// The rule's variation ID (for analytical purposes).
+    /// Variation ID (for analytical purposes).
     @objc public let variationId: String?
 
     init(servedValue: SettingValue, percentage: Int, variationId: String?) {

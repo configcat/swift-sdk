@@ -383,9 +383,6 @@ class RolloutEvaluator {
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
-            guard let salt = salt else {
-                return .fatal(RolloutEvaluator.saltMissingMessage)
-            }
             return evalTextEq(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
         case .oneOf, .notOneOf, .oneOfHashed, .notOneOfHashed:
@@ -396,9 +393,6 @@ class RolloutEvaluator {
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
-            guard let salt = salt else {
-                return .fatal(RolloutEvaluator.saltMissingMessage)
-            }
             return evalOneOf(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
         case .startsWithAnyOf, .startsWithAnyOfHashed, .notStartsWithAnyOf, .notStartsWithAnyOfHashed, .endsWithAnyOf, .endsWithAnyOfHashed, .notEndsWithAnyOf, .notEndsWithAnyOfHashed:
@@ -408,9 +402,6 @@ class RolloutEvaluator {
             let (userVal, converted) = asString(value: userAnyVal)
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
-            }
-            guard let salt = salt else {
-                return .fatal(RolloutEvaluator.saltMissingMessage)
             }
             return evalStartsEndsWith(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
@@ -467,23 +458,33 @@ class RolloutEvaluator {
             guard let userVal = asSlice(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid string array", cond)
             }
-            guard let salt = salt else {
-                return .fatal(RolloutEvaluator.saltMissingMessage)
-            }
             return evalArrayContains(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
         default:
             return .fatal("Comparison operator is invalid")
         }
     }
 
-    private func evalTextEq(comparisonValue: String, userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalTextEq(comparisonValue: String, userValue: String, comp: UserComparator, salt: String?, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .eqHashed : comp == .eq
-        return .success((comparisonValue == (comp.isSensitive ? userValue.sha256hex(salt: salt, contextSalt: ctxSalt) : userValue)) == needsTrue)
+        var userVal = userValue
+        if comp.isSensitive {
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
+            }
+            userVal = userValue.sha256hex(salt: salt, contextSalt: ctxSalt)
+        }
+        return .success((comparisonValue == userVal) == needsTrue)
     }
     
-    private func evalOneOf(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalOneOf(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String?, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .oneOfHashed : comp == .oneOf
-        let userVal = comp.isSensitive ? userValue.sha256hex(salt: salt, contextSalt: ctxSalt) : userValue
+        var userVal = userValue
+        if comp.isSensitive {
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
+            }
+            userVal = userValue.sha256hex(salt: salt, contextSalt: ctxSalt)
+        }
         for value in comparisonValue {
             if value == userVal {
                 return .success(needsTrue)
@@ -492,17 +493,20 @@ class RolloutEvaluator {
         return .success(!needsTrue)
     }
     
-    private func evalStartsEndsWith(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalStartsEndsWith(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String?, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isStartsWith ? comp.isSensitive ? comp == .startsWithAnyOfHashed : comp == .startsWithAnyOf :
         comp.isSensitive ? comp == .endsWithAnyOfHashed : comp == .endsWithAnyOf
         let userValData = Data(userValue.utf8)
         for value in comparisonValue {
             if comp.isSensitive {
+                guard let salt = salt else {
+                    return .fatal(RolloutEvaluator.saltMissingMessage)
+                }
                 let parts = value.components(separatedBy: "_")
                 if parts.count < 2 || parts[1].isEmpty {
                     return .fatal("Comparison value is missing or invalid")
                 }
-                guard let length = Int(parts[0].trimmingCharacters(in: .whitespaces)), length > 0 else {
+                guard let length = Int(parts[0].trimmingCharacters(in: .whitespaces)), length >= 0 else {
                     return .fatal("Comparison value is missing or invalid")
                 }
                 if length > userValData.count {
@@ -595,12 +599,18 @@ class RolloutEvaluator {
         return comp == .beforeDateTime ? .success(userValue < comparisonValue) : .success(userValue > comparisonValue)
     }
     
-    private func evalArrayContains(comparisonValue: [String], userValue: [String], comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalArrayContains(comparisonValue: [String], userValue: [String], comp: UserComparator, salt: String?, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .arrayContainsAnyOfHashed : comp == .arrayContainsAnyOf
         for userItem in userValue {
-            let usrVal = comp.isSensitive ? userItem.sha256hex(salt: salt, contextSalt: ctxSalt) : userItem
+            var userVal = userItem
+            if comp.isSensitive {
+                guard let salt = salt else {
+                    return .fatal(RolloutEvaluator.saltMissingMessage)
+                }
+                userVal = userItem.sha256hex(salt: salt, contextSalt: ctxSalt)
+            }
             for value in comparisonValue {
-                if usrVal == value {
+                if userVal == value {
                     return .success(needsTrue)
                 }
             }

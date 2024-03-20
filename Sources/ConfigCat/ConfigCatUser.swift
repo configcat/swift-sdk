@@ -23,7 +23,7 @@ public final class ConfigCatUser: NSObject {
      
      **Text-based comparators** (EQUALS, IS ONE OF, etc.)
      * accept `String` values,
-     * all other values are automatically converted to `string` (a warning will be logged but evaluation will continue as normal).
+     * all other values are automatically converted to `String` (a warning will be logged but evaluation will continue as normal).
      
      **SemVer-based comparators** (IS ONE OF, &lt;, &gt;=, etc.)
      * accept `String` values containing a properly formatted, valid semver value,
@@ -31,13 +31,13 @@ public final class ConfigCatUser: NSObject {
      
      **Number-based comparators** (=, &lt;, &gt;=, etc.)
      * accept `Int`, `UInt`, `Double`, or `Float` values,
-     * accept `String` values containing a properly formatted, valid `Int`, `UInt`, `Double`, or `Float` value,
+     * accept `String` values containing a properly formatted, valid `Double` value,
      * all other values are considered invalid (a warning will be logged and the currently evaluated targeting rule will be skipped).
      
      **Date time-based comparators** (BEFORE / AFTER)
      * accept `Date` values, which are automatically converted to a second-based Unix timestamp,
      * accept `Int`, `UInt`, `Double`, or `Float` values representing a second-based Unix timestamp,
-     * accept `String` values containing a properly formatted, valid `Int`, `UInt`, `Double`, or `Float` value,
+     * accept `String` values containing a properly formatted, valid `Double` value,
      * all other values are considered invalid (a warning will be logged and the currently evaluated targeting rule will be skipped).
      
      **String array-based comparators** (ARRAY CONTAINS ANY OF / ARRAY NOT CONTAINS ANY OF)

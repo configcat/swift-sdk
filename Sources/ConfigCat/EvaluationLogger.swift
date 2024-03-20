@@ -51,9 +51,9 @@ class EvaluationLogger {
         }
         self.append(value: "THEN")
         
-        if let val = targetingRule.servedValue?.value.anyValue {
-            self.append(value: " '\(val)'")
-        } else if !targetingRule.percentageOptions.isEmpty {
+        if let sv = targetingRule.servedValue {
+            self.append(value: " '\(sv.value.anyValue ?? RolloutEvaluator.invalidValueText)'")
+        } else {
             self.append(value: " % options")
         }
             
