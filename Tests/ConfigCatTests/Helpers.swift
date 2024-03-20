@@ -73,25 +73,6 @@ func randomSdkKey() -> String {
     return "\(String.random(len: 22))/\(String.random(len: 22))"
 }
 
-func anyEq(a: Any?, b: Any?) -> Bool {
-    if a == nil && b == nil {
-        return true
-    }
-    if let valA = a as? String, let valB = b as? String, valA == valB {
-        return true
-    }
-    if let valA = a as? Double, let valB = b as? Double, valA == valB {
-        return true
-    }
-    if let valA = a as? Int, let valB = b as? Int, valA == valB {
-        return true
-    }
-    if let valA = a as? Bool, let valB = b as? Bool, valA == valB {
-        return true
-    }
-    return false
-}
-
 func loadResource(bundle: Bundle, path: String) -> String? {
     guard let url = bundle.url(forResource: path, withExtension: nil), let matrixData = try? Data(contentsOf: url), let content = String(bytes: matrixData, encoding: .utf8) else {
         return nil

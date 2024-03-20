@@ -120,7 +120,7 @@ class EvaluationLogTests: XCTestCase {
             let exp = (test.user?.count ?? 0) > 1 ? expLogContent.removeTrailingNewLine().trimUserSection() : expLogContent.removeTrailingNewLine()
             let logs = (test.user?.count ?? 0) > 1 ? logger.entries.joined(separator: "\n").trimUserSection() : logger.entries.joined(separator: "\n")
             
-            XCTAssertTrue(anyEq(a: test.returnVal, b: res), "\(test.returnVal) is not equal to \(res ?? "invalid")")
+            XCTAssertTrue(Utils.anyEq(a: test.returnVal, b: res), "\(test.returnVal) is not equal to \(res ?? "invalid")")
             XCTAssertEqual(exp, logs)
         }
     }

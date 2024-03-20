@@ -78,6 +78,9 @@ class Utils {
     }
     
     static func anyEq(a: Any?, b: Any?) -> Bool {
+        if a == nil && b == nil {
+            return true
+        }
         guard let eq1 = a as? any Equatable, let eq2 = b as? any Equatable else {
             return false
         }

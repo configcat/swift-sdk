@@ -75,7 +75,7 @@ class EvaluationTests: XCTestCase {
             
             let res = await client.getAnyValue(for: test.0, defaultValue: nil)
             
-            XCTAssertTrue(anyEq(a: test.3, b: res))
+            XCTAssertTrue(Utils.anyEq(a: test.3, b: res))
             
             if test.3 == nil {
                 let type = SettingValue.fromAnyValue(value: test.2).settingType
@@ -124,7 +124,7 @@ class EvaluationTests: XCTestCase {
             let user = ConfigCatUser(identifier: test.1, email: test.2)
             let res = await client.getAnyValue(for: test.0, defaultValue: nil, user: user)
             
-            XCTAssertTrue(anyEq(a: test.4, b: res))
+            XCTAssertTrue(Utils.anyEq(a: test.4, b: res), "\(test.4) != \(res)")
         }
     }
     
@@ -155,7 +155,7 @@ class EvaluationTests: XCTestCase {
             let user = test.2 != nil ? ConfigCatUser(identifier: test.2!, email: test.3, custom: test.4 == nil ? nil : ["PercentageBase": test.4!]) : nil
             let res = await client!.getAnyValueDetails(for: test.1, defaultValue: nil, user: user)
             
-            XCTAssertTrue(anyEq(a: test.5, b: res.value), "\(test.5) is not equal to \(String(describing: res.value))")
+            XCTAssertTrue(Utils.anyEq(a: test.5, b: res.value), "\(test.5) is not equal to \(String(describing: res.value))")
             XCTAssertEqual(test.6, res.matchedTargetingRule != nil)
             XCTAssertEqual(test.7, res.matchedPercentageOption != nil)
         }
@@ -283,7 +283,7 @@ class EvaluationTests: XCTestCase {
             let user = ConfigCatUser(identifier: test.2,  custom: [test.3: test.4])
             let res = await client!.getAnyValue(for: test.1, defaultValue: nil, user: user)
             
-            XCTAssertTrue(anyEq(a: test.5, b: res))
+            XCTAssertTrue(Utils.anyEq(a: test.5, b: res))
         }
     }
     
@@ -345,7 +345,7 @@ class EvaluationTests: XCTestCase {
         for test in tests {
             let res = await client.getValue(for: test.0, defaultValue: "NOT_CAT", user: ConfigCatUser(identifier: test.1))
             
-            XCTAssertTrue(anyEq(a: test.2, b: res))
+            XCTAssertTrue(Utils.anyEq(a: test.2, b: res))
         }
     }
     
