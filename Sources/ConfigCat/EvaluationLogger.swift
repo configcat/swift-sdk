@@ -51,7 +51,7 @@ class EvaluationLogger {
         }
         self.append(value: "THEN")
         
-        if let val = targetingRule.servedValue.value.anyValue {
+        if let val = targetingRule.servedValue?.value.anyValue {
             self.append(value: " '\(val)'")
         } else if !targetingRule.percentageOptions.isEmpty {
             self.append(value: " % options")

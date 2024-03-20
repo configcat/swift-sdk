@@ -285,9 +285,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             return setting.value.toAnyChecked(settingType: setting.settingType)
         }
         for rule in setting.targetingRules {
-            if !rule.servedValue.value.isEmpty {
-                if variationId == rule.servedValue.variationId {
-                    return rule.servedValue.value.toAnyChecked(settingType: setting.settingType)
+            if let servedValue = rule.servedValue {
+                if variationId == servedValue.variationId {
+                    return servedValue.value.toAnyChecked(settingType: setting.settingType)
                 }
             } else if !rule.percentageOptions.isEmpty {
                 for opt in rule.percentageOptions {

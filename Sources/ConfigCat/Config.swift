@@ -510,7 +510,7 @@ public final class TargetingRule: NSObject, JsonSerializable {
     static let percentageOptionsKey = "p"
 
     /// The value associated with the targeting rule or nil if the targeting rule has percentage options THEN part.
-    @objc public let servedValue: ServedValue
+    @objc public let servedValue: ServedValue?
 
     /// The list of conditions that are combined with the AND logical operator.
     @objc public let conditions: [Condition]
@@ -518,7 +518,7 @@ public final class TargetingRule: NSObject, JsonSerializable {
     /// The list of percentage options associated with the targeting rule or nil if the targeting rule has a served value THEN part.
     @objc public let percentageOptions: [PercentageOption]
 
-    init(servedValue: ServedValue, conditions: [Condition], percentageOptions: [PercentageOption]) {
+    init(servedValue: ServedValue?, conditions: [Condition], percentageOptions: [PercentageOption]) {
         self.servedValue = servedValue
         self.conditions = conditions
         self.percentageOptions = percentageOptions
@@ -527,8 +527,9 @@ public final class TargetingRule: NSObject, JsonSerializable {
     static func fromJson(json: [String: Any]) -> TargetingRule {
         let conditions = json[self.conditionsKey] as? [[String: Any]] ?? []
         let percentageOptions = json[self.percentageOptionsKey] as? [[String: Any]] ?? []
+        let servedValueJson = json[self.valueKey] as? [String: Any]
         
-        return TargetingRule(servedValue: .fromJson(json: json[self.valueKey] as? [String: Any] ?? [:]),
+        return TargetingRule(servedValue: servedValueJson != nil ? .fromJson(json: servedValueJson!) : nil,
                              conditions: conditions.map { cond in
                                 .fromJson(json: cond)
                              },
@@ -538,15 +539,19 @@ public final class TargetingRule: NSObject, JsonSerializable {
     }
 
     func toJsonMap() -> [String: Any] {
-        [
-            TargetingRule.valueKey: servedValue.toJsonMap(),
+        var result: [String: Any] = [
             TargetingRule.conditionsKey: conditions.map { cond in
                 cond.toJsonMap()
             },
-            TargetingRule.percentageOptionsKey: percentageOptions.map { opt in
+        ]
+        if let sv = servedValue {
+            result[TargetingRule.valueKey] = sv.toJsonMap()
+        } else {
+            result[TargetingRule.percentageOptionsKey] = percentageOptions.map { opt in
                 opt.toJsonMap()
             }
-        ]
+        }
+        return result
     }
 }
 

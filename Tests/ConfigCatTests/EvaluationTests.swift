@@ -124,7 +124,7 @@ class EvaluationTests: XCTestCase {
             let user = ConfigCatUser(identifier: test.1, email: test.2)
             let res = await client.getAnyValue(for: test.0, defaultValue: nil, user: user)
             
-            XCTAssertTrue(Utils.anyEq(a: test.4, b: res), "\(test.4) != \(res)")
+            XCTAssertTrue(Utils.anyEq(a: test.4, b: res))
         }
     }
     
@@ -311,7 +311,7 @@ class EvaluationTests: XCTestCase {
             ("dateToStringConversionNegativeInf", -Double.infinity, "5"),
             ("stringArrayToStringConversion", ["read", "Write", " eXecute "], "4"),
             ("stringArrayToStringConversionEmpty", [String](), "5"),
-            //("stringArrayToStringConversionSpecialChars", ["+<>%\"'\\/\t\r\n"], "3"),
+            //("stringArrayToStringConversionSpecialChars", ["+<>%\"'\\/\t\r\n"], "3"), We'll fix this with the .withoutEscapingSlashes JSONEncoder option after macOS 10.15
             ("stringArrayToStringConversionUnicode", ["äöüÄÖÜçéèñışğâ¢™✓😀"], "2")
         ]
         

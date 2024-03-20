@@ -113,8 +113,8 @@ class RolloutEvaluator {
                 }
                 switch result {
                 case .success(true):
-                    if !rule.servedValue.value.isEmpty {
-                        return evalResult(value: rule.servedValue.value, settingType: setting.settingType, variationId: rule.servedValue.variationId, rule: rule, opt: nil)
+                    if let servedValue = rule.servedValue {
+                        return evalResult(value: servedValue.value, settingType: setting.settingType, variationId: servedValue.variationId, rule: rule, opt: nil)
                     }
                     evalLogger?.incIndent()
                     if !rule.percentageOptions.isEmpty {
@@ -499,7 +499,7 @@ class RolloutEvaluator {
         for value in comparisonValue {
             if comp.isSensitive {
                 let parts = value.components(separatedBy: "_")
-                if parts.count != 2 || parts[1].isEmpty {
+                if parts.count < 2 || parts[1].isEmpty {
                     return .fatal("Comparison value is missing or invalid")
                 }
                 guard let length = Int(parts[0].trimmingCharacters(in: .whitespaces)), length > 0 else {
