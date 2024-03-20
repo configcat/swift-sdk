@@ -22,7 +22,7 @@ class FlagEvaluator {
             of != Bool?.self &&
             of != Any.self &&
             of != Any?.self {
-            let message = "Only String, Integer, Double, Bool or Any types are supported."
+            let message = "Only the following types are supported: String, Int, Double, Bool, and Any (both nullable and non-nullable)."
             log.error(eventId: 2022, message: message)
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                     value: defaultValue,
