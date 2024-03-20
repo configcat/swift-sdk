@@ -65,7 +65,7 @@ public final class Hooks: NSObject {
     private var readyState: ClientReadyState?
     private var onReady: [(ClientReadyState) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
-    private var onConfigChanged: [(ConfigProtocol) -> ()] = []
+    private var onConfigChanged: [(Config) -> ()] = []
     private var onError: [(String) -> ()] = []
 
     /**
@@ -96,7 +96,7 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onConfigChanged` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnConfigChanged(handler: @escaping (ConfigProtocol) -> ()) {
+    @objc public func addOnConfigChanged(handler: @escaping (Config) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
         onConfigChanged.append(handler)
@@ -121,7 +121,7 @@ public final class Hooks: NSObject {
         }
     }
 
-    func invokeOnConfigChanged(config: ConfigProtocol) {
+    func invokeOnConfigChanged(config: Config) {
         mutex.lock()
         defer { mutex.unlock() }
         for item in onConfigChanged {

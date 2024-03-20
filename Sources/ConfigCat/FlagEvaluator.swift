@@ -61,9 +61,7 @@ class FlagEvaluator {
         switch evaluationResult {
         case .success(let value, let variationId, let rule, let option):
             guard let typedValue = value as? Value else {
-                let message = String(format: "Failed to evaluate setting '%@' (the value '%@' cannot be converted to the requested type). "
-                    + "Returning the `defaultValue` parameter that you specified in your application: '%@'.",
-                    key, "\(value)", "\(defaultValue)")
+                let message = "The type of a setting must match the type of the specified default value. Setting's type was \(setting.settingType.text) but the default value's type was \(Value.self). Please use a default value which corresponds to the setting type \(setting.settingType.text). Learn more: https://configcat.com/docs/sdk-reference/ios/#setting-type-mapping"
                 self.log.error(eventId: 2002, message: message)
                 self.hooks.invokeOnFlagEvaluated(details: EvaluationDetails.fromError(key: key,
                                                                                       value: defaultValue,
@@ -73,7 +71,7 @@ class FlagEvaluator {
             }
             
             hooks.invokeOnFlagEvaluated(details: EvaluationDetails(key: key,
-                                                                   value: value,
+                                                                   value: typedValue,
                                                                    variationId: variationId,
                                                                    fetchTime: result.fetchTime,
                                                                    user: user,
@@ -81,7 +79,7 @@ class FlagEvaluator {
                                                                    matchedPercentageOption: option))
             return TypedEvaluationDetails<Value>(key: key,
                                                  value: typedValue,
-                                                 variationId: variationId ?? "",
+                                                 variationId: variationId,
                                                  fetchTime: result.fetchTime,
                                                  user: user,
                                                  matchedTargetingRule: rule,
@@ -98,7 +96,7 @@ class FlagEvaluator {
     }
     
     func evaluateFlag(for setting: Setting, key: String, user: ConfigCatUser?, fetchTime: Date, settings: [String: Setting]) -> EvaluationDetails? {
-        let evaluationResult = evaluator.evaluate(setting: setting, key: key, user: user, settings: settings)
+        let evaluationResult = evaluator.evaluate(setting: setting, key: key, user: user, settings: settings, defaultValue: nil)
         switch evaluationResult {
         case .success(let value, let variationId, let rule, let option):
             let details = EvaluationDetails(key: key,

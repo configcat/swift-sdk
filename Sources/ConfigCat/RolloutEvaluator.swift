@@ -42,15 +42,21 @@ enum EvalConditionResult {
         case .noUser:
             return "cannot evaluate, User Object is missing"
         case .attributeMissing(let cond):
-            return "cannot evaluate, the User.\(cond.comparisonAttribute) attribute is missing"
+            return "cannot evaluate, the User.\(cond.unwrappedComparisonAttribute) attribute is missing"
         case .attributeInvalid(let reason, let cond):
-            return "cannot evaluate, the User.\(cond.comparisonAttribute) attribute is invalid (\(reason))"
+            return "cannot evaluate, the User.\(cond.unwrappedComparisonAttribute) attribute is invalid (\(reason))"
         case .compValueInvalid(let err):
             return "cannot evaluate, (\(err ?? "comparison value is missing or invalid"))"
         case .fatal(let err):
             return "cannot evaluate (\(err))"
         }
     }
+}
+
+enum EvalPercentageResult {
+    case success(PercentageOption)
+    case userAttrMissing(String)
+    case fatal(String)
 }
 
 enum EvalResult {
@@ -60,6 +66,7 @@ enum EvalResult {
 
 class RolloutEvaluator {
     static let ruleIgnoredMessage = "The current targeting rule is ignored and the evaluation continues with the next rule."
+    static let saltMissingMessage = "Config JSON salt is missing"
     static let invalidValueText = "<invalid value>"
     private let log: InternalLogger;
 
@@ -67,7 +74,7 @@ class RolloutEvaluator {
         log = logger
     }
 
-    func evaluate(setting: Setting, key: String, user: ConfigCatUser?, settings: [String: Setting], defaultValue: Any? = nil) -> EvalResult {
+    func evaluate(setting: Setting, key: String, user: ConfigCatUser?, settings: [String: Setting], defaultValue: Any?) -> EvalResult {
         let evalLogger = log.enabled(level: .info) ? EvaluationLogger() : nil
         var cycleTracker: [String] = []
         
@@ -77,7 +84,7 @@ class RolloutEvaluator {
         }
         evalLogger?.incIndent()
         
-        let result = evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
+        let result = setting.settingType == .unknown ? .error("Setting type is invalid") : evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
         
         if case .success(let val, _, _, _) = result {
             evalLogger?.newLine(msg: "Returning '\(val)'.")
@@ -107,14 +114,20 @@ class RolloutEvaluator {
                 switch result {
                 case .success(true):
                     if !rule.servedValue.value.isEmpty {
-                        return evalResult(value: rule.servedValue.value, variationId: rule.servedValue.variationId, rule: rule, opt: nil)
+                        return evalResult(value: rule.servedValue.value, settingType: setting.settingType, variationId: rule.servedValue.variationId, rule: rule, opt: nil)
                     }
                     evalLogger?.incIndent()
                     if !rule.percentageOptions.isEmpty {
                         if let usr = user {
-                            if let matchedOption = evalPercentageOptions(opts: rule.percentageOptions, user: usr, key: key, percentageAttr: setting.percentageAttribute, evalLogger: evalLogger) {
+                            let percResult = evalPercentageOptions(opts: rule.percentageOptions, user: usr, key: key, percentageAttr: setting.percentageAttribute, evalLogger: evalLogger)
+                            switch percResult {
+                            case .success(let opt):
                                 evalLogger?.decIndent()
-                                return evalResult(value: matchedOption.servedValue, variationId: matchedOption.variationId, rule: rule, opt: matchedOption)
+                                return evalResult(value: opt.servedValue, settingType: setting.settingType, variationId: opt.variationId, rule: rule, opt: opt)
+                            case .userAttrMissing(let attr):
+                                logAttributeMissing(key: key, attr: attr)
+                            case .fatal(let err):
+                                return .error(err)
                             }
                         } else {
                             if !userMissingLogged {
@@ -123,6 +136,8 @@ class RolloutEvaluator {
                             }
                             evalLogger?.newLine(msg: "Skipping % options because the User Object is missing.")
                         }
+                    } else {
+                        return .error("Targeting rule THEN part is missing or invalid")
                     }
                     evalLogger?.newLine(msg: RolloutEvaluator.ruleIgnoredMessage).decIndent()
                 case .success(false):
@@ -149,8 +164,14 @@ class RolloutEvaluator {
         
         if !setting.percentageOptions.isEmpty {
             if let usr = user {
-                if let matchedOption = evalPercentageOptions(opts: setting.percentageOptions, user: usr, key: key, percentageAttr: setting.percentageAttribute, evalLogger: evalLogger) {
-                    return evalResult(value: matchedOption.servedValue, variationId: matchedOption.variationId, rule: nil, opt: matchedOption)
+                let percResult = evalPercentageOptions(opts: setting.percentageOptions, user: usr, key: key, percentageAttr: setting.percentageAttribute, evalLogger: evalLogger)
+                switch percResult {
+                case .success(let opt):
+                    return evalResult(value: opt.servedValue, settingType: setting.settingType, variationId: opt.variationId, rule: nil, opt: opt)
+                case .userAttrMissing(let attr):
+                    logAttributeMissing(key: key, attr: attr)
+                case .fatal(let err):
+                    return .error(err)
                 }
             } else {
                 if !userMissingLogged {
@@ -159,47 +180,45 @@ class RolloutEvaluator {
                 evalLogger?.newLine(msg: "Skipping % options because the User Object is missing.")
             }
         }
-        return evalResult(value: setting.value, variationId: setting.variationId, rule: nil, opt: nil)
+        return evalResult(value: setting.value, settingType: setting.settingType, variationId: setting.variationId, rule: nil, opt: nil)
     }
     
-    private func evalResult(value: SettingValue, variationId: String?, rule: TargetingRule?, opt: PercentageOption?) -> EvalResult {
-        if let val = value.val {
+    private func evalResult(value: SettingValue, settingType: SettingType, variationId: String?, rule: TargetingRule?, opt: PercentageOption?) -> EvalResult {
+        let valResult = value.toAnyChecked(settingType: settingType)
+        switch valResult {
+        case .success(let val):
             return .success(val, variationId, rule, opt)
-        } else if let invalid = value.invalidValue {
-            return .error("Setting value '\(invalid)' is of an unsupported type (\(type(of: invalid))")
-        } else {
-            return .error("Setting value is missing or invalid")
+        case .error(let err):
+            return .error(err)
         }
     }
     
-    private func evalPercentageOptions(opts: [PercentageOption], user: ConfigCatUser, key: String, percentageAttr: String, evalLogger: EvaluationLogger?) -> PercentageOption? {
-        let percAttr = percentageAttr == "" ? "Identifier" : percentageAttr
-        guard let attrVal = user.attribute(for: percAttr) else {
-            logAttributeMissing(key: key, attr: percAttr)
-            evalLogger?.newLine(msg: "Skipping % options because the User.\(percAttr) attribute is missing.")
-            return nil
+    private func evalPercentageOptions(opts: [PercentageOption], user: ConfigCatUser, key: String, percentageAttr: String, evalLogger: EvaluationLogger?) -> EvalPercentageResult {
+        guard let attrVal = user.attribute(for: percentageAttr) else {
+            evalLogger?.newLine(msg: "Skipping % options because the User.\(percentageAttr) attribute is missing.")
+            return .userAttrMissing(percentageAttr)
         }
-        evalLogger?.newLine(msg: "Evaluating % options based on the User.\(percAttr) attribute:")
+        evalLogger?.newLine(msg: "Evaluating % options based on the User.\(percentageAttr) attribute:")
         let (stringAttrVal, _) = asString(value: attrVal)
         let hashCandidate = key + stringAttrVal
         let hash = hashCandidate.sha1hex.prefix(7)
         let hashString = String(hash)
         if let num = Int(hashString, radix: 16) {
             let scaled = num % 100
-            evalLogger?.newLine(msg: "- Computing hash in the [0..99] range from User.\(percAttr) => \(scaled) (this value is sticky and consistent across all SDKs)")
+            evalLogger?.newLine(msg: "- Computing hash in the [0..99] range from User.\(percentageAttr) => \(scaled) (this value is sticky and consistent across all SDKs)")
             var bucket = 0
             for (index, opt) in opts.enumerated() {
                 bucket += opt.percentage
                 if scaled < bucket {
-                    evalLogger?.newLine(msg: "- Hash value \(scaled) selects % option \(index + 1) (\(opt.percentage)%), '\(opt.servedValue.val ?? RolloutEvaluator.invalidValueText)'.")
-                    return opt
+                    evalLogger?.newLine(msg: "- Hash value \(scaled) selects % option \(index + 1) (\(opt.percentage)%), '\(opt.servedValue.anyValue ?? RolloutEvaluator.invalidValueText)'.")
+                    return .success(opt)
                 }
             }
         }
-        return nil
+        return .fatal("Sum of percentage option percentages is less than 100")
     }
     
-    private func evalConditions(targetingRule: TargetingRule, key: String, user: ConfigCatUser?, salt: String, ctxSalt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
+    private func evalConditions(targetingRule: TargetingRule, key: String, user: ConfigCatUser?, salt: String?, ctxSalt: String, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
         evalLogger?.newLine(msg: "- ")
         var newLineBeforeThen = false
         
@@ -254,12 +273,15 @@ class RolloutEvaluator {
         return .success(true)
     }
     
-    private func evalSegmentCondition(cond: SegmentCondition, key: String, salt: String, user: ConfigCatUser, evalLogger: EvaluationLogger?) -> EvalConditionResult {
+    private func evalSegmentCondition(cond: SegmentCondition, key: String, salt: String?, user: ConfigCatUser, evalLogger: EvaluationLogger?) -> EvalConditionResult {
+        guard let userConditions = cond.segment?.conditions else {
+            return .fatal("Segment reference is invalid")
+        }
         guard let name = cond.segment?.name else {
             return .fatal("Segment name is missing")
         }
-        guard let userConditions = cond.segment?.conditions else {
-            return .fatal("Segment reference is invalid")
+        if cond.segmentComparator == .unknown {
+            return .fatal("Comparison operator is invalid")
         }
         
         evalLogger?.newLine(msg: "(").incIndent().newLine(msg: "Evaluating segment '\(name)':")
@@ -299,20 +321,27 @@ class RolloutEvaluator {
     
     private func evalPrerequisiteCondition(cond: PrerequisiteFlagCondition, key: String, user: ConfigCatUser?, evalLogger: EvaluationLogger?, settings: [String: Setting], cycleTracker: inout [String]) -> EvalConditionResult {
         evalLogger?.append(value: cond)
+        guard let flagKey = cond.flagKey else {
+            return .fatal("Prerequisite flag key is missing")
+        }
+        guard let prereq = settings[flagKey] else {
+            return .fatal("Prerequisite flag is missing")
+        }
+        if cond.prerequisiteComparator == .unknown {
+            return .fatal("Comparison operator is invalid")
+        }
         
-        guard let prereq = settings[cond.flagKey] else {
-            return .fatal("Prerequisite flag is missing or invalid")
+        let compValChecked = cond.flagValue.toAnyChecked(settingType: prereq.settingType)
+        var compVal: Any? = nil
+        if case .error(_) = compValChecked, prereq.settingType != .unknown {
+            return .fatal("Type mismatch between comparison value '\(cond.flagValue.anyValue ?? "")' and prerequisite flag '\(flagKey)'.")
         }
-        if !cond.flagValue.isValid {
-            return .fatal("Prerequisite flag value is invalid")
+        if case .success(let val) = compValChecked {
+            compVal = val
         }
-        if prereq.settingType != .unknown && prereq.settingType != cond.flagValue.settingType {
-            return .fatal("Type mismatch between comparison value '\(cond.flagValue.val ?? "")' and prerequisite flag '\(cond.flagKey)'.")
-        }
-        
         cycleTracker.append(key)
-        if cycleTracker.contains(cond.flagKey) {
-            cycleTracker.append(cond.flagKey)
+        if cycleTracker.contains(flagKey) {
+            cycleTracker.append(flagKey)
             let output = cycleTracker.map { c in
                 return "'"+c+"'"
             }.joined(separator: " -> ")
@@ -320,14 +349,14 @@ class RolloutEvaluator {
         }
         
         let needsTrue = cond.prerequisiteComparator == .eq
-        evalLogger?.newLine(msg: "(").incIndent().newLine(msg: "Evaluating prerequisite flag '\(cond.flagKey)':")
+        evalLogger?.newLine(msg: "(").incIndent().newLine(msg: "Evaluating prerequisite flag '\(flagKey)':")
         
-        let evalResult = evalSetting(setting: prereq, key: cond.flagKey, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
+        let evalResult = evalSetting(setting: prereq, key: flagKey, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
         cycleTracker.removeLast()
         
         switch evalResult {
         case .success(let val, _, _, _):
-            let match = needsTrue == (cond.flagValue.eq(to: val))
+            let match = needsTrue == (Utils.anyEq(a: compVal, b: val))
             evalLogger?.newLine(msg: "Prerequisite flag evaluation result: '\(val)'.")
                 .newLine(msg: "Condition (").append(value: cond).append(value: ") evaluates to ").append(value: "\(match ? "true" : "false").")
                 .decIndent()
@@ -338,18 +367,24 @@ class RolloutEvaluator {
         }
     }
     
-    private func evalUserCondition(cond: UserCondition, key: String, user: ConfigCatUser, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalUserCondition(cond: UserCondition, key: String, user: ConfigCatUser, salt: String?, ctxSalt: String) -> EvalConditionResult {
+        guard let comparisonAttribute = cond.comparisonAttribute else {
+            return .fatal("Comparison attribute is missing")
+        }
+        guard let userAnyVal = user.attribute(for: comparisonAttribute) else {
+            return .attributeMissing(cond)
+        }
         switch cond.comparator {
         case .eq, .notEq, .eqHashed, .notEqHashed:
             guard let compVal = cond.stringValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             let (userVal, converted) = asString(value: userAnyVal)
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
+            }
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
             }
             return evalTextEq(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
@@ -357,12 +392,12 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             let (userVal, converted) = asString(value: userAnyVal)
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
+            }
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
             }
             return evalOneOf(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
@@ -370,21 +405,18 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             let (userVal, converted) = asString(value: userAnyVal)
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
+            }
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
             }
             return evalStartsEndsWith(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
             
         case .contains, .notContains:
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
-            }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
             }
             let (userVal, converted) = asString(value: userAnyVal)
             if converted {
@@ -396,9 +428,6 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             guard let userVal = asSemver(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid semantic version", cond)
             }
@@ -407,9 +436,6 @@ class RolloutEvaluator {
         case .lessSemver, .lessEqSemver, .greaterSemver, .greaterEqSemver:
             guard let compVal = cond.stringValue else {
                 return .compValueInvalid(nil)
-            }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
             }
             guard let userVal = asSemver(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid semantic version", cond)
@@ -420,9 +446,6 @@ class RolloutEvaluator {
             guard let compVal = cond.doubleValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             guard let userVal = asDouble(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid decimal number", cond)
             }
@@ -432,56 +455,55 @@ class RolloutEvaluator {
             guard let compVal = cond.doubleValue else {
                 return .compValueInvalid(nil)
             }
-            let compDate = Date(timeIntervalSince1970: compVal)
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
-            guard let userVal = asDate(value: userAnyVal) else {
+            guard let userVal = asDateDouble(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)", cond)
             }
-            return evalDateTime(comparisonValue: compDate, userValue: userVal, comp: cond.comparator)
+            return evalDateTime(comparisonValue: compVal, userValue: userVal, comp: cond.comparator)
             
         case .arrayContainsAnyOf, .arrayNotContainsAnyOf, .arrayContainsAnyOfHashed, .arrayNotContainsAnyOfHashed:
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userAnyVal = user.attribute(for: cond.comparisonAttribute) else {
-                return .attributeMissing(cond)
-            }
             guard let userVal = asSlice(value: userAnyVal) else {
                 return .attributeInvalid("'\(userAnyVal)' is not a valid string array", cond)
             }
+            guard let salt = salt else {
+                return .fatal(RolloutEvaluator.saltMissingMessage)
+            }
             return evalArrayContains(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
+        default:
+            return .fatal("Comparison operator is invalid")
         }
     }
 
-    private func evalTextEq(comparisonValue: String, userValue: String, comp: Comparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalTextEq(comparisonValue: String, userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .eqHashed : comp == .eq
         return .success((comparisonValue == (comp.isSensitive ? userValue.sha256hex(salt: salt, contextSalt: ctxSalt) : userValue)) == needsTrue)
     }
     
-    private func evalOneOf(comparisonValue: [String], userValue: String, comp: Comparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalOneOf(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .oneOfHashed : comp == .oneOf
+        let userVal = comp.isSensitive ? userValue.sha256hex(salt: salt, contextSalt: ctxSalt) : userValue
         for value in comparisonValue {
-            if value == (comp.isSensitive ? userValue.sha256hex(salt: salt, contextSalt: ctxSalt) : userValue) {
+            if value == userVal {
                 return .success(needsTrue)
             }
         }
         return .success(!needsTrue)
     }
     
-    private func evalStartsEndsWith(comparisonValue: [String], userValue: String, comp: Comparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalStartsEndsWith(comparisonValue: [String], userValue: String, comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isStartsWith ? comp.isSensitive ? comp == .startsWithAnyOfHashed : comp == .startsWithAnyOf :
         comp.isSensitive ? comp == .endsWithAnyOfHashed : comp == .endsWithAnyOf
         let userValData = Data(userValue.utf8)
         for value in comparisonValue {
             if comp.isSensitive {
                 let parts = value.components(separatedBy: "_")
-                if parts.isEmpty {
+                if parts.count != 2 || parts[1].isEmpty {
                     return .fatal("Comparison value is missing or invalid")
                 }
-                guard let length = Int(parts[0]) else {
-                    return .fatal("Could not parse the length part of the comparison value")
+                guard let length = Int(parts[0].trimmingCharacters(in: .whitespaces)), length > 0 else {
+                    return .fatal("Comparison value is missing or invalid")
                 }
                 if length > userValData.count {
                     continue
@@ -500,7 +522,7 @@ class RolloutEvaluator {
         return .success(!needsTrue)
     }
     
-    private func evalContains(comparisonValue: [String], userValue: String, comp: Comparator) -> EvalConditionResult {
+    private func evalContains(comparisonValue: [String], userValue: String, comp: UserComparator) -> EvalConditionResult {
         let needsTrue = comp == .contains
         for value in comparisonValue {
             if userValue.contains(value) {
@@ -510,7 +532,7 @@ class RolloutEvaluator {
         return .success(!needsTrue)
     }
     
-    private func evalSemverIsOneOf(comparisonValue: [String], userValue: Version, comp: Comparator) -> EvalConditionResult {
+    private func evalSemverIsOneOf(comparisonValue: [String], userValue: Version, comp: UserComparator) -> EvalConditionResult {
         let needsTrue = comp == .oneOfSemver
         var matched = false
         for value in comparisonValue {
@@ -519,7 +541,9 @@ class RolloutEvaluator {
                 continue
             }
             guard let compVer = trimmed.toVersion() else {
-                return .compValueInvalid("'\(trimmed)' is not a valid semantic version")
+                // NOTE: Previous versions of the evaluation algorithm ignored invalid comparison values.
+                // We keep this behavior for backward compatibility.
+                return .success(false)
             }
             if userValue == compVer {
                 matched = true
@@ -528,9 +552,11 @@ class RolloutEvaluator {
         return .success(matched == needsTrue)
     }
     
-    private func evalSemverCompare(comparisonValue: String, userValue: Version, comp: Comparator) -> EvalConditionResult {
+    private func evalSemverCompare(comparisonValue: String, userValue: Version, comp: UserComparator) -> EvalConditionResult {
         guard let compVer = comparisonValue.toVersion() else {
-            return .compValueInvalid("'\(comparisonValue)' is not a valid semantic version")
+            // NOTE: Previous versions of the evaluation algorithm ignored invalid comparison values.
+            // We keep this behavior for backward compatibility.
+            return .success(false)
         }
         switch comp {
         case .greaterSemver:
@@ -546,7 +572,7 @@ class RolloutEvaluator {
         }
     }
     
-    private func evalNumberCompare(comparisonValue: Double, userValue: Double, comp: Comparator) -> EvalConditionResult {
+    private func evalNumberCompare(comparisonValue: Double, userValue: Double, comp: UserComparator) -> EvalConditionResult {
         switch comp {
         case .eqNum:
             return .success(userValue == comparisonValue)
@@ -565,15 +591,15 @@ class RolloutEvaluator {
         }
     }
     
-    private func evalDateTime(comparisonValue: Date, userValue: Date, comp: Comparator) -> EvalConditionResult {
+    private func evalDateTime(comparisonValue: Double, userValue: Double, comp: UserComparator) -> EvalConditionResult {
         return comp == .beforeDateTime ? .success(userValue < comparisonValue) : .success(userValue > comparisonValue)
     }
     
-    private func evalArrayContains(comparisonValue: [String], userValue: [String], comp: Comparator, salt: String, ctxSalt: String) -> EvalConditionResult {
+    private func evalArrayContains(comparisonValue: [String], userValue: [String], comp: UserComparator, salt: String, ctxSalt: String) -> EvalConditionResult {
         let needsTrue = comp.isSensitive ? comp == .arrayContainsAnyOfHashed : comp == .arrayContainsAnyOf
-        for value in comparisonValue {
-            for userItem in userValue {
-                let usrVal = comp.isSensitive ? userItem.sha256hex(salt: salt, contextSalt: ctxSalt) : userItem
+        for userItem in userValue {
+            let usrVal = comp.isSensitive ? userItem.sha256hex(salt: salt, contextSalt: ctxSalt) : userItem
+            for value in comparisonValue {
                 if usrVal == value {
                     return .success(needsTrue)
                 }
@@ -619,7 +645,7 @@ class RolloutEvaluator {
         case let val as Date:
             return (val.timeIntervalSince1970.description, true)
         default:
-            return ("", false)
+            return ("\(value)", true)
         }
     }
     
@@ -670,14 +696,11 @@ class RolloutEvaluator {
         }
     }
     
-    private func asDate(value: Any) -> Date? {
+    private func asDateDouble(value: Any) -> Double? {
         if case let val as Date = value {
-            return val
+            return val.timeIntervalSince1970
         }
-        if let doubleVal = asDouble(value: value) {
-            return Date(timeIntervalSince1970: doubleVal)
-        }
-        return nil
+        return asDouble(value: value)
     }
     
     private func asSemver(value: Any) -> Version? {
@@ -723,7 +746,7 @@ class RolloutEvaluator {
     }
     
     private func logConverted(cond: UserCondition, key: String, attrValue: String) {
-        log.warning(eventId: 3005, message: "Evaluation of condition (\(cond)) for setting '\(key)' may not produce the expected result (the User.\(cond.comparisonAttribute) attribute is not a string value, thus it was automatically converted to the string value '\(attrValue)'). Please make sure that using a non-string value was intended.")
+        log.warning(eventId: 3005, message: "Evaluation of condition (\(cond)) for setting '\(key)' may not produce the expected result (the User.\(cond.unwrappedComparisonAttribute) attribute is not a string value, thus it was automatically converted to the string value '\(attrValue)'). Please make sure that using a non-string value was intended.")
     }
     
     private func logUserObjectMissing(key: String) {
@@ -731,7 +754,7 @@ class RolloutEvaluator {
     }
     
     private func logAttributeMissing(key:String, cond: UserCondition) {
-        log.warning(eventId: 3003, message: "Cannot evaluate condition (\(cond)) for setting '\(key)' (the User.\(cond.comparisonAttribute) attribute is missing). You should set the User.\(cond.comparisonAttribute) attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/")
+        log.warning(eventId: 3003, message: "Cannot evaluate condition (\(cond)) for setting '\(key)' (the User.\(cond.unwrappedComparisonAttribute) attribute is missing). You should set the User.\(cond.unwrappedComparisonAttribute) attribute in order to make targeting work properly. Read more: https://configcat.com/docs/advanced/user-object/")
     }
     
     private func logAttributeMissing(key:String, attr: String) {
@@ -739,7 +762,7 @@ class RolloutEvaluator {
     }
     
     private func logAttributeInvalid(key:String, reason: String, cond: UserCondition) {
-        log.warning(eventId: 3004, message: "Cannot evaluate condition (\(cond)) for setting '\(key)' (\(reason)). Please check the User.\(cond.comparisonAttribute) attribute and make sure that its value corresponds to the comparison operator.")
+        log.warning(eventId: 3004, message: "Cannot evaluate condition (\(cond)) for setting '\(key)' (\(reason)). Please check the User.\(cond.unwrappedComparisonAttribute) attribute and make sure that its value corresponds to the comparison operator.")
     }
 }
 

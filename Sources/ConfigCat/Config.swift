@@ -1,27 +1,30 @@
 import Foundation
 
 enum RedirectMode: Int {
-    case noRedirect
-    case shouldRedirect
-    case forceRedirect
+    case unknown = -1
+    case noRedirect = 0
+    case shouldRedirect = 1
+    case forceRedirect = 2
 }
 
 @objc public enum SegmentComparator: Int {
+    case unknown = -1
     /// Checks whether the conditions of the specified segment are evaluated to true.
-    case isIn
+    case isIn = 0
     /// Checks whether the conditions of the specified segment are evaluated to false.
-    case isNotIn
+    case isNotIn = 1
     
     var text: String {
         return self == .isIn ? "IS IN SEGMENT" : "IS NOT IN SEGMENT"
     }
 }
 
-@objc public enum PrerequisiteComparator: Int {
+@objc public enum PrerequisiteFlagComparator: Int {
+    case unknown = -1
     /// Checks whether the evaluated value of the specified prerequisite flag is equal to the comparison value.
-    case eq
+    case eq = 0
     /// Checks whether the evaluated value of the specified prerequisite flag is not equal to the comparison value.
-    case notEq
+    case notEq = 1
     
     var text: String {
         return self == .eq ? "EQUALS" : "NOT EQUALS"
@@ -38,81 +41,97 @@ enum RedirectMode: Int {
     case int = 2
     /// The decimal number setting type.
     case double = 3
+    
+    var text: String {
+        switch self {
+        case .unknown:
+            return "Unknown"
+        case .bool:
+            return "Bool"
+        case .string:
+            return "String"
+        case .int:
+            return "Int"
+        case .double:
+            return "Double"
+        }
+    }
 }
 
-@objc public enum Comparator: Int {
+@objc public enum UserComparator: Int {
+    case unknown = -1
     /// Checks whether the comparison attribute is equal to any of the comparison values.
-    case oneOf
+    case oneOf = 0
     /// Checks whether the comparison attribute is not equal to any of the comparison values.
-    case notOneOf
+    case notOneOf = 1
     /// Checks whether the comparison attribute contains any comparison values as a substring.
-    case contains
+    case contains = 2
     /// Checks whether the comparison attribute does not contain any comparison values as a substring.
-    case notContains
+    case notContains = 3
     /// Checks whether the comparison attribute interpreted as a semantic version is equal to any of the comparison values.
-    case oneOfSemver
+    case oneOfSemver = 4
     /// Checks whether the comparison attribute interpreted as a semantic version is not equal to any of the comparison values.
-    case notOneOfSemver
+    case notOneOfSemver = 5
     /// Checks whether the comparison attribute interpreted as a semantic version is less than the comparison value.
-    case lessSemver
+    case lessSemver = 6
     /// Checks whether the comparison attribute interpreted as a semantic version is less than or equal to the comparison value.
-    case lessEqSemver
+    case lessEqSemver = 7
     /// Checks whether the comparison attribute interpreted as a semantic version is greater than the comparison value.
-    case greaterSemver
+    case greaterSemver = 8
     /// Checks whether the comparison attribute interpreted as a semantic version is greater than or equal to the comparison value.
-    case greaterEqSemver
+    case greaterEqSemver = 9
     /// Checks whether the comparison attribute interpreted as a decimal number is equal to the comparison value.
-    case eqNum
+    case eqNum = 10
     /// Checks whether the comparison attribute interpreted as a decimal number is not equal to the comparison value.
-    case notEqNum
+    case notEqNum = 11
     /// Checks whether the comparison attribute interpreted as a decimal number is less than the comparison value.
-    case lessNum
+    case lessNum = 12
     /// Checks whether the comparison attribute interpreted as a decimal number is less than or equal to the comparison value.
-    case lessEqNum
+    case lessEqNum = 13
     /// Checks whether the comparison attribute interpreted as a decimal number is greater than the comparison value.
-    case greaterNum
+    case greaterNum = 14
     /// Checks whether the comparison attribute interpreted as a decimal number is greater than or equal to the comparison value.
-    case greaterEqNum
+    case greaterEqNum = 15
     /// Checks whether the comparison attribute is equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case oneOfHashed
+    case oneOfHashed = 16
     /// Checks whether the comparison attribute is not equal to any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case notOneOfHashed
+    case notOneOfHashed = 17
     /// Checks whether the comparison attribute interpreted as the seconds elapsed since Unix Epoch is less than the comparison value.
-    case beforeDateTime
+    case beforeDateTime = 18
     /// Checks whether the comparison attribute interpreted as the seconds elapsed since Unix Epoch is greater than the comparison value.
-    case afterDateTime
+    case afterDateTime = 19
     /// Checks whether the comparison attribute is equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
-    case eqHashed
+    case eqHashed = 20
     /// Checks whether the comparison attribute is not equal to the comparison value (where the comparison is performed using the salted SHA256 hashes of the values).
-    case notEqHashed
+    case notEqHashed = 21
     /// Checks whether the comparison attribute starts with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case startsWithAnyOfHashed
+    case startsWithAnyOfHashed = 22
     /// Checks whether the comparison attribute does not start with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case notStartsWithAnyOfHashed
+    case notStartsWithAnyOfHashed = 23
     /// Checks whether the comparison attribute ends with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case endsWithAnyOfHashed
+    case endsWithAnyOfHashed = 24
     /// Checks whether the comparison attribute does not end with any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case notEndsWithAnyOfHashed
+    case notEndsWithAnyOfHashed = 25
     /// Checks whether the comparison attribute interpreted as a string list contains any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case arrayContainsAnyOfHashed
+    case arrayContainsAnyOfHashed = 26
     /// Checks whether the comparison attribute interpreted as a string list does not contain any of the comparison values (where the comparison is performed using the salted SHA256 hashes of the values).
-    case arrayNotContainsAnyOfHashed
+    case arrayNotContainsAnyOfHashed = 27
     //// Checks whether the comparison attribute is equal to the comparison value.
-    case eq
+    case eq = 28
     /// Checks whether the comparison attribute is not equal to the comparison value.
-    case notEq
+    case notEq = 29
     /// Checks whether the comparison attribute starts with any of the comparison values.
-    case startsWithAnyOf
+    case startsWithAnyOf = 30
     /// Checks whether the comparison attribute does not start with any of the comparison values.
-    case notStartsWithAnyOf
+    case notStartsWithAnyOf = 31
     /// Checks whether the comparison attribute ends with any of the comparison values.
-    case endsWithAnyOf
+    case endsWithAnyOf = 32
     /// Checks whether the comparison attribute does not end with any of the comparison values.
-    case notEndsWithAnyOf
+    case notEndsWithAnyOf = 33
     /// Checks whether the comparison attribute interpreted as a string list contains any of the comparison values.
-    case arrayContainsAnyOf
+    case arrayContainsAnyOf = 34
     /// Checks whether the comparison attribute interpreted as a string list does not contain any of the comparison values.
-    case arrayNotContainsAnyOf
+    case arrayNotContainsAnyOf = 35
     
     var isSensitive: Bool {
         switch self {
@@ -143,7 +162,7 @@ enum RedirectMode: Int {
     }
 }
 
-let comparatorTexts: [Comparator: String] = [
+let comparatorTexts: [UserComparator: String] = [
     .oneOf:                       "IS ONE OF",
     .notOneOf:                    "IS NOT ONE OF",
     .contains:                    "CONTAINS ANY OF",
@@ -259,25 +278,19 @@ class ConfigEntry: Equatable {
     static let empty = ConfigEntry(eTag: "empty")
 }
 
-@objc public protocol ConfigProtocol {
-    /// The dictionary of settings.
-    @objc var settings: [String: Setting] { get }
-    /// The list of segments.
-    @objc var segments: [Segment] { get }
-    
-    @objc var salt: String { get }
-}
-
-class Config: ConfigProtocol, JsonSerializable {
-    
+public class Config: NSObject, JsonSerializable {
     static let preferencesKey = "p"
     static let settingsKey = "f"
     static let segmentsKey = "s"
 
+    /// The dictionary of settings.
+    @objc public let settings: [String: Setting]
+    /// The dictionary of settings.
+    @objc public let segments: [Segment]
+    /// The salt that was used to hash sensitive comparison values.
+    @objc public let salt: String?
+    
     let preferences: Preferences
-    let settings: [String: Setting]
-    let segments: [Segment]
-    let salt: String
 
     init(preferences: Preferences, settings: [String: Setting] = [:], segments: [Segment] = []) {
         self.preferences = preferences
@@ -342,9 +355,9 @@ class Preferences: JsonSerializable {
 
     let preferencesUrl: String
     let preferencesRedirect: RedirectMode
-    let salt: String
+    let salt: String?
 
-    init(preferencesUrl: String, preferencesRedirect: RedirectMode, salt: String) {
+    init(preferencesUrl: String, preferencesRedirect: RedirectMode, salt: String?) {
         self.preferencesUrl = preferencesUrl
         self.preferencesRedirect = preferencesRedirect
         self.salt = salt
@@ -352,11 +365,11 @@ class Preferences: JsonSerializable {
 
     static func fromJson(json: [String: Any]) -> Preferences {
         Preferences(preferencesUrl: json[self.preferencesUrlKey] as? String ?? "",
-                    preferencesRedirect: RedirectMode(rawValue: (json[self.preferencesRedirectKey] as? Int ?? 0)) ?? .noRedirect,
-                    salt: json[self.saltKey] as? String ?? "")
+                    preferencesRedirect: RedirectMode(rawValue: (json[self.preferencesRedirectKey] as? Int ?? -1)) ?? .noRedirect,
+                    salt: json[self.saltKey] as? String)
     }
     
-    static let empty = Preferences(preferencesUrl: "", preferencesRedirect: .noRedirect, salt: "")
+    static let empty = Preferences(preferencesUrl: "", preferencesRedirect: .noRedirect, salt: nil)
 
     var isEmpty: Bool {
         get {
@@ -368,7 +381,7 @@ class Preferences: JsonSerializable {
         [
             Preferences.preferencesUrlKey: preferencesUrl,
             Preferences.preferencesRedirectKey: preferencesRedirect.rawValue,
-            Preferences.saltKey: salt,
+            Preferences.saltKey: salt as Any,
         ]
     }
 }
@@ -391,7 +404,7 @@ public final class Setting: NSObject, JsonSerializable {
     @objc public let targetingRules: [TargetingRule]
 
     /// Variation ID (for analytical purposes).
-    @objc public let variationId: String
+    @objc public let variationId: String?
     
     /// The User Object attribute which serves as the basis of percentage options evaluation.
     @objc public let percentageAttribute: String
@@ -399,9 +412,9 @@ public final class Setting: NSObject, JsonSerializable {
     /// The setting's type. It can be Bool, String, Int, Float.
     @objc public let settingType: SettingType
     
-    var salt: String = ""
+    var salt: String?
 
-    init(value: SettingValue, variationId: String, percentageAttribute: String, settingType: SettingType, percentageOptions: [PercentageOption], targetingRules: [TargetingRule]) {
+    init(value: SettingValue, variationId: String?, percentageAttribute: String, settingType: SettingType, percentageOptions: [PercentageOption], targetingRules: [TargetingRule]) {
         self.value = value
         self.percentageAttribute = percentageAttribute
         self.settingType = settingType
@@ -415,8 +428,8 @@ public final class Setting: NSObject, JsonSerializable {
         let percentageOptions = json[self.percentageOptionsKey] as? [[String: Any]] ?? []
 
         return Setting(value: .fromJson(json: json[self.valueKey] as? [String: Any] ?? [:]),
-                       variationId: json[self.variationIdKey] as? String ?? "",
-                       percentageAttribute: json[self.percentageAttributeKey] as? String ?? "",
+                       variationId: json[self.variationIdKey] as? String,
+                       percentageAttribute: json[self.percentageAttributeKey] as? String ?? ConfigCatUser.IdKey,
                        settingType: SettingType(rawValue: (json[self.settingTypeKey] as? Int ?? -1)) ?? .unknown,
                        percentageOptions: percentageOptions.map { opt in
                            .fromJson(json: opt)
@@ -429,7 +442,7 @@ public final class Setting: NSObject, JsonSerializable {
     func toJsonMap() -> [String: Any] {
         [
             Setting.valueKey: value.toJsonMap(),
-            Setting.variationIdKey: variationId,
+            Setting.variationIdKey: variationId as Any,
             Setting.percentageAttributeKey: percentageAttribute,
             Setting.settingTypeKey: settingType.rawValue,
             Setting.percentageOptionsKey: percentageOptions.map { opt in
@@ -444,13 +457,13 @@ public final class Setting: NSObject, JsonSerializable {
     static func fromAnyValue(value: Any?) -> Setting {
         switch value {
         case let val as String:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: val, doubleValue: nil, intValue: nil), variationId: "", percentageAttribute: "", settingType: .string, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(boolValue: nil, stringValue: val, doubleValue: nil, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .string, percentageOptions: [], targetingRules: [])
         case let val as Bool:
-            return Setting(value: SettingValue(boolValue: val, stringValue: nil, doubleValue: nil, intValue: nil), variationId: "", percentageAttribute: "", settingType: .bool, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(boolValue: val, stringValue: nil, doubleValue: nil, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .bool, percentageOptions: [], targetingRules: [])
         case let val as Double:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: val, intValue: nil), variationId: "", percentageAttribute: "", settingType: .double, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: val, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .double, percentageOptions: [], targetingRules: [])
         case let val as Int:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: val), variationId: "", percentageAttribute: "", settingType: .int, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: val), variationId: nil, percentageAttribute: "", settingType: .int, percentageOptions: [], targetingRules: [])
         default:
             return Setting(value: SettingValue(invalidValue: value), variationId: "", percentageAttribute: "", settingType: .unknown, percentageOptions: [], targetingRules: [])
         }
@@ -461,13 +474,13 @@ public final class Segment: NSObject, JsonSerializable {
     static let nameKey = "n"
     static let conditionsKey = "r"
 
-    /// The first 4 characters of the Segment's name.
-    @objc public let name: String
+    /// The name of the segment.
+    @objc public let name: String?
 
     /// The list of segment rule conditions (has a logical AND relation between the items).
     @objc public let conditions: [UserCondition]
 
-    init(name: String, conditions: [UserCondition]) {
+    init(name: String?, conditions: [UserCondition]) {
         self.name = name
         self.conditions = conditions
     }
@@ -475,7 +488,7 @@ public final class Segment: NSObject, JsonSerializable {
     static func fromJson(json: [String: Any]) -> Segment {
         let conditions = json[self.conditionsKey] as? [[String: Any]] ?? []
         
-        return Segment(name: json[self.nameKey] as? String ?? "",
+        return Segment(name: json[self.nameKey] as? String,
                        conditions: conditions.map { cond in
                            .fromJson(json: cond)
                        })
@@ -483,7 +496,7 @@ public final class Segment: NSObject, JsonSerializable {
 
     func toJsonMap() -> [String: Any] {
         [
-            Segment.nameKey: name,
+            Segment.nameKey: name as Any,
             Segment.conditionsKey: conditions.map { cond in
                 cond.toJsonMap()
             }
@@ -606,12 +619,12 @@ public final class UserCondition: NSObject, JsonSerializable {
     @objc public let stringArrayValue: [String]?
 
     /// The operator which defines the relation between the comparison attribute and the comparison value.
-    @objc public let comparator: Comparator
+    @objc public let comparator: UserComparator
 
     /// The User Object attribute that the condition is based on. Can be "Identifier", "Email", "Country" or any custom attribute.
-    @objc public let comparisonAttribute: String
+    @objc public let comparisonAttribute: String?
 
-    init(stringValue: String?, doubleValue: Double?, stringArrayValue: [String]?, comparator: Comparator, comparisonAttribute: String) {
+    init(stringValue: String?, doubleValue: Double?, stringArrayValue: [String]?, comparator: UserComparator, comparisonAttribute: String?) {
         self.stringValue = stringValue
         self.doubleValue = doubleValue
         self.stringArrayValue = stringArrayValue
@@ -628,8 +641,8 @@ public final class UserCondition: NSObject, JsonSerializable {
         UserCondition(stringValue: json[self.stringValKey] as? String,
                       doubleValue: json[self.doubleValKey] as? Double,
                       stringArrayValue: json[self.stringArrValKey] as? [String],
-                      comparator: Comparator(rawValue: (json[self.comparatorKey] as? Int ?? 0)) ?? .oneOf,
-                      comparisonAttribute: json[self.comparisonAttributeKey] as? String ?? "")
+                      comparator: UserComparator(rawValue: (json[self.comparatorKey] as? Int ?? -1)) ?? .unknown,
+                      comparisonAttribute: json[self.comparisonAttributeKey] as? String)
     }
 
     func toJsonMap() -> [String: Any] {
@@ -638,12 +651,12 @@ public final class UserCondition: NSObject, JsonSerializable {
             UserCondition.doubleValKey: doubleValue as Any,
             UserCondition.stringArrValKey: stringArrayValue as Any,
             UserCondition.comparatorKey: comparator.rawValue,
-            UserCondition.comparisonAttributeKey: comparisonAttribute,
+            UserCondition.comparisonAttributeKey: comparisonAttribute as Any,
         ]
     }
     
     public override var description: String {
-        let res = "User.\(comparisonAttribute) \(comparatorTexts[comparator]!) "
+        let res = "User.\(unwrappedComparisonAttribute) \(comparatorTexts[comparator] ?? "<invalid comparator>") "
         if stringValue == nil && doubleValue == nil && stringArrayValue == nil {
             return res + "<invalid value>"
         }
@@ -675,6 +688,10 @@ public final class UserCondition: NSObject, JsonSerializable {
         }
         return res
     }
+    
+    var unwrappedComparisonAttribute: String {
+        return comparisonAttribute ?? "<invalid attribute>"
+    }
 }
 
 public final class SegmentCondition: NSObject, JsonSerializable {
@@ -696,7 +713,7 @@ public final class SegmentCondition: NSObject, JsonSerializable {
 
     static func fromJson(json: [String: Any]) -> SegmentCondition {
         SegmentCondition(index: json[self.indexKey] as? Int ?? -1,
-                         segmentComparator: SegmentComparator(rawValue: (json[self.comparatorKey] as? Int ?? 0)) ?? .isIn)
+                         segmentComparator: SegmentComparator(rawValue: (json[self.comparatorKey] as? Int ?? -1)) ?? .unknown)
     }
 
     func toJsonMap() -> [String: Any] {
@@ -717,37 +734,42 @@ public final class PrerequisiteFlagCondition: NSObject, JsonSerializable {
     static let valueKey = "v"
 
     /// The key of the prerequisite flag that the condition is based on.
-    @objc public let flagKey: String
+    @objc public let flagKey: String?
 
     /// The operator which defines the relation between the evaluated value of the prerequisite flag and the comparison value.
-    @objc public let prerequisiteComparator: PrerequisiteComparator
+    @objc public let prerequisiteComparator: PrerequisiteFlagComparator
     
     /// The evaluated value of the prerequisite flag is compared to.
     @objc public let flagValue: SettingValue
 
-    init(flagKey: String, prerequisiteComparator: PrerequisiteComparator, flagValue: SettingValue) {
+    init(flagKey: String?, prerequisiteComparator: PrerequisiteFlagComparator, flagValue: SettingValue) {
         self.flagKey = flagKey
         self.prerequisiteComparator = prerequisiteComparator
         self.flagValue = flagValue
     }
 
     static func fromJson(json: [String: Any]) -> PrerequisiteFlagCondition {
-        PrerequisiteFlagCondition(flagKey: json[self.flagKeyKey] as? String ?? "",
-                                  prerequisiteComparator: PrerequisiteComparator(rawValue: (json[self.comparatorKey] as? Int ?? 0)) ?? .eq,
+        PrerequisiteFlagCondition(flagKey: json[self.flagKeyKey] as? String,
+                                  prerequisiteComparator: PrerequisiteFlagComparator(rawValue: (json[self.comparatorKey] as? Int ?? -1)) ?? .unknown,
                                   flagValue: .fromJson(json: json[self.valueKey] as? [String: Any] ?? [:]))
     }
 
     func toJsonMap() -> [String: Any] {
         [
-            PrerequisiteFlagCondition.flagKeyKey: flagKey,
+            PrerequisiteFlagCondition.flagKeyKey: flagKey as Any,
             PrerequisiteFlagCondition.comparatorKey: prerequisiteComparator.rawValue,
             PrerequisiteFlagCondition.valueKey: flagValue.toJsonMap()
         ]
     }
     
     public override var description: String {
-        return "Flag '\(flagKey)' \(prerequisiteComparator.text) '\(flagValue.val ?? "<invalid value>")'"
+        return "Flag '\(flagKey ?? "<invalid key>")' \(prerequisiteComparator.text) '\(flagValue.anyValue ?? "<invalid value>")'"
     }
+}
+
+enum ValueResult {
+    case success(Any)
+    case error(String)
 }
 
 public final class SettingValue: NSObject, JsonSerializable {
@@ -755,7 +777,9 @@ public final class SettingValue: NSObject, JsonSerializable {
     static let stringKey = "s"
     static let doubleKey = "d"
     static let intKey = "i"
-
+    
+    static let settingValueMissingMessage = "Setting value is missing"
+    
     /// Holds a bool feature flag's value.
     public let boolValue: Bool?
     
@@ -774,8 +798,8 @@ public final class SettingValue: NSObject, JsonSerializable {
     
     @objc public let intValueObjC: NSNumber?
     
-    let invalidValue: Any?
-
+    private let invalidValue: Any?
+    
     init(boolValue: Bool?, stringValue: String?, doubleValue: Double?, intValue: Int?, invalidValue: Any? = nil) {
         self.boolValue = boolValue
         self.stringValue = stringValue
@@ -803,14 +827,14 @@ public final class SettingValue: NSObject, JsonSerializable {
     convenience init(invalidValue: Any?) {
         self.init(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: nil, invalidValue: invalidValue)
     }
-
+    
     static func fromJson(json: [String: Any]) -> SettingValue {
         SettingValue(boolValue: json[self.boolKey] as? Bool,
                      stringValue: json[self.stringKey] as? String,
                      doubleValue: json[self.doubleKey] as? Double,
                      intValue: json[self.intKey] as? Int)
     }
-
+    
     func toJsonMap() -> [String: Any] {
         [
             SettingValue.boolKey: boolValue as Any,
@@ -851,7 +875,7 @@ public final class SettingValue: NSObject, JsonSerializable {
         return .unknown
     }
     
-    var val: Any? {
+    var anyValue: Any? {
         if let val = boolValue {
             return val
         }
@@ -864,7 +888,7 @@ public final class SettingValue: NSObject, JsonSerializable {
         if let val = intValue {
             return val
         }
-        return nil
+        return invalidValue
     }
     
     var isValid: Bool {
@@ -875,18 +899,36 @@ public final class SettingValue: NSObject, JsonSerializable {
         return !isValid && invalidValue == nil
     }
     
-    func eq(to: Any) -> Bool {
-        switch to {
-        case let val as String:
-            return val == stringValue
-        case let val as Bool:
-            return val == boolValue
-        case let val as Double:
-            return val == doubleValue
-        case let val as Int:
-            return val == intValue
+    func toAnyChecked(settingType: SettingType) -> ValueResult {
+        if isEmpty {
+            return .error(SettingValue.settingValueMissingMessage)
+        }
+        if let inv = invalidValue {
+            return .error("Setting value '\(inv)' is of an unsupported type (\(type(of: inv))")
+        }
+        switch settingType {
+        case .bool:
+            guard let val = boolValue else {
+                return .error(SettingValue.settingValueMissingMessage)
+            }
+            return .success(val)
+        case .string:
+            guard let val = stringValue else {
+                return .error(SettingValue.settingValueMissingMessage)
+            }
+            return .success(val)
+        case .int:
+            guard let val = intValue else {
+                return .error(SettingValue.settingValueMissingMessage)
+            }
+            return .success(val)
+        case .double:
+            guard let val = doubleValue else {
+                return .error(SettingValue.settingValueMissingMessage)
+            }
+            return .success(val)
         default:
-            return false
+            return .error("Setting value is missing or invalid")
         }
     }
 }
@@ -895,10 +937,10 @@ public final class ServedValue: NSObject, JsonSerializable {
     static let valueKey = "v"
     static let idKey = "i"
 
-    /// The value associated with the targeting rule or nil if the targeting rule has percentage options THEN part.
+    /// The value associated with the targeting rule. It's empty (its `isEmpty` property is `true`) when the targeting rule has percentage options THEN part.
     @objc public let value: SettingValue
     
-    /// VariationID of the targeting rule.
+    /// Variation ID.
     @objc public let variationId: String?
 
     init(value: SettingValue, variationId: String?) {
@@ -932,9 +974,9 @@ public final class PercentageOption: NSObject, JsonSerializable {
     @objc public let percentage: Int
 
     /// The rule's variation ID (for analytical purposes).
-    @objc public let variationId: String
+    @objc public let variationId: String?
 
-    init(servedValue: SettingValue, percentage: Int, variationId: String) {
+    init(servedValue: SettingValue, percentage: Int, variationId: String?) {
         self.servedValue = servedValue
         self.percentage = percentage
         self.variationId = variationId;
@@ -943,14 +985,14 @@ public final class PercentageOption: NSObject, JsonSerializable {
     static func fromJson(json: [String: Any]) -> PercentageOption {
         PercentageOption(servedValue: .fromJson(json: json[self.valueKey] as? [String: Any] ?? [:]),
                 percentage: json[self.percentageKey] as? Int ?? 0,
-                variationId: json[self.variationIdKey] as? String ?? "")
+                variationId: json[self.variationIdKey] as? String)
     }
 
     func toJsonMap() -> [String: Any] {
         [
             PercentageOption.valueKey: servedValue.toJsonMap(),
             PercentageOption.percentageKey: percentage,
-            PercentageOption.variationIdKey: variationId
+            PercentageOption.variationIdKey: variationId as Any
         ]
     }
 }

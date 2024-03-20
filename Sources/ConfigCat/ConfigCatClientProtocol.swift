@@ -3,7 +3,7 @@ import Foundation
 /// Defines the public protocol of the `ConfigCatClient`.
 public protocol ConfigCatClientProtocol {
     /**
-     Gets the value of a feature flag or setting identified by the given `key`.
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
      
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -13,7 +13,7 @@ public protocol ConfigCatClientProtocol {
     func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ())
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.

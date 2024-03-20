@@ -80,9 +80,9 @@ class EvaluationTests: XCTestCase {
             if test.3 == nil {
                 let type = SettingValue.fromAnyValue(value: test.2).settingType
                 if test.2 == nil {
-                    XCTAssertTrue(logger.entries.last?.contains("Setting value is missing or invalid") ?? false)
+                    XCTAssertTrue(logger.entries.last?.contains("Setting value is missing") ?? false, logger.entries.last ?? "")
                 } else if type == .unknown {
-                    XCTAssertTrue(logger.entries.last?.range(of: "Setting value '[^']+' is of an unsupported type", options: .regularExpression) != nil)
+                    XCTAssertTrue(logger.entries.last?.range(of: "Setting value '[^']+' is of an unsupported type", options: .regularExpression) != nil, logger.entries.last ?? "")
                 } else {
                     XCTAssertTrue(logger.entries.last?.range(of: "Type mismatch between comparison value '[^']+' and prerequisite flag '[^']+'", options: .regularExpression) != nil)
                 }
@@ -117,9 +117,9 @@ class EvaluationTests: XCTestCase {
         }
         
         for test in tests {
-            let logger = RecordingLogger()
+            let logger = NoLogger()
             let source = test.3 != nil ? try! BundleResourceDataSource(json: jsonContent, behaviour: test.3!) : nil
-            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: source)
+            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: source, logLevel: .info)
             
             let user = ConfigCatUser(identifier: test.1, email: test.2)
             let res = await client.getAnyValue(for: test.0, defaultValue: nil, user: user)
@@ -312,6 +312,7 @@ class EvaluationTests: XCTestCase {
             ("stringArrayToStringConversion", ["read", "Write", " eXecute "], "4"),
             ("stringArrayToStringConversionEmpty", [String](), "5"),
             //("stringArrayToStringConversionSpecialChars", ["+<>%\"'\\/\t\r\n"], "3"),
+            ("stringArrayToStringConversionUnicode", ["äöüÄÖÜçéèñışğâ¢™✓😀"], "2")
         ]
         
         guard let jsonContent = loadResource(bundle: testBundle, path: "json/comparison_attribute_conversion.json") else {
@@ -328,6 +329,23 @@ class EvaluationTests: XCTestCase {
             let res = await client.getValue(for: test.0, defaultValue: "default", user: user)
             
             XCTAssertEqual(test.2, res, "\(test.0) \(test.1)")
+        }
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testSpecialCharacters() async {
+        let tests: [(String, String, String)] = [
+            ("specialCharacters", "äöüÄÖÜçéèñışğâ¢™✓😀", "äöüÄÖÜçéèñışğâ¢™✓😀"),
+            ("specialCharactersHashed", "äöüÄÖÜçéèñışğâ¢™✓😀", "äöüÄÖÜçéèñışğâ¢™✓😀"),
+        ]
+        
+        let client = ConfigCatClient(sdkKey: "configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/u28_1qNyZ0Wz-ldYHIU7-g", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: nil)
+        
+        
+        for test in tests {
+            let res = await client.getValue(for: test.0, defaultValue: "NOT_CAT", user: ConfigCatUser(identifier: test.1))
+            
+            XCTAssertTrue(anyEq(a: test.2, b: res))
         }
     }
     
@@ -410,10 +428,10 @@ class EvaluationTests: XCTestCase {
             ("notendswithanyof", "no trim"),
             ("arraycontainsanyof", "no trim"),
             ("arraynotcontainsanyof", "no trim"),
-            ("startwithanyofhashed", "default"),
-            ("notstartwithanyofhashed", "default"),
-            ("endswithanyofhashed", "default"),
-            ("notendswithanyofhashed", "default"),
+            ("startwithanyofhashed", "no trim"),
+            ("notstartwithanyofhashed", "no trim"),
+            ("endswithanyofhashed", "no trim"),
+            ("notendswithanyofhashed", "no trim"),
             ("semverisoneof", "4 trim"),
             ("semverisnotoneof", "5 trim"),
             ("semverless", "6 trim"),

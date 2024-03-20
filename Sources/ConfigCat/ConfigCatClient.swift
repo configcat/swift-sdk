@@ -165,7 +165,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     // MARK: ConfigCatClientProtocol
 
     /**
-     Gets the value of a feature flag or setting identified by the given `key`.
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -188,7 +188,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -257,25 +257,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 return
             }
             for (key, setting) in result.settings {
-                if variationId == setting.variationId {
-                    completion(KeyValue(key: key, value: setting.value.val))
+                if setting.settingType == .unknown {
+                    self.log.error(eventId: 1002, message: "Error occurred in the `getKeyAndValue` method: Setting type of '\(key)' is invalid.")
+                    completion(nil)
                     return
                 }
-                for rule in setting.targetingRules {
-                    if variationId == rule.servedValue.variationId {
-                        completion(KeyValue(key: key, value: rule.servedValue.value.val))
+                if let valResult = self.getValueForVariationId(variationId: variationId, setting: setting) {
+                    switch valResult {
+                    case .success(let val):
+                        completion(KeyValue(key: key, value: val))
                         return
-                    }
-                    for opt in rule.percentageOptions {
-                        if variationId == opt.variationId {
-                            completion(KeyValue(key: key, value: opt.servedValue.val))
-                            return
-                        }
-                    }
-                }
-                for opt in setting.percentageOptions {
-                    if variationId == opt.variationId {
-                        completion(KeyValue(key: key, value: opt.servedValue.val))
+                    case .error(let err):
+                        self.log.error(eventId: 1002, message: "Error occurred in the `getKeyAndValue` method: \(err).")
+                        completion(nil)
                         return
                     }
                 }
@@ -284,6 +278,33 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             self.log.error(eventId: 2011, message: String(format: "Could not find the setting for the specified variation ID: '%@'.", variationId))
             completion(nil)
         }
+    }
+    
+    func getValueForVariationId(variationId: String, setting: Setting) -> ValueResult? {
+        if variationId == setting.variationId {
+            return setting.value.toAnyChecked(settingType: setting.settingType)
+        }
+        for rule in setting.targetingRules {
+            if !rule.servedValue.value.isEmpty {
+                if variationId == rule.servedValue.variationId {
+                    return rule.servedValue.value.toAnyChecked(settingType: setting.settingType)
+                }
+            } else if !rule.percentageOptions.isEmpty {
+                for opt in rule.percentageOptions {
+                    if variationId == opt.variationId {
+                        return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+                    }
+                }
+            } else {
+                return .error("Targeting rule THEN part is missing or invalid")
+            }
+        }
+        for opt in setting.percentageOptions {
+            if variationId == opt.variationId {
+                return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+            }
+        }
+        return nil
     }
 
     /// Gets the values of all feature flags or settings asynchronously.
