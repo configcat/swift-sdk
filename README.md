@@ -10,13 +10,13 @@ ConfigCat SDK for Swift provides easy integration for your application to [Confi
 
 The following device platform versions are supported:
 
-| Platform | Version |
-| -------- | ------- |
-| iOS      | 12.0    |
-| watchOS  | 4.0     |
-| tvOS     | 12.0    |
-| macOS    | 10.13   |
-| visionOS | 1.0     |
+| Platform | Version    |
+| -------- | ---------- |
+| iOS      | >= 12.0    |
+| watchOS  | >= 4.0     |
+| tvOS     | >= 12.0    |
+| macOS    | >= 10.13   |
+| visionOS | >= 1.0     |
 
 ## Getting started
 
