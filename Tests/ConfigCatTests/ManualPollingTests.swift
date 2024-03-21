@@ -2,7 +2,7 @@ import XCTest
 @testable import ConfigCat
 
 class ManualPollingTests: XCTestCase {
-    private let testJsonFormat = #"{ "f": { "fakeKey": { "v": "%@", "p": [], "r": [] } } }"#
+    private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 1, "v": { "s": "%@" } } } }"#
 
     func testGet() throws {
         let engine = MockEngine()
@@ -10,15 +10,15 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200, delay: 2))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -29,7 +29,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -47,7 +47,7 @@ class ManualPollingTests: XCTestCase {
             called = true
             XCTAssertTrue(error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
         }
-        let logger = Logger(level: .warning, hooks: hooks)
+        let logger = InternalLogger(log: OSLogger(), level: .warning, hooks: hooks)
 
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
@@ -58,7 +58,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -69,7 +69,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertFalse(result.success)
             XCTAssertTrue(result.error?.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -87,15 +87,15 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -109,7 +109,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -125,15 +125,15 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
             }
         }
@@ -144,7 +144,7 @@ class ManualPollingTests: XCTestCase {
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
             service.settings { settingsResult in
-                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value as? String)
+                XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
             }
         }
@@ -156,8 +156,8 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.settings { settingsResult in
@@ -176,8 +176,8 @@ class ManualPollingTests: XCTestCase {
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
@@ -221,8 +221,8 @@ class ManualPollingTests: XCTestCase {
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
-        let fetcher = ConfigFetcher(httpEngine: engine, logger: Logger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: Logger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in

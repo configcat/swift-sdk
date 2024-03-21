@@ -2,7 +2,7 @@ import XCTest
 @testable import ConfigCat
 
 class LocalTests: XCTestCase {
-    private let testJsonFormat = #"{ "f": { "fakeKey": { "v": %@, "p": [], "r": [] } } }"#
+    private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 0, "v": { "b": %@ } } } }"#
 
     func testDictionary() throws {
         let dictionary: [String: Any] = [
@@ -35,7 +35,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
@@ -53,7 +53,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: "testKey", pollingMode: PollingModes.autoPoll(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertFalse(values["fakeKey"] as? Bool ?? true)

@@ -3,7 +3,7 @@ import XCTest
 
 class AsyncAwaitTests: XCTestCase {
     #if compiler(>=5.5) && canImport(_Concurrency)
-    let testJsonMultiple = #"{ "f": { "key1": { "v": true, "i": "fakeId1", "p": [], "r": [] }, "key2": { "v": false, "i": "fakeId2", "p": [], "r": [{"o":1,"a":"Email","t":2,"c":"@example.com","v":true,"i":"9f21c24c"}] } } }"#
+    let testJsonMultiple = #"{"f":{"key1":{"t":0,"v":{"b":true},"i":"fakeId1"},"key2":{"t":0,"r":[{"c":[{"u":{"a":"Email","c":2,"l":["@example.com"]}}],"s":{"v":{"b":true},"i":"9f21c24c"}}],"v":{"b":false},"i":"fakeId2"}}}"#
     let user = ConfigCatUser(identifier: "id", email: "test@example.com")
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -11,7 +11,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let value = await client.getValue(for: "key1", defaultValue: false)
         XCTAssertTrue(value)
         let value2 = await client.getValue(for: "key2", defaultValue: false, user: user)
@@ -23,7 +23,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let details = await client.getValueDetails(for: "key1", defaultValue: false)
         XCTAssertEqual("fakeId1", details.variationId)
         let details2 = await client.getValueDetails(for: "key2", defaultValue: false, user: user)
@@ -35,7 +35,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let id = await client.getKeyAndValue(for: "fakeId1")
         XCTAssertEqual(true, id?.value as? Bool)
         XCTAssertEqual("key1", id?.key)
@@ -46,7 +46,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let keys = await client.getAllKeys()
         XCTAssertEqual(2, keys.count)
     }
@@ -56,7 +56,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let values = await client.getAllValues()
         XCTAssertEqual(2, values.count)
     }
@@ -66,7 +66,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let values = await client.getAllValueDetails()
         XCTAssertEqual(2, values.count)
     }
@@ -76,7 +76,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         let result = await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertTrue(result.success)
@@ -89,7 +89,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         await client.forceRefresh()
         let value = await client.getValue(for: "key2", defaultValue: true)
         XCTAssertFalse(value)
@@ -101,7 +101,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let details = await client.getValueDetails(for: "key2", defaultValue: true)
         XCTAssertFalse(details.isDefaultValue)
         XCTAssertFalse(details.value)
@@ -116,7 +116,7 @@ class AsyncAwaitTests: XCTestCase {
         let initValue = testJsonMultiple.asEntryString()
         let cache = SingleValueCache(initValue: initValue)
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, configCache: cache)
         
         let state = await client.waitForReady()
         
@@ -132,7 +132,7 @@ class AsyncAwaitTests: XCTestCase {
         let initValue = testJsonMultiple.asEntryString(date: Date().subtract(minutes: 5)!)
         let cache = SingleValueCache(initValue: initValue)
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, configCache: cache)
         
         let state = await client.waitForReady()
         
@@ -148,7 +148,7 @@ class AsyncAwaitTests: XCTestCase {
         let initValue = testJsonMultiple.asEntryString(date: Date().subtract(minutes: 5)!)
         let cache = SingleValueCache(initValue: initValue)
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, configCache: cache)
         
         let state = await client.waitForReady()
         
@@ -161,7 +161,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.autoPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         
         let state = await client.waitForReady()
         
@@ -174,7 +174,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 400))
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine)
         
         let state = await client.waitForReady()
         
@@ -190,7 +190,7 @@ class AsyncAwaitTests: XCTestCase {
         let initValue = testJsonMultiple.asEntryString()
         let cache = SingleValueCache(initValue: initValue)
 
-        let client = ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, configCache: cache)
         
         let state = await client.waitForReady()
         

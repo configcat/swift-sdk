@@ -1,7 +1,7 @@
 import XCTest
 @testable import ConfigCat
 
-class RolloutIntegrationTests: XCTestCase {
+class RolloutIntegrationV1Tests: XCTestCase {
     enum TestType {
         case value
         case variation
@@ -15,65 +15,69 @@ class RolloutIntegrationTests: XCTestCase {
         #endif
     }()
 
-    func testRolloutMatrixText() throws {
-        if let url = testBundle.url(forResource: "testmatrix", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", type: .value)
+    func testRolloutMatrixText() {
+        if let content = loadResource(bundle: testBundle, path: "testmatrix.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", type: .value)
+        } else {
+            XCTFail()
+        }
+    }
+    
+    func testRolloutMatrixSegments() throws {
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_segments_old.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/LcYz135LE0qbcacz2mgXnA", type: .value)
         } else {
             XCTFail()
         }
     }
 
     func testRolloutMatrixSemantic() throws {
-        if let url = testBundle.url(forResource: "testmatrix_semantic", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", type: .value)
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_semantic.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/BAr3KgLTP0ObzKnBTo5nhA", type: .value)
         } else {
             XCTFail()
         }
     }
 
     func testRolloutMatrixSemantic2() throws {
-        if let url = testBundle.url(forResource: "testmatrix_semantic_2", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", type: .value)
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_semantic_2.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/q6jMCFIp-EmuAfnmZhPY7w", type: .value)
         } else {
             XCTFail()
         }
     }
 
     func testRolloutMatrixNumber() throws {
-        if let url = testBundle.url(forResource: "testmatrix_number", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", type: .value)
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_number.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/uGyK3q9_ckmdxRyI7vjwCw", type: .value)
         } else {
             XCTFail()
         }
     }
 
     func testRolloutMatrixSensitive() throws {
-        if let url = testBundle.url(forResource: "testmatrix_sensitive", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", type: .value)
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_sensitive.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/qX3TP2dTj06ZpCCT1h_SPA", type: .value)
         } else {
             XCTFail()
         }
     }
 
     func testRolloutMatrixVariationId() throws {
-        if let url = testBundle.url(forResource: "testmatrix_variationId", withExtension: "csv") {
-            try testRolloutMatrix(url: url, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", type: .variation)
+        if let content = loadResource(bundle: testBundle, path: "testmatrix_variationid.csv") {
+            testRolloutMatrix(content: content, sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/nQ5qkhRAUEa6beEyyrVLBA", type: .variation)
         } else {
             XCTFail()
         }
     }
 
-    func testRolloutMatrix(url: URL, sdkKey: String, type: TestType) throws {
+    func testRolloutMatrix(content: String, sdkKey: String, type: TestType) {
         let client: ConfigCatClient = ConfigCatClient.get(sdkKey: sdkKey) { options in
             options.pollingMode = PollingModes.lazyLoad()
+            options.logLevel = .nolog
         }
         defer {
             ConfigCatClient.closeAll()
-        }
-
-        guard let matrixData = try? Data(contentsOf: url), let content = String(bytes: matrixData, encoding: .utf8) else {
-            XCTFail()
-            return
         }
 
         let rows = content.components(separatedBy: "\n")
@@ -105,8 +109,8 @@ class RolloutIntegrationTests: XCTestCase {
             var user: ConfigCatUser? = nil
             if testObjects[0] != "##null##" {
 
-                var email = ""
-                var country = ""
+                var email: String? = nil
+                var country: String? = nil
 
                 let identifier = testObjects[0]
 
@@ -134,44 +138,31 @@ class RolloutIntegrationTests: XCTestCase {
                         if let boolValue = anyValue as? Bool,
                            let expectedValue = Bool(testObjects[i + 4].lowercased()) {
                             if boolValue != expectedValue {
-                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, boolValue))
+                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(boolValue)")
                             }
-                            expectation.fulfill()
-                            return
-                        }
-
-                        if let intValue = anyValue as? Int,
+                        } else if let intValue = anyValue as? Int,
                            let expectedValue = Int(testObjects[i + 4]) {
                             if intValue != expectedValue {
-                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, intValue))
+                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(intValue)")
                             }
-                            expectation.fulfill()
-                            return
-                        }
-
-                        if let doubleValue = anyValue as? Double,
+                        } else if let doubleValue = anyValue as? Double,
                            let expectedValue = Double(testObjects[i + 4]) {
                             if doubleValue != expectedValue {
-                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, doubleValue))
+                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(doubleValue)")
                             }
-                            expectation.fulfill()
-                            return
-                        }
-
-                        if let stringValue = anyValue as? String {
+                        } else if let stringValue = anyValue as? String {
                             let expectedValue = testObjects[i + 4]
                             if stringValue != expectedValue {
-                                errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, stringValue))
+                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(stringValue)")
                             }
-                            expectation.fulfill()
-                            return
                         }
+                        expectation.fulfill()
                     }
                 } else {
                     client.getValueDetails(for: settingKey, defaultValue: nil, user: user) { (details: TypedEvaluationDetails<Any?>) in
                         let expectedValue = testObjects[i + 4]
                         if details.variationId != expectedValue {
-                            errors.append(String(format: "Identifier: %@, Key: %@. Expected: %@, Result: %@", testObjects[0], settingKey, expectedValue, details.variationId ?? ""))
+                            errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(details.variationId ?? "")")
                         }
                         expectation.fulfill()
                     }
@@ -180,13 +171,13 @@ class RolloutIntegrationTests: XCTestCase {
                 i += 1
             }
         }
-
+        
+        if !errors.isEmpty {
+            for err in errors {
+                print(err)
+            }
+        }
+        
         XCTAssertEqual(0, errors.count)
-    }
-}
-
-extension Array {
-    func skip(count: Int) -> [Element] {
-        [Element](self[count..<self.count])
     }
 }

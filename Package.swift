@@ -5,10 +5,10 @@ import PackageDescription
 let package = Package(
     name: "ConfigCat",
     platforms: [
-        .iOS(.v10),
-        .watchOS(.v3),
-        .tvOS(.v10),
-        .macOS(.v10_12)
+        .iOS(.v12),
+        .watchOS(.v4),
+        .tvOS(.v12),
+        .macOS(.v10_13)
     ],
     products: [
         .library(name: "ConfigCat", targets: ["ConfigCat"])
@@ -19,6 +19,7 @@ let package = Package(
         .target(name: "ConfigCat",
                 dependencies: ["Version"],
                 exclude: ["Resources/ConfigCat.h", "Resources/Info.plist"],
+                resources: [.copy("Resources/PrivacyInfo.xcprivacy")],
                 swiftSettings: [
                     .define("DEBUG", .when(configuration: .debug))
                 ]),

@@ -6,7 +6,7 @@ public class LocalDictionaryDataSource: OverrideDataSource {
     @objc public init(source: [String: Any], behaviour: OverrideBehaviour) {
         super.init(behaviour: behaviour)
         for (key, value) in source {
-            settings[key] = Setting(value: value, variationId: "", percentageItems: [], rolloutRules: [])
+            settings[key] = Setting.fromAnyValue(value: value)
         }
     }
 

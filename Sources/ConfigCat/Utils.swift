@@ -37,17 +37,76 @@ extension Date {
     }
 }
 
+extension Equatable {
+    func isEqual(_ other: any Equatable) -> Bool {
+        guard let other = other as? Self else {
+            return false
+        }
+        return self == other
+    }
+}
+
 class Constants {
-    static let version: String = "10.0.0"
-    static let configJsonName: String = "config_v5.json"
+    static let version: String = "11.0.0"
+    static let configJsonName: String = "config_v6.json"
     static let configJsonCacheVersion: String = "v2"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
     static let euOnlyBaseUrl: String = "https://cdn-eu.configcat.com"
+    static let proxyPrefix: String = "configcat-proxy/"
+    static let sdkKeyCompSize: Int = 22
 }
 
 class Utils {
     public static func generateCacheKey(sdkKey: String) -> String {
         let keyToHash = sdkKey + "_" + Constants.configJsonName + "_" + Constants.configJsonCacheVersion
-        return String(keyToHash.sha1hex ?? keyToHash)
+        return String(keyToHash.sha1hex)
+    }
+    
+    static func validateSdkKey(sdkKey: String, isCustomUrl: Bool) -> Bool {
+        if isCustomUrl && sdkKey.count > Constants.proxyPrefix.count && sdkKey.hasPrefix(Constants.proxyPrefix) {
+            return true
+        }
+        let comps = sdkKey.split(separator: "/")
+        switch comps.count {
+        case 2:
+            return comps[0].count == Constants.sdkKeyCompSize && comps[1].count == Constants.sdkKeyCompSize
+        case 3:
+            return comps[0] == "configcat-sdk-1" && comps[1].count == Constants.sdkKeyCompSize && comps[2].count == Constants.sdkKeyCompSize
+        default:
+            return false
+        }
+    }
+    
+    static func anyEq(a: Any?, b: Any?) -> Bool {
+        if a == nil && b == nil {
+            return true
+        }
+        guard let eq1 = a as? any Equatable, let eq2 = b as? any Equatable else {
+            return false
+        }
+        return eq1.isEqual(eq2)
+    }
+    
+    static func toJson(obj: Any) -> String {
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: obj, options: [])
+            return String(data: jsonData, encoding: .utf8) ?? ""
+        } catch {
+            return ""
+        }
+    }
+    
+    static func fromJson<T>(json: String) -> T? {
+        do {
+            guard let data = json.data(using: .utf8) else {
+                return nil
+            }
+            guard let result = try JSONSerialization.jsonObject(with: data, options: []) as? T else {
+                return nil
+            }
+            return result
+        } catch {
+            return nil
+        }
     }
 }

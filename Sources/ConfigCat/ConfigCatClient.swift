@@ -9,9 +9,9 @@ import os.log
     case euOnly
 }
 
-/// A client for handling configurations provided by ConfigCat.
+/// ConfigCat SDK client.
 public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
-    private let log: Logger
+    private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
     private let sdkKey: String
@@ -24,6 +24,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
 
     init(sdkKey: String,
          pollingMode: PollingMode,
+         logger: ConfigCatLogger,
          httpEngine: HttpEngine?,
          hooks: Hooks? = nil,
          configCache: ConfigCache? = nil,
@@ -31,15 +32,13 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
          dataGovernance: DataGovernance = DataGovernance.global,
          flagOverrides: OverrideDataSource? = nil,
          defaultUser: ConfigCatUser? = nil,
-         logLevel: LogLevel = .warning,
+         logLevel: ConfigCatLogLevel = .warning,
          offline: Bool = false) {
         
-        assert(!sdkKey.isEmpty, "sdkKey cannot be empty")
-
         self.sdkKey = sdkKey
         self.hooks = hooks ?? Hooks()
         self.defaultUser = defaultUser
-        log = Logger(level: logLevel, hooks: self.hooks)
+        log = InternalLogger(log: logger, level: logLevel, hooks: self.hooks)
         overrideDataSource = flagOverrides
         flagEvaluator = FlagEvaluator(log: log, evaluator: RolloutEvaluator(logger: log), hooks: self.hooks)
 
@@ -47,6 +46,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             // configService is not needed in localOnly mode
             configService = nil
             hooks?.invokeOnReady(state: .hasLocalOverrideFlagDataOnly)
+        } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
+            log.error(eventId: 0, message: "ConfigCat SDK Key '\(sdkKey)' is invalid.")
+            configService = nil
+            hooks?.invokeOnReady(state: .noFlagData)
         } else {
             let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
@@ -66,17 +69,22 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
+     Creates a new or gets an already existing `ConfigCatClient` for the given sdkKey.
 
      - Parameters:
-       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
-       - options: the configuration options.
-     - Returns: the ConfigCatClient instance.
+       - sdkKey: The SDK Key for to communicate with the ConfigCat services.
+       - options: The configuration options.
+     - Returns: The ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, options: ConfigCatOptions? = nil) -> ConfigCatClient {
         mutex.lock()
         defer { mutex.unlock() }
 
+        let isCustomUrl = !(options?.baseUrl ?? "").isEmpty
+        if options?.flagOverrides == nil || options?.flagOverrides?.behaviour != .localOnly {
+            assert(Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: isCustomUrl), "invalid 'sdkKey' passed to the ConfigCatClient")
+        }
+        
         if let client = instances[sdkKey]?.get() {
             if options != nil {
                 client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
@@ -86,18 +94,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             return client
         }
-        let opts = options ?? ConfigCatOptions.default
+        let opts = options ?? .default
         let client = ConfigCatClient(sdkKey: sdkKey,
-                pollingMode: opts.pollingMode,
-                httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
-                hooks: opts.hooks,
-                configCache: opts.configCache,
-                baseUrl: opts.baseUrl,
-                dataGovernance: opts.dataGovernance,
-                flagOverrides: opts.flagOverrides,
-                defaultUser: opts.defaultUser,
-                logLevel: opts.logLevel,
-                offline: opts.offline)
+                                     pollingMode: opts.pollingMode,
+                                     logger: opts.logger,
+                                     httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
+                                     hooks: opts.hooks,
+                                     configCache: opts.configCache,
+                                     baseUrl: opts.baseUrl,
+                                     dataGovernance: opts.dataGovernance,
+                                     flagOverrides: opts.flagOverrides,
+                                     defaultUser: opts.defaultUser,
+                                     logLevel: opts.logLevel,
+                                     offline: opts.offline)
         instances[sdkKey] = Weak(value: client)
         return client
     }
@@ -106,9 +115,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
 
      - Parameters:
-       - sdkKey: the SDK Key for to communicate with the ConfigCat services.
-       - configurator: the configuration callback.
-     - Returns: the ConfigCatClient instance.
+       - sdkKey: The SDK Key for to communicate with the ConfigCat services.
+       - configurator: The configuration callback.
+     - Returns: The ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, configurator: (ConfigCatOptions) -> ()) -> ConfigCatClient {
         let options = ConfigCatOptions.default
@@ -156,12 +165,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     // MARK: ConfigCatClientProtocol
 
     /**
-     Gets the value of a feature flag or setting identified by the given `key`.
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
@@ -179,12 +188,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
 
-     - Parameter key: the identifier of the feature flag or setting.
-     - Parameter defaultValue: in case of any failure, this value will be returned.
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter key: The identifier of the feature flag or setting.
+     - Parameter defaultValue: In case of any failure, this value will be returned.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
@@ -204,8 +213,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Gets the values along with evaluation details of all feature flags and settings.
 
-     - Parameter user: the user object to identify the caller.
-     - Parameter completion: the function which will be called when the feature flag or setting is evaluated.
+     - Parameter user: The user object to identify the caller.
+     - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
     @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
         getSettings { result in
@@ -219,8 +228,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-                detailsResult.append(details)
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                    detailsResult.append(details)
+                }
             }
             completion(detailsResult)
         }
@@ -247,19 +257,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 return
             }
             for (key, setting) in result.settings {
-                if variationId == setting.variationId {
-                    completion(KeyValue(key: key, value: setting.value))
+                if setting.settingType == .unknown {
+                    self.log.error(eventId: 1002, message: "Error occurred in the `getKeyAndValue` method: Setting type of '\(key)' is invalid.")
+                    completion(nil)
                     return
                 }
-                for rule in setting.rolloutRules {
-                    if variationId == rule.variationId {
-                        completion(KeyValue(key: key, value: rule.value))
+                if let valResult = self.getValueForVariationId(variationId: variationId, setting: setting) {
+                    switch valResult {
+                    case .success(let val):
+                        completion(KeyValue(key: key, value: val))
                         return
-                    }
-                }
-                for rule in setting.percentageItems {
-                    if variationId == rule.variationId {
-                        completion(KeyValue(key: key, value: rule.value))
+                    case .error(let err):
+                        self.log.error(eventId: 1002, message: "Error occurred in the `getKeyAndValue` method: \(err).")
+                        completion(nil)
                         return
                     }
                 }
@@ -268,6 +278,33 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             self.log.error(eventId: 2011, message: String(format: "Could not find the setting for the specified variation ID: '%@'.", variationId))
             completion(nil)
         }
+    }
+    
+    func getValueForVariationId(variationId: String, setting: Setting) -> ValueResult? {
+        if variationId == setting.variationId {
+            return setting.value.toAnyChecked(settingType: setting.settingType)
+        }
+        for rule in setting.targetingRules {
+            if let servedValue = rule.servedValue {
+                if variationId == servedValue.variationId {
+                    return servedValue.value.toAnyChecked(settingType: setting.settingType)
+                }
+            } else if !rule.percentageOptions.isEmpty {
+                for opt in rule.percentageOptions {
+                    if variationId == opt.variationId {
+                        return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+                    }
+                }
+            } else {
+                return .error("Targeting rule THEN part is missing or invalid")
+            }
+        }
+        for opt in setting.percentageOptions {
+            if variationId == opt.variationId {
+                return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+            }
+        }
+        return nil
     }
 
     /// Gets the values of all feature flags or settings asynchronously.
@@ -283,8 +320,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                let details = self.flagEvaluator.evaluateRules(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime)
-                allValues[key] = details.value
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                    allValues[key] = details.value
+                }
             }
             completion(allValues)
         }
@@ -293,7 +331,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     /**
      Initiates a force refresh asynchronously on the cached configuration.
 
-     - Parameter completion: the function which will be called when refresh completed successfully.
+     - Parameter completion: The function which will be called when refresh completed successfully.
      */
     @objc public func forceRefresh(completion: @escaping (RefreshResult) -> ()) {
         if let configService = configService {
@@ -325,19 +363,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
     #endif
 
-    func getSettings(completion: @escaping (SettingResult) -> Void) {
+    func getSettings(completion: @escaping (SettingsResult) -> Void) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            completion(SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
+            completion(SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
             return
         }
         guard let configService = configService else {
-            completion(SettingResult.empty)
+            completion(.empty)
             return
         }
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
                 configService.settings { result in
-                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
+                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                         new
                     }, fetchTime: result.fetchTime))
                 }
@@ -345,7 +383,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
                 configService.settings { result in
-                    completion(SettingResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
+                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                         current
                     }, fetchTime: result.fetchTime))
                 }
@@ -357,30 +395,30 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
     
-    func getInMemorySettings() -> SettingResult {
+    func getInMemorySettings() -> SettingsResult {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            return SettingResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
+            return SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
         }
         guard let configService = configService else {
-            return SettingResult.empty
+            return .empty
         }
         
         let inMemory = configService.inMemory
         
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
-                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (_, new) in
+                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                     new
                 }, fetchTime: inMemory.fetchTime)
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
-                return SettingResult(settings: inMemory.config.entries.merging(overrideDataSource.getOverrides()) { (current, _) in
+                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                     current
                 }, fetchTime: inMemory.fetchTime)
             }
         }
         
-        return SettingResult(settings: inMemory.config.entries, fetchTime: inMemory.fetchTime)
+        return SettingsResult(settings: inMemory.config.settings, fetchTime: inMemory.fetchTime)
     }
 
     /// Sets the default user.

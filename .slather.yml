@@ -1,6 +1,6 @@
-coverage_service: cobertura_xml
+coverage_service: sonarqube_xml
 xcodeproj: ./ConfigCat.xcodeproj
 scheme: 'ConfigCat Coverage'
-output_directory: ./
+output_directory: ./reports
 ignore:
   - "Version/*.swift"

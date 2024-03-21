@@ -5,42 +5,74 @@ class VariationIdTests: XCTestCase {
     let testJson = #"""
                    {"f":{
                        "key1":{
-                           "v":true,
+                           "v": {
+                              "b": true
+                           },
                            "i":"fakeId1",
+                           "t": 0,
                            "p":[
-                               {
-                                   "v":true,
-                                   "p":50,
-                                   "i":"percentageId1"
-                               },
-                               {
-                                   "v":false,
-                                   "p":50,
-                                   "i":"percentageId2"
-                               }
+                              {
+                                 "p":50,
+                                 "v":{
+                                    "b":true
+                                 },
+                                 "i":"percentageId1"
+                              },
+                              {
+                                 "p":50,
+                                 "v":{
+                                    "b":false
+                                 },
+                                 "i":"percentageId2"
+                              }
                            ],
                            "r":[
-                               {
-                                   "a":"Email",
-                                   "t":2,
-                                   "c":"@configcat.com",
-                                   "v":true,
-                                   "i":"rolloutId1"
-                               },
-                               {
-                                   "a":"Email",
-                                   "t":2,
-                                   "c":"@test.com",
-                                   "v":false,
-                                   "i":"rolloutId2"
-                               }
+                              {
+                                 "c":[
+                                    {
+                                       "u":{
+                                          "a":"Email",
+                                          "c":2,
+                                          "l":[
+                                             "@configcat.com"
+                                          ]
+                                       }
+                                    }
+                                 ],
+                                 "s":{
+                                    "v":{
+                                       "b":true
+                                    },
+                                    "i":"rolloutId1"
+                                 }
+                              },
+                              {
+                                 "c":[
+                                    {
+                                       "u":{
+                                          "a":"Email",
+                                          "c":2,
+                                          "l":[
+                                             "@test.com"
+                                          ]
+                                       }
+                                    }
+                                 ],
+                                 "s":{
+                                    "v":{
+                                       "b":false
+                                    },
+                                    "i":"rolloutId2"
+                                 }
+                              }
                            ]
                        },
                        "key2":{
-                           "v":false,
+                           "v": {
+                              "b": false
+                           },
                            "i":"fakeId2",
-                           "p":[],
-                           "r":[]
+                           "t": 0
                        }
                    }}
                    """#
@@ -129,6 +161,6 @@ class VariationIdTests: XCTestCase {
     }
 
     private func createClient(httpEngine: HttpEngine) -> ConfigCatClient {
-        ConfigCatClient(sdkKey: "test", pollingMode: PollingModes.manualPoll(), httpEngine: httpEngine)
+        ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: httpEngine)
     }
 }

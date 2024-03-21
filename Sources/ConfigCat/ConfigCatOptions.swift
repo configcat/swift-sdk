@@ -16,7 +16,7 @@ public final class ConfigCatOptions: NSObject {
     @objc public var pollingMode: PollingMode = PollingModes.autoPoll()
 
     /// Custom `URLSessionConfiguration` used by the HTTP calls.
-    @objc public var sessionConfiguration: URLSessionConfiguration = URLSessionConfiguration.default
+    @objc public var sessionConfiguration: URLSessionConfiguration = .default
 
     /// The base ConfigCat CDN url.
     @objc public var baseUrl: String = ""
@@ -25,7 +25,10 @@ public final class ConfigCatOptions: NSObject {
     @objc public var flagOverrides: OverrideDataSource? = nil
 
     /// Default: `LogLevel.warning`. The internal log level.
-    @objc public var logLevel: LogLevel = .warning
+    @objc public var logLevel: ConfigCatLogLevel = .warning
+    
+    /// The logger used by the SDK.
+    @objc public var logger: ConfigCatLogger = OSLogger()
 
     /// The default user, used as fallback when there's no user parameter is passed to the getValue() method.
     @objc public var defaultUser: ConfigCatUser? = nil
@@ -62,12 +65,12 @@ public final class Hooks: NSObject {
     private var readyState: ClientReadyState?
     private var onReady: [(ClientReadyState) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
-    private var onConfigChanged: [([String: Setting]) -> ()] = []
+    private var onConfigChanged: [(Config) -> ()] = []
     private var onError: [(String) -> ()] = []
 
     /**
      Subscribes a handler to the `onReady` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnReady(handler: @escaping (ClientReadyState) -> ()) {
         mutex.lock()
@@ -81,7 +84,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onFlagEvaluated` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnFlagEvaluated(handler: @escaping (EvaluationDetails) -> ()) {
         mutex.lock()
@@ -91,9 +94,9 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onConfigChanged` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnConfigChanged(handler: @escaping ([String: Setting]) -> ()) {
+    @objc public func addOnConfigChanged(handler: @escaping (Config) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
         onConfigChanged.append(handler)
@@ -101,7 +104,7 @@ public final class Hooks: NSObject {
 
     /**
      Subscribes a handler to the `onError` hook.
-     - Parameter handler: the handler to subscribe.
+     - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnError(handler: @escaping (String) -> ()) {
         mutex.lock()
@@ -118,11 +121,11 @@ public final class Hooks: NSObject {
         }
     }
 
-    func invokeOnConfigChanged(settings: [String: Setting]) {
+    func invokeOnConfigChanged(config: Config) {
         mutex.lock()
         defer { mutex.unlock() }
         for item in onConfigChanged {
-            item(settings);
+            item(config);
         }
     }
 

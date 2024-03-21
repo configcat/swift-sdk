@@ -30,8 +30,8 @@ extension ConfigCatClient {
                     user: user,
                     isDefaultValue: details.isDefaultValue,
                     error: details.error,
-                    matchedEvaluationRule: details.matchedEvaluationRule,
-                    matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule))
+                    matchedTargetingRule: details.matchedTargetingRule,
+                    matchedPercentageOption: details.matchedPercentageOption))
         }
     }
 
@@ -68,9 +68,27 @@ extension ConfigCatClient {
             }
         }
     }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func getAnyValue(for key: String, defaultValue: Any?, user: ConfigCatUser? = nil) async -> Any? {
+        await withCheckedContinuation { continuation in
+            getValue(for: key, defaultValue: defaultValue, user: user) { value in
+                continuation.resume(returning: value)
+            }
+        }
+    }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> TypedEvaluationDetails<Value> {
+        await withCheckedContinuation { continuation in
+            getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
+                continuation.resume(returning: details)
+            }
+        }
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    public func getAnyValueDetails(for key: String, defaultValue: Any?, user: ConfigCatUser? = nil) async -> TypedEvaluationDetails<Any?> {
         await withCheckedContinuation { continuation in
             getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
                 continuation.resume(returning: details)
@@ -156,8 +174,8 @@ extension ConfigCatSnapshot {
                                  user: user,
                                  isDefaultValue: details.isDefaultValue,
                                  error: details.error,
-                                 matchedEvaluationRule: details.matchedEvaluationRule,
-                                 matchedEvaluationPercentageRule: details.matchedEvaluationPercentageRule)
+                                 matchedTargetingRule: details.matchedTargetingRule,
+                                 matchedPercentageOption: details.matchedPercentageOption)
     }
 
     @objc public func getStringValueDetails(for key: String, defaultValue: String, user: ConfigCatUser?) -> StringEvaluationDetails {

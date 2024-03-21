@@ -5,6 +5,8 @@ on:
     - cron: '0 0 * * *'
   push:
     branches: [ master ]
+    paths-ignore:
+      - '**.md'
     tags: [ '[0-9]+.[0-9]+.[0-9]+' ]
   pull_request:
     branches: [ master ]
@@ -12,27 +14,29 @@ on:
   workflow_dispatch:
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_13.2.app/Contents/Developer
+  DEVELOPER_DIR: /Applications/Xcode_15.2.app
 
 jobs:
   test-ios:
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       matrix:
         include:
-          - sdk: iphonesimulator15.2
-            destination: OS=15.2,name=iPhone 8
+          - destination: platform=iOS Simulator,name=iPhone 8
             platform: iphone
-          - sdk: appletvsimulator15.2
-            destination: OS=15.2,name=Apple TV
+          - destination: platform=tvOS Simulator,name=Apple TV
             platform: appletv
+          - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
+            platform: watch
+          - destination: platform=visionOS Simulator,name=Apple Vision Pro
+            platform: watch
     steps:
       - uses: actions/checkout@v4
       - name: Tests
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
-          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
+          xcodebuild build-for-testing -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -quiet
+          xcodebuild test-without-building -project ConfigCat.xcodeproj -scheme "ConfigCat" -destination "${{ matrix.destination }}" CODE_SIGNING_REQUIRED=NO -resultBundlePath tests/${{ matrix.platform }}.xcresult
       - name: Archive results
         if: failure()
         uses: actions/upload-artifact@v4
@@ -41,11 +45,11 @@ jobs:
           path: tests
 
   test-osx:
-    runs-on: macos-latest
+    runs-on: macos-14
     strategy:
       matrix:
         include:
-          - sdk: macosx12.1
+          - sdk: macosx14.2
             destination: arch=x86_64
             platform: macos
     steps:
@@ -65,24 +69,37 @@ jobs:
 
   coverage:
     needs: [test-ios, test-osx]
-    runs-on: macos-latest
+    runs-on: macos-14
+    strategy:
+      matrix:
+        include:
+          - sdk: macosx14.2
+            destination: arch=x86_64
     steps:
       - uses: actions/checkout@v4
       
       - name: Install Slather
-        run: gem install slather
+        run: |
+          gem install slather
+          brew install sonar-scanner
       
       - name: Execute Coverage
         run: |
           set -o pipefail
-          xcodebuild build-for-testing -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
-          xcodebuild test-without-building -sdk macosx12.1 -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "arch=x86_64" -quiet
+          xcodebuild build-for-testing -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
+          xcodebuild test-without-building -sdk ${{ matrix.sdk }} -project ConfigCat.xcodeproj -scheme "ConfigCat Coverage" -destination "${{ matrix.destination }}" -quiet
           slather
-          bash <(curl -s https://codecov.io/bash) -f ./cobertura.xml
 
-  lint:
+      - name: Run Sonar
+        run: |
+          git fetch --unshallow --no-tags
+          sonar-scanner -Dsonar.token=${{ secrets.SONAR_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pod-lint:
     needs: coverage
-    runs-on: macos-latest
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
       
@@ -93,8 +110,8 @@ jobs:
         run: pod lib lint
         
   publish:
-    needs: lint
-    runs-on: macos-latest
+    needs: pod-lint
+    runs-on: macos-14
     if: startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v4

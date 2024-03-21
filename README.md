@@ -1,56 +1,61 @@
 # ConfigCat SDK for Swift
-https://configcat.com
-
-ConfigCat SDK for Swift provides easy integration for your application to ConfigCat.
-
-ConfigCat is a feature flag and configuration management service that lets you separate releases from deployments. You can turn your features ON/OFF using <a href="https://app.configcat.com" target="_blank">ConfigCat Dashboard</a> even after they are deployed. ConfigCat lets you target specific groups of users based on region, email or any other custom user attribute.
-
-ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature flag service</a>. Manage feature toggles across frontend, backend, mobile, desktop apps. <a href="https://configcat.com" target="_blank">Alternative to LaunchDarkly</a>. Management app + feature flag SDKs.
 
 [![Build Status](https://github.com/configcat/swift-sdk/actions/workflows/swift-ci.yml/badge.svg?branch=master)](https://github.com/configcat/swift-sdk/actions/workflows/swift-ci.yml)
-[![Coverage Status](https://img.shields.io/codecov/c/github/ConfigCat/swift-sdk.svg)](https://codecov.io/gh/ConfigCat/swift-sdk)
 [![CocoaPods](https://img.shields.io/cocoapods/v/ConfigCat.svg)](https://cocoapods.org/pods/ConfigCat)
-[![Carthage compatible](https://img.shields.io/badge/Carthage-compatible-4BC51D.svg?style=flat)](https://github.com/Carthage/Carthage)
 [![Supported Platforms](https://img.shields.io/cocoapods/p/ConfigCat.svg?style=flat)](https://configcat.com/docs/sdk-reference/ios)
+[![Coverage Status](https://img.shields.io/sonar/coverage/configcat_swift-sdk?logo=SonarCloud&server=https%3A%2F%2Fsonarcloud.io)](https://sonarcloud.io/project/overview?id=configcat_swift-sdk)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=configcat_swift-sdk&metric=alert_status)](https://sonarcloud.io/dashboard?id=configcat_swift-sdk)
+
+ConfigCat SDK for Swift provides easy integration for your application to [ConfigCat](https://configcat.com).
+
+The following device platform versions are supported:
+
+| Platform | Version |
+| -------- | ------- |
+| iOS      | 12.0    |
+| watchOS  | 4.0     |
+| tvOS     | 12.0    |
+| macOS    | 10.13   |
+| visionOS | 1.0     |
 
 ## Getting started
 
 ### 1. Install the package
 
-**CocoaPods:**
+- ### CocoaPods
 
-Add the following to your `Podfile`:
-```ruby
-target '<YOUR TARGET>' do
-pod 'ConfigCat'
-end
-```
-Then, run the following command to install your dependencies:
-```bash
-pod install
-```
+  Add the following to your `Podfile`:
+  ```ruby
+  target '<YOUR TARGET>' do
+  pod 'ConfigCat'
+  end
+  ```
+  Then, run the following command to install your dependencies:
+  ```bash
+  pod install
+  ```
 
-**Carthage:**
+- ### Swift Package Manager
 
-Add the following to your `Cartfile`:
-```
-github "configcat/swift-sdk"
-```
-Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
+  You can add ConfigCat to an Xcode project by adding it as a package dependency.
 
-**Swift Package Manager:**
+  > https://github.com/configcat/swift-sdk
 
-You can add ConfigCat to an Xcode project by adding it as a package dependency.
+  If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
 
-> https://github.com/configcat/swift-sdk
+  ``` swift
+  dependencies: [
+    .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.0")
+  ]
+  ```
 
-If you want to use ConfigCat in a [SwiftPM](https://swift.org/package-manager/) project, it's as simple as adding a `dependencies` clause to your `Package.swift`:
+- ### Carthage
 
-``` swift
-dependencies: [
-  .package(url: "https://github.com/configcat/swift-sdk", from: "10.0.0")
-]
-```
+  Add the following to your `Cartfile`:
+  ```
+  github "configcat/swift-sdk"
+  ```
+  Then, run the `carthage update` command and then follow the [Carthage integration steps](https://github.com/Carthage/Carthage#getting-started) to link the framework with your project.
 
 ### 2. Go to the <a href="https://app.configcat.com/sdkkey" target="_blank">ConfigCat Dashboard</a> to get your *SDK Key*:
 ![SDK-KEY](https://raw.githubusercontent.com/ConfigCat/swift-sdk/master/media/readme02-3.png  "SDK-KEY")
@@ -127,6 +132,10 @@ https://configcat.com/support
 Contributions are welcome. For more info please read the [Contribution Guideline](CONTRIBUTING.md).
 
 ## About ConfigCat
+ConfigCat is a feature flag and configuration management service that lets you separate releases from deployments. You can turn your features ON/OFF using <a href="https://app.configcat.com" target="_blank">ConfigCat Dashboard</a> even after they are deployed. ConfigCat lets you target specific groups of users based on region, email or any other custom user attribute.
+
+ConfigCat is a <a href="https://configcat.com" target="_blank">hosted feature flag service</a>. Manage feature toggles across frontend, backend, mobile, desktop apps. <a href="https://configcat.com" target="_blank">Alternative to LaunchDarkly</a>. Management app + feature flag SDKs.
+
 - [Official ConfigCat SDKs for other platforms](https://github.com/configcat)
 - [Documentation](https://configcat.com/docs)
 - [Blog](https://configcat.com/blog)
