@@ -8,7 +8,7 @@ int main(int argc, const char * argv[]) {
         ConfigCatClient* client = [ConfigCatClient getWithSdkKey:@"PKDVCLf-Hq-h-kCzMp-L7Q/HhOWfwVtZ0mb30i9wi17GQ" configurator:^(ConfigCatOptions* options){
             // Info level logging helps to inspect the feature flag evaluation process.
             // Use the default Warning level to avoid too detailed logging in your application.
-            options.logLevel = LogLevelInfo;
+            options.logLevel = ConfigCatLogLevelInfo;
             
             [options.hooks addOnReadyWithHandler:^(enum ClientReadyState state) {
                 dispatch_semaphore_signal(semaphore);
@@ -18,10 +18,10 @@ int main(int argc, const char * argv[]) {
         dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, (uint64_t)(5 * NSEC_PER_SEC)));
         
         // Creating a user object to identify your user (optional).
-        ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"Some UserID"
-                                                     email:@"configcat@example.com"
-                                                   country:@"CountryID"
-                                                    custom:@{@"version": @"1.0.0"}];
+        ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"<SOME USERID>"
+                                                                       email:@"configcat@example.com"
+                                                                     country:@"CountryID"
+                                                                      custom:@{@"version": @"1.0.0"}];
         
         NSString *featureName = @"isPOCFeatureEnabled";
         
