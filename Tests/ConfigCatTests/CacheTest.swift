@@ -25,4 +25,29 @@ class CacheTests: XCTestCase {
         XCTAssertEqual(testJson, fromCache.configJson)
         XCTAssertEqual("test-etag", fromCache.eTag)
     }
+    
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testCacheTTLRespectsExternalCache() async {
+        let testJson = "{\"f\":{\"testKey\":{\"t\":1,\"v\":{\"s\":\"%@\"}}}}"
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJson, "remote"), statusCode: 200))
+        
+        let entry = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local"), eTag: "test-etag", fetchTime: Date()).get()
+        let cache = SingleValueCache(initValue: entry.serialize())
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine, configCache: cache)
+        var val = await client.getValue(for: "testKey", defaultValue: "")
+        
+        XCTAssertEqual("local", val)
+        XCTAssertEqual(0, engine.requests.count)
+        
+        let entry2 = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local2"), eTag: "test-etag2", fetchTime: Date()).get()
+        try! cache.write(for: "", value: entry2.serialize())
+        
+        val = await client.getValue(for: "testKey", defaultValue: "")
+        
+        XCTAssertEqual("local2", val)
+        XCTAssertEqual(0, engine.requests.count)
+    }
+    #endif
 }

@@ -193,7 +193,7 @@ class ConfigService {
         defer { mutex.unlock() }
         // Sync up with the cache and use it when it's not expired.
         let entry = readCache()
-        if cachedEntry.isEmpty && entry != cachedEntry {
+        if !entry.isEmpty && entry != cachedEntry {
             cachedEntry = entry
             hooks.invokeOnConfigChanged(config: entry.config)
         }
