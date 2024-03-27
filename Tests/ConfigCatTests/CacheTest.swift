@@ -41,8 +41,6 @@ class CacheTests: XCTestCase {
         XCTAssertEqual("local", val)
         XCTAssertEqual(0, engine.requests.count)
         
-        sleep(2)
-        
         let entry2 = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local2"), eTag: "test-etag2", fetchTime: Date()).get()
         try! cache.write(for: "", value: entry2.serialize())
         
