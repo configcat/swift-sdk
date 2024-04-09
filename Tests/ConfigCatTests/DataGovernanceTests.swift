@@ -176,17 +176,30 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = createFetcher(http: engine, url: customCdnUrl)
 
         // Act
-        let expectation = expectation(description: "wait for response")
+        let expectation1 = expectation(description: "wait for response")
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
             XCTAssertNotNil(response.entry)
-            expectation.fulfill()
+            expectation1.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation1], timeout: 5)
 
         // Assert
         XCTAssertEqual(1, engine.requests.count)
-        XCTAssertTrue(engine.requests.last?.url?.absoluteString.starts(with: customCdnUrl) ?? false)
+        XCTAssertTrue(engine.requests[0].url?.absoluteString.starts(with: customCdnUrl) ?? false)
+        
+        // Act
+        let expectation2 = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 5)
+
+        // Assert
+        XCTAssertEqual(2, engine.requests.count)
+        XCTAssertTrue(engine.requests[1].url?.absoluteString.starts(with: customCdnUrl) ?? false)
     }
 
     func testShouldNotRespectCustomUrlWhenForced() throws {
@@ -199,18 +212,31 @@ class DataGovernanceTests: XCTestCase {
         let fetcher = createFetcher(http: engine, url: customCdnUrl)
 
         // Act
-        let expectation = expectation(description: "wait for response")
+        let expectation1 = expectation(description: "wait for response")
         fetcher.fetch(eTag: "") { response in
             XCTAssertEqual(.fetched(.empty), response)
             XCTAssertNotNil(response.entry)
-            expectation.fulfill()
+            expectation1.fulfill()
         }
-        wait(for: [expectation], timeout: 5)
+        wait(for: [expectation1], timeout: 5)
 
         // Assert
         XCTAssertEqual(2, engine.requests.count)
         XCTAssertTrue(engine.requests[0].url?.absoluteString.starts(with: customCdnUrl) ?? false)
         XCTAssertTrue(engine.requests[1].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
+        
+        // Act
+        let expectation2 = expectation(description: "wait for response")
+        fetcher.fetch(eTag: "") { response in
+            XCTAssertEqual(.fetched(.empty), response)
+            XCTAssertNotNil(response.entry)
+            expectation2.fulfill()
+        }
+        wait(for: [expectation2], timeout: 5)
+
+        // Assert
+        XCTAssertEqual(3, engine.requests.count)
+        XCTAssertTrue(engine.requests[2].url?.absoluteString.starts(with: Constants.globalBaseUrl) ?? false)
     }
 
     private func createFetcher(http: HttpEngine, url: String = "") -> ConfigFetcher {
