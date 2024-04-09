@@ -67,23 +67,17 @@ class ConfigFetcher: NSObject {
     }
 
     func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
-        let cachedUrl = baseUrl
-        executeFetch(url: cachedUrl, eTag: eTag, executionCount: 2) { response in
-            if let newUrl = response.entry?.config.preferences.preferencesUrl, !newUrl.isEmpty && newUrl != cachedUrl {
-                self._baseUrl.testAndSet(expect: cachedUrl, new: newUrl)
-            }
-            completion(response)
-        }
+        executeFetch(eTag: eTag, executionCount: 2, completion: completion)
     }
 
-    private func executeFetch(url: String, eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
-        sendFetchRequest(url: url, eTag: eTag, completion: { response in
+    private func executeFetch(eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
+        sendFetchRequest(url: baseUrl, eTag: eTag, completion: { response in
             guard case .fetched(let entry) = response else {
                 completion(response)
                 return
             }
             let newUrl = entry.config.preferences.preferencesUrl
-            if newUrl.isEmpty || newUrl == url {
+            if newUrl.isEmpty || newUrl == self.baseUrl {
                 completion(response)
                 return
             }
@@ -92,6 +86,7 @@ class ConfigFetcher: NSObject {
                 completion(response)
                 return
             }
+            self.baseUrl = newUrl
             if redirect == .noRedirect {
                 completion(response)
                 return
@@ -101,7 +96,7 @@ class ConfigFetcher: NSObject {
                     + "Read more: https://configcat.com/docs/advanced/data-governance/")
             }
             if executionCount > 0 {
-                self.executeFetch(url: newUrl, eTag: eTag, executionCount: executionCount - 1, completion: completion)
+                self.executeFetch(eTag: eTag, executionCount: executionCount - 1, completion: completion)
                 return
             }
             self.log.error(eventId: 1104, message: "Redirection loop encountered while trying to fetch config JSON. Please contact us at https://configcat.com/support/")
