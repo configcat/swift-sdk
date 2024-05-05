@@ -217,7 +217,7 @@ class AutoPollingTests: XCTestCase {
 
         let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().subtract(seconds: 5)!)
         let cache = SingleValueCache(initValue: initValue)
-        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
