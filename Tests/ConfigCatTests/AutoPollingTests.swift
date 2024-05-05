@@ -210,6 +210,26 @@ class AutoPollingTests: XCTestCase {
 
         XCTAssertEqual(1, engine.requests.count)
     }
+    
+    func testPollsWhenCacheExpired() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test1"), statusCode: 200))
+
+        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().subtract(seconds: 5)!)
+        let cache = SingleValueCache(initValue: initValue)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+
+        let expectation1 = expectation(description: "wait for settings")
+        service.settings { settingsResult in
+            XCTAssertEqual("test1", settingsResult.settings["fakeKey"]?.value.stringValue)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 5)
+
+        XCTAssertEqual(1, engine.requests.count)
+    }
 
     func testOnlineOffline() {
         let engine = MockEngine()

@@ -99,28 +99,24 @@ class ConfigService {
     }
 
     func settings(completion: @escaping (SettingsResult) -> Void) {
-        switch pollingMode {
-        case let lazyMode as LazyLoadingMode:
-            fetchIfOlder(threshold: Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!) { result in
-                switch result {
-                case .success(let entry): completion(!entry.isEmpty
-                                                     ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                     : .empty)
-                case .failure(_, let entry): completion(!entry.isEmpty
-                                                        ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                        : .empty)
-                }
-            }
-        default:
-            fetchIfOlder(threshold: .distantPast, preferCache: initialized) { result in
-                switch result {
-                case .success(let entry): completion(!entry.isEmpty
-                                                     ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                     : .empty)
-                case .failure(_, let entry): completion(!entry.isEmpty
-                                                        ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                        : .empty)
-                }
+        var threshold = Date.distantPast
+        var preferCache = initialized
+        if let lazyMode = pollingMode as? LazyLoadingMode {
+            threshold = Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!
+            preferCache = false
+        }
+        else if let autoPoll = pollingMode as? AutoPollingMode, !initialized {
+            threshold = Date().subtract(seconds: autoPoll.autoPollIntervalInSeconds)!
+        }
+        
+        fetchIfOlder(threshold: threshold, preferCache: preferCache) { result in
+            switch result {
+            case .success(let entry): completion(!entry.isEmpty
+                                                 ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                 : .empty)
+            case .failure(_, let entry): completion(!entry.isEmpty
+                                                    ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
+                                                    : .empty)
             }
         }
     }
