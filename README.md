@@ -45,7 +45,7 @@ The following device platform versions are supported:
 
   ``` swift
   dependencies: [
-    .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.2")
+    .package(url: "https://github.com/configcat/swift-sdk", from: "11.0.3")
   ]
   ```
 
