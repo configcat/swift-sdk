@@ -2,12 +2,14 @@ import Foundation
 
 /// User Object. Contains user attributes which are used for evaluating targeting rules and percentage options.
 public final class ConfigCatUser: NSObject {
-    static let idKey: String = "Identifier"
-    static let emailKey: String = "Email"
-    static let countryKey: String = "Country"
+    @objc public static let idKey: String = "Identifier"
+    @objc public static let emailKey: String = "Email"
+    @objc public static let countryKey: String = "Country"
     
     private var attributes: [String: Any]
-    private(set) var identifier: String
+    
+    /// The user object's identifier.
+    public private(set) var identifier: String
     
     /**
      Initializes a new `ConfigCatUser`.
@@ -76,7 +78,13 @@ public final class ConfigCatUser: NSObject {
         self.identifier = custom[ConfigCatUser.idKey] as? String ?? ""
     }
     
-    func attribute(for key: String) -> Any? {
+    /**
+     Returns the user attribute value identified by the given key.
+     
+     - Parameter key: The key of the user attribute.
+     - Returns: The user attribute value.
+     */
+    @objc public func attribute(for key: String) -> Any? {
         if key.isEmpty {
             assert(false, "key cannot be empty")
         }
