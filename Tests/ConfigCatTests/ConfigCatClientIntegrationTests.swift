@@ -77,7 +77,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
             XCTAssertEqual("@configcat.com", details.matchedTargetingRule?.conditions[0].userCondition?.stringArrayValue?.first)
             XCTAssertNil(details.matchedPercentageOption)
             XCTAssertEqual(2, details.matchedTargetingRule?.conditions[0].userCondition?.comparator.rawValue)
-            XCTAssertEqual(user.identifier, details.user?.identifier)
+            XCTAssertEqual(user.attribute(for: ConfigCatUser.idKey) as! String, details.user?.attribute(for: ConfigCatUser.idKey) as! String)
             called = true
         }
         let client = ConfigCatClient.get(sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A", options: config)
