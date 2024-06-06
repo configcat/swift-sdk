@@ -1,7 +1,7 @@
 Pod::Spec.new do |spec|
 
   spec.name          = "ConfigCat"
-  spec.version       = "11.0.3"
+  spec.version       = "11.1.0"
   spec.summary       = "ConfigCat Swift SDK"
   spec.swift_version = "5.0"
 
