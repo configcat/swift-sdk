@@ -38,4 +38,4 @@ SUPPORTED_PLATFORMS = macosx iphoneos iphonesimulator watchos watchsimulator app
 SWIFT_VERSION = 5.0
 
 // ConfigCat SDK version
-MARKETING_VERSION = 11.1.0
+MARKETING_VERSION = 11.2.0
