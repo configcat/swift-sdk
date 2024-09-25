@@ -351,7 +351,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     @discardableResult
     public func waitForReady() async -> ClientReadyState {
-        await withCheckedContinuation { continuation in
+        // withCheckedContinuation sometimes crashes on iOS 18.0. See https://github.com/RevenueCat/purchases-ios/pull/4286
+        await withUnsafeContinuation { continuation in
             guard let configService = self.configService else {
                 continuation.resume(returning: .hasLocalOverrideFlagDataOnly)
                 return
