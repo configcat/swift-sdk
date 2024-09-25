@@ -123,5 +123,14 @@ jobs:
         run: pod trunk push
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+
+  # Prevent GitHub from suspending your cronjob based triggers due to repository inactivity
+  keepalive:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: gautamkrishnar/keepalive-workflow@v2
           
           
