@@ -62,7 +62,7 @@ extension ConfigCatClient {
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> Value {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getValue(for: key, defaultValue: defaultValue, user: user) { value in
                 continuation.resume(returning: value)
             }
@@ -71,7 +71,7 @@ extension ConfigCatClient {
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAnyValue(for key: String, defaultValue: Any?, user: ConfigCatUser? = nil) async -> Any? {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getValue(for: key, defaultValue: defaultValue, user: user) { value in
                 continuation.resume(returning: value)
             }
@@ -80,7 +80,7 @@ extension ConfigCatClient {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil) async -> TypedEvaluationDetails<Value> {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
                 continuation.resume(returning: details)
             }
@@ -89,7 +89,7 @@ extension ConfigCatClient {
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAnyValueDetails(for key: String, defaultValue: Any?, user: ConfigCatUser? = nil) async -> TypedEvaluationDetails<Any?> {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getValueDetails(for: key, defaultValue: defaultValue, user: user) { details in
                 continuation.resume(returning: details)
             }
@@ -98,7 +98,7 @@ extension ConfigCatClient {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllValueDetails(user: ConfigCatUser? = nil) async -> [EvaluationDetails] {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getAllValueDetails(user: user) { details in
                 continuation.resume(returning: details)
             }
@@ -107,7 +107,7 @@ extension ConfigCatClient {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllKeys() async -> [String] {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getAllKeys { keys in
                 continuation.resume(returning: keys)
             }
@@ -116,7 +116,7 @@ extension ConfigCatClient {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getKeyAndValue(for variationId: String) async -> KeyValue? {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getKeyAndValue(for: variationId) { value in
                 continuation.resume(returning: value)
             }
@@ -125,7 +125,7 @@ extension ConfigCatClient {
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func getAllValues(user: ConfigCatUser? = nil) async -> [String: Any] {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             getAllValues(user: user) { values in
                 continuation.resume(returning: values)
             }
@@ -135,7 +135,7 @@ extension ConfigCatClient {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     @discardableResult
     public func forceRefresh() async -> RefreshResult {
-        await withCheckedContinuation { continuation in
+        await withUnsafeContinuation { continuation in
             forceRefresh { result in
                 continuation.resume(returning: result)
             }
