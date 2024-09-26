@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '0 0 * * *'
   push:
-    branches: [ master ]
+    branches: [ '*' ]
     paths-ignore:
       - '**.md'
     tags: [ '[0-9]+.[0-9]+.[0-9]+' ]
@@ -49,7 +49,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - sdk: macosx14.2
+          - sdk: macosx14.5
             destination: arch=x86_64
             platform: macos
     steps:
@@ -73,7 +73,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - sdk: macosx14.2
+          - sdk: macosx14.5
             destination: arch=x86_64
     steps:
       - uses: actions/checkout@v4
@@ -106,6 +106,12 @@ jobs:
       - name: Install Cocoapods
         run: gem install cocoapods
         
+      - name: Enable VisionOS
+        run: |
+          defaults write com.apple.dt.Xcode AllowUnsupportedVisionOSHost -bool YES
+          defaults write com.apple.CoreSimulator AllowUnsupportedVisionOSHost -bool YES
+          xcodebuild -downloadPlatform visionOS
+
       - name: Lint
         run: pod lib lint
         
