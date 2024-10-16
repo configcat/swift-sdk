@@ -15,6 +15,7 @@
  A struct representing a “semver” version, that is: a Semantic Version.
  - SeeAlso: https://semver.org
  */
+
 public struct Version {
     /// The major version.
     public let major: Int
@@ -36,6 +37,7 @@ public struct Version {
      - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
      - Remark: This initializer variant provided for more readable code when initializing with static integers.
      */
+    @inlinable
     public init(_ major: Int, _ minor: Int, _ patch: Int, pre: [String] = [], build: [String] = []) {
         self.major = abs(major)
         self.minor = abs(minor)
@@ -48,6 +50,19 @@ public struct Version {
             print("notice: negative components were abs’d")
         }
     }
+
+    /**
+     Creates a version object.
+     - Note: Integers are made absolute since negative integers are not allowed, yet it is conventional Swift to take `Int` over `UInt` where possible.
+     - Remark: This initializer variant provided when it would be more readable than the nameless variant.
+     */
+    @inlinable
+    public init(major: Int, minor: Int, patch: Int, prereleaseIdentifiers: [String] = [], buildMetadataIdentifiers: [String] = []) {
+        self.init(major, minor, patch, pre: prereleaseIdentifiers, build: buildMetadataIdentifiers)
+    }
+
+    /// Represents `0.0.0`
+    public static let null = Version(0,0,0)
 }
 
 extension Version: LosslessStringConvertible {
@@ -180,67 +195,6 @@ public extension Version {
     }
 }
 
-extension Version: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(major)
-        hasher.combine(minor)
-        hasher.combine(patch)
-        hasher.combine(prereleaseIdentifiers)
-    }
-}
-
-extension Version: Equatable {
-    /// Compares the provided versions *without* comparing any build-metadata
-    public static func == (lhs: Version, rhs: Version) -> Bool {
-        lhs.major == rhs.major && lhs.minor == rhs.minor && lhs.patch == rhs.patch && lhs.prereleaseIdentifiers == rhs.prereleaseIdentifiers
-    }
-}
-
-extension Version: Comparable {
-    func isEqualWithoutPrerelease(_ other: Version) -> Bool {
-        major == other.major && minor == other.minor && patch == other.patch
-    }
-
-    /**
-     `1.0.0` is less than `1.0.1`, `1.0.1-alpha` is less than `1.0.1` but
-     greater than `1.0.0`.
-     - Returns: `true` if `lhs` is less than `rhs`
-     */
-    public static func < (lhs: Version, rhs: Version) -> Bool {
-        let lhsComparators = [lhs.major, lhs.minor, lhs.patch]
-        let rhsComparators = [rhs.major, rhs.minor, rhs.patch]
-
-        if lhsComparators != rhsComparators {
-            return lhsComparators.lexicographicallyPrecedes(rhsComparators)
-        }
-
-        guard lhs.prereleaseIdentifiers.count > 0 else {
-            return false // Non-prerelease lhs >= potentially prerelease rhs
-        }
-
-        guard rhs.prereleaseIdentifiers.count > 0 else {
-            return true // Prerelease lhs < non-prerelease rhs
-        }
-
-        let zippedIdentifiers = zip(lhs.prereleaseIdentifiers, rhs.prereleaseIdentifiers)
-        for (lhsPrereleaseIdentifier, rhsPrereleaseIdentifier) in zippedIdentifiers {
-            if lhsPrereleaseIdentifier == rhsPrereleaseIdentifier {
-                continue
-            }
-
-            let typedLhsIdentifier: Any = Int(lhsPrereleaseIdentifier) ?? lhsPrereleaseIdentifier
-            let typedRhsIdentifier: Any = Int(rhsPrereleaseIdentifier) ?? rhsPrereleaseIdentifier
-
-            switch (typedLhsIdentifier, typedRhsIdentifier) {
-            case let (int1 as Int, int2 as Int): return int1 < int2
-            case let (string1 as String, string2 as String): return string1 < string2
-            case (is Int, is String): return true // Int prereleases < String prereleases
-            case (is String, is Int): return false
-            default:
-                fatalError("impossi-op")
-            }
-        }
-
-        return lhs.prereleaseIdentifiers.count < rhs.prereleaseIdentifiers.count
-    }
-}
+#if swift(>=5.5)
+extension Version: Sendable {}
+#endif
