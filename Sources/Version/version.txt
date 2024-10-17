@@ -1,1 +1,2 @@
 https://github.com/mxcl/Version/releases/tag/2.1.0
+Version+Comparable.swift merged into Version.swift.
