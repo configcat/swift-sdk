@@ -200,7 +200,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         let evalUser = user ?? defaultUser
         
         if let error = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
-            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, user: evalUser))
+            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, errorCode: .settingValueTypeMismatch, user: evalUser))
             return
         }
         
@@ -339,18 +339,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         } else {
             let message = "Client is configured to use local-only mode, thus `.refresh()` has no effect."
             log.warning(eventId: 3202, message: message)
-            completion(RefreshResult(success: false, error: message))
+            completion(RefreshResult(success: false, errorCode: .localOnlyClient, error: message))
         }
     }
     
-    @objc public func snapshot() -> ConfigCatSnapshot {
-        return ConfigCatSnapshot(flagEvaluator: flagEvaluator, settingsSnapshot: getInMemorySettings(), defaultUser: defaultUser, log: log)
+    @objc public func snapshot() -> ConfigCatClientSnapshot {
+        let inMemorySettings = getInMemorySettings()
+        return ConfigCatClientSnapshot(flagEvaluator: flagEvaluator, settingsSnapshot: inMemorySettings.0, cacheState: inMemorySettings.1, defaultUser: defaultUser, log: log)
     }
     
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     @discardableResult
-    public func waitForReady() async -> ClientReadyState {
+    public func waitForReady() async -> ClientCacheState {
         // withCheckedContinuation sometimes crashes on iOS 18.0. See https://github.com/RevenueCat/purchases-ios/pull/4286
         await withUnsafeContinuation { continuation in
             guard let configService = self.configService else {
@@ -396,30 +397,31 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
     
-    func getInMemorySettings() -> SettingsResult {
+    func getInMemorySettings() -> (SettingsResult, ClientCacheState) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            return SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast)
+            return (SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast), ClientCacheState.hasLocalOverrideFlagDataOnly)
         }
         guard let configService = configService else {
-            return .empty
+            return (.empty, ClientCacheState.noFlagData)
         }
         
         let inMemory = configService.inMemory
+        let entry = inMemory.entry
         
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
-                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
+                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
                     new
-                }, fetchTime: inMemory.fetchTime)
+                }, fetchTime: entry.fetchTime), inMemory.cacheState)
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
-                return SettingsResult(settings: inMemory.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
+                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
                     current
-                }, fetchTime: inMemory.fetchTime)
+                }, fetchTime: entry.fetchTime), inMemory.cacheState)
             }
         }
         
-        return SettingsResult(settings: inMemory.config.settings, fetchTime: inMemory.fetchTime)
+        return (SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime), inMemory.cacheState)
     }
 
     /// Sets the default user.

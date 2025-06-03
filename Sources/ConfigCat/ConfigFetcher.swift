@@ -3,7 +3,7 @@ import Foundation
 enum FetchResponse: Equatable {
     case fetched(ConfigEntry)
     case notModified
-    case failure(message: String, isTransient: Bool)
+    case failure(message: String, errorCode: RefreshErrorCode, isTransient: Bool)
 
     public var entry: ConfigEntry? {
         switch self {
@@ -19,7 +19,7 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     switch (lhs, rhs) {
     case (.fetched(_), .fetched(_)),
          (.notModified, .notModified),
-         (.failure(_, _), .failure(_, _)):
+         (.failure(_, _, _), .failure(_, _, _)):
         return true
     default:
         return false
@@ -108,16 +108,16 @@ class ConfigFetcher: NSObject {
         let request = getRequest(url: url, eTag: eTag)
         httpEngine.get(request: request) { (data, resp, error) in
             if let error = error {
-                var message: String
-                if error._code == NSURLErrorTimedOut, let engine = self.httpEngine as? URLSessionEngine {
-                    message = String(format: "Request timed out while trying to fetch config JSON. Timeout value: %.2fs", engine.session.configuration.timeoutIntervalForRequest)
+                if error._code == NSURLErrorTimedOut {
+                    let message = String(format: "Request timed out while trying to fetch config JSON. Timeout value: %.2fs", (self.httpEngine as? URLSessionEngine)?.session.configuration.timeoutIntervalForRequest ?? 0)
                     self.log.error(eventId: 1102, message: message)
+                    completion(.failure(message: message, errorCode: .httpRequestTimeout, isTransient: true))
                 }
                 else {
-                    message = String(format: "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP. %@", error.localizedDescription)
+                    let message = String(format: "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP. %@", error.localizedDescription)
                     self.log.error(eventId: 1103, message: message)
+                    completion(.failure(message: message, errorCode: .httpRequestFailure, isTransient: true))
                 }
-                completion(.failure(message: message, isTransient: true))
             } else {
                 let response = resp as! HTTPURLResponse
                 if response.statusCode >= 200 && response.statusCode < 300, let data = data {
@@ -132,7 +132,7 @@ class ConfigFetcher: NSObject {
                         let message = String(format: "Fetching config JSON was successful but the HTTP response content was invalid. "
                             + "JSON parsing failed. %@", error.localizedDescription)
                         self.log.error(eventId: 1105, message: message)
-                        completion(.failure(message: message, isTransient: true))
+                        completion(.failure(message: message, errorCode: .invalidHttpResponseContent, isTransient: true))
                     }
                 } else if response.statusCode == 304 {
                     self.log.debug(message: "Fetch was successful: not modified")
@@ -142,12 +142,12 @@ class ConfigFetcher: NSObject {
                         + "Status code: %@",
                         String(response.statusCode))
                     self.log.error(eventId: 1100, message: message)
-                    completion(.failure(message: message, isTransient: false))
+                    completion(.failure(message: message, errorCode: .invalidSdkKey, isTransient: false))
                 } else {
                     let message = String(format: "Unexpected HTTP response was received while trying to fetch config JSON: %@",
                         String(response.statusCode))
                     self.log.error(eventId: 1101, message: message)
-                    completion(.failure(message: message, isTransient: true))
+                    completion(.failure(message: message, errorCode: .unexpectedHttpResponse, isTransient: true))
                 }
             }
         }

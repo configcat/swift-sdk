@@ -53,8 +53,8 @@
 		F10AC6D02A93B02B006FA496 /* CacheTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6CF2A93B02B006FA496 /* CacheTest.swift */; };
 		F10AC6D22A950197006FA496 /* FlagEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D12A950197006FA496 /* FlagEvaluator.swift */; };
 		F10AC6D32A9507C4006FA496 /* FlagEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D12A950197006FA496 /* FlagEvaluator.swift */; };
-		F10AC6D52A9516F5006FA496 /* ConfigCatSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D42A9516F5006FA496 /* ConfigCatSnapshot.swift */; };
-		F10AC6D62A9516F5006FA496 /* ConfigCatSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D42A9516F5006FA496 /* ConfigCatSnapshot.swift */; };
+		F10AC6D52A9516F5006FA496 /* ConfigCatClientSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D42A9516F5006FA496 /* ConfigCatClientSnapshot.swift */; };
+		F10AC6D62A9516F5006FA496 /* ConfigCatClientSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = F10AC6D42A9516F5006FA496 /* ConfigCatClientSnapshot.swift */; };
 		F11F76BC288AD6CA0097939F /* AsyncAwaitTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BB288AD6CA0097939F /* AsyncAwaitTests.swift */; };
 		F11F76BE288AE7540097939F /* SnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BD288AE7540097939F /* SnapshotTests.swift */; };
 		F11F76C0288AE7650097939F /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11F76BF288AE7640097939F /* Extensions.swift */; };
@@ -135,7 +135,7 @@
 		C4FA1B3F278D953300BFA8C3 /* OverrideBehaviour.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = OverrideBehaviour.swift; sourceTree = "<group>"; };
 		F10AC6CF2A93B02B006FA496 /* CacheTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CacheTest.swift; sourceTree = "<group>"; };
 		F10AC6D12A950197006FA496 /* FlagEvaluator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlagEvaluator.swift; sourceTree = "<group>"; };
-		F10AC6D42A9516F5006FA496 /* ConfigCatSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatSnapshot.swift; sourceTree = "<group>"; };
+		F10AC6D42A9516F5006FA496 /* ConfigCatClientSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientSnapshot.swift; sourceTree = "<group>"; };
 		F10F787D2528950D0021F468 /* DataGovernanceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataGovernanceTests.swift; sourceTree = "<group>"; };
 		F11F76BB288AD6CA0097939F /* AsyncAwaitTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AsyncAwaitTests.swift; sourceTree = "<group>"; };
 		F11F76BD288AE7540097939F /* SnapshotTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SnapshotTests.swift; sourceTree = "<group>"; };
@@ -258,7 +258,7 @@
 				F1E1180A257532D700DA245A /* Log.swift */,
 				3F880A41207BE91300087A6B /* Resources */,
 				F10AC6D12A950197006FA496 /* FlagEvaluator.swift */,
-				F10AC6D42A9516F5006FA496 /* ConfigCatSnapshot.swift */,
+				F10AC6D42A9516F5006FA496 /* ConfigCatClientSnapshot.swift */,
 				F1CBE12E2B8CC81700CD2FF9 /* EvaluationLogger.swift */,
 			);
 			name = Sources;
@@ -447,7 +447,7 @@
 				F17DEE28288876F7009C3E48 /* MutableQueue.swift in Sources */,
 				F1BC414728E1D54800F2230A /* EvaluationDetails.swift in Sources */,
 				C4FA1B3D278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
-				F10AC6D52A9516F5006FA496 /* ConfigCatSnapshot.swift in Sources */,
+				F10AC6D52A9516F5006FA496 /* ConfigCatClientSnapshot.swift in Sources */,
 				B4BD2AB6258CA6FF007371E2 /* Log.swift in Sources */,
 				B4BD2AB8258CA6FF007371E2 /* KeyValue.swift in Sources */,
 				F10AC6D32A9507C4006FA496 /* FlagEvaluator.swift in Sources */,
@@ -473,7 +473,7 @@
 				F1BC414828E1D54800F2230A /* EvaluationDetails.swift in Sources */,
 				C40CF51527B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				F1B1D8B628FF2C830034165E /* ConfigCatOptions.swift in Sources */,
-				F10AC6D62A9516F5006FA496 /* ConfigCatSnapshot.swift in Sources */,
+				F10AC6D62A9516F5006FA496 /* ConfigCatClientSnapshot.swift in Sources */,
 				F10AC6D22A950197006FA496 /* FlagEvaluator.swift in Sources */,
 				B4BD2AE6258CA7DF007371E2 /* ConfigFetcher.swift in Sources */,
 				B4BD2AE7258CA7DF007371E2 /* RolloutIntegrationV1Tests.swift in Sources */,

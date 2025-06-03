@@ -308,7 +308,7 @@ class AutoPollingTests: XCTestCase {
         let hooks = Hooks()
         hooks.addOnReady { state in
             ready = true
-            XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+            XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         }
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)

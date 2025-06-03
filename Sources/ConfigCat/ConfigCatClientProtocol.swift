@@ -63,7 +63,7 @@ public protocol ConfigCatClientProtocol {
     
     /// Returns a snapshot of the current state of the feature flag data within the SDK.
     /// The snapshot allows synchronous feature flag evaluation on the captured feature flag data.
-    func snapshot() -> ConfigCatSnapshot
+    func snapshot() -> ConfigCatClientSnapshot
 
     /// Async/await interface
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -113,7 +113,7 @@ public protocol ConfigCatClientProtocol {
     
     /// Awaits for SDK initialization.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func waitForReady() async -> ClientReadyState
+    func waitForReady() async -> ClientCacheState
     #endif
 
     /// Objective-C interface

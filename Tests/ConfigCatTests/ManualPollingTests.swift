@@ -17,6 +17,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
@@ -28,6 +29,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
@@ -57,6 +59,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
@@ -68,6 +71,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertFalse(result.success)
             XCTAssertTrue(result.error?.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
+            XCTAssertEqual(RefreshErrorCode.invalidSdkKey, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
@@ -78,6 +82,78 @@ class ManualPollingTests: XCTestCase {
         waitFor {
             called
         }
+    }
+    
+    func testFailedRequest() throws {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String("test"), statusCode: 500))
+
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertEqual(result.error, "Unexpected HTTP response was received while trying to fetch config JSON: 500")
+            XCTAssertEqual(RefreshErrorCode.unexpectedHttpResponse, result.errorCode)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 5)
+    }
+    
+    func testWrongBody() throws {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String("{"), statusCode: 200))
+
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertTrue(result.error?.starts(with: "Fetching config JSON was successful but the HTTP response content was invalid. JSON parsing failed. The operation couldn’t be completed.") ?? false)
+            XCTAssertEqual(RefreshErrorCode.invalidHttpResponseContent, result.errorCode)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 5)
+    }
+    
+    func testHttpError() throws {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(""), statusCode: 200, error: TestError.test))
+
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertTrue(result.error?.starts(with: "Unexpected error occurred while trying to fetch config JSON. It is most likely due to a local network issue. Please make sure your application can reach the ConfigCat CDN servers (or your proxy server) over HTTP.") ?? false)
+            XCTAssertEqual(RefreshErrorCode.httpRequestFailure, result.errorCode)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 5)
+    }
+    
+    func testHttpTimeout() throws {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: String(""), statusCode: 200, error: URLError(.timedOut)))
+
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+
+        let expectation1 = self.expectation(description: "wait for response")
+        service.refresh { result in
+            XCTAssertFalse(result.success)
+            XCTAssertTrue(result.error?.starts(with: "Request timed out while trying to fetch config JSON. Timeout value:") ?? false)
+            XCTAssertEqual(RefreshErrorCode.httpRequestTimeout, result.errorCode)
+            expectation1.fulfill()
+        }
+        wait(for: [expectation1], timeout: 5)
     }
 
     func testCache() throws {
@@ -132,6 +208,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation1.fulfill()
@@ -143,6 +220,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test2", settingsResult.settings["fakeKey"]?.value.stringValue)
                 expectation2.fulfill()
@@ -173,11 +251,9 @@ class ManualPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString()
-        let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
@@ -195,6 +271,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertFalse(result.success)
             XCTAssertEqual("Client is in offline mode, it cannot initiate HTTP calls.", result.error)
+            XCTAssertEqual(RefreshErrorCode.offlineClient, result.errorCode)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)
@@ -207,6 +284,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             expectation3.fulfill()
         }
         wait(for: [expectation3], timeout: 5)
@@ -218,16 +296,15 @@ class ManualPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString()
-        let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         let expectation1 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
             XCTAssertEqual("Client is in offline mode, it cannot initiate HTTP calls.", result.error)
+            XCTAssertEqual(RefreshErrorCode.offlineClient, result.errorCode)
             expectation1.fulfill()
         }
         wait(for: [expectation1], timeout: 5)
@@ -240,6 +317,7 @@ class ManualPollingTests: XCTestCase {
         service.refresh { result in
             XCTAssertTrue(result.success)
             XCTAssertNil(result.error)
+            XCTAssertEqual(RefreshErrorCode.none, result.errorCode)
             expectation2.fulfill()
         }
         wait(for: [expectation2], timeout: 5)

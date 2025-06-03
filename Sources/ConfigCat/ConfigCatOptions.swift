@@ -48,7 +48,7 @@ public final class ConfigCatOptions: NSObject {
 }
 
 /// Describes the initialization state of the `ConfigCatClient`.
-@objc public enum ClientReadyState: Int {
+@objc public enum ClientCacheState: Int {
     /// The SDK has no feature flag data neither from the cache nor from the ConfigCat CDN.
     case noFlagData
     /// The SDK runs with local only feature flag data.
@@ -62,8 +62,8 @@ public final class ConfigCatOptions: NSObject {
 /// Hooks for events sent by `ConfigCatClient`.
 public final class Hooks: NSObject {
     private let mutex: Mutex = Mutex(recursive: true);
-    private var readyState: ClientReadyState?
-    private var onReady: [(ClientReadyState) -> ()] = []
+    private var readyState: ClientCacheState?
+    private var onReady: [(ClientCacheState) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
     private var onConfigChanged: [(Config) -> ()] = []
     private var onError: [(String) -> ()] = []
@@ -72,7 +72,7 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onReady` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnReady(handler: @escaping (ClientReadyState) -> ()) {
+    @objc public func addOnReady(handler: @escaping (ClientCacheState) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
         if let readyState = self.readyState {
@@ -112,7 +112,7 @@ public final class Hooks: NSObject {
         onError.append(handler)
     }
 
-    func invokeOnReady(state: ClientReadyState) {
+    func invokeOnReady(state: ClientCacheState) {
         mutex.lock()
         defer { mutex.unlock() }
         readyState = state

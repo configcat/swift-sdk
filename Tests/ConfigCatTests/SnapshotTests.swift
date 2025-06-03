@@ -74,5 +74,36 @@ class SnapshotTests: XCTestCase {
         let value2 = snapshot.getValue(for: "key2", defaultValue: false, user: user)
         XCTAssertTrue(value2)
     }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testWaitMultiple() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        
+        await client.waitForReady()
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testClientState() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "", statusCode: 200))
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine)
+        
+        let state = await client.waitForReady()
+        
+        XCTAssertEqual(ClientCacheState.noFlagData, state)
+        XCTAssertEqual(ClientCacheState.noFlagData, client.snapshot().cacheState)
+        
+        waitFor {
+            client.snapshot().cacheState == .hasUpToDateFlagData
+        }
+    }
     #endif
 }
