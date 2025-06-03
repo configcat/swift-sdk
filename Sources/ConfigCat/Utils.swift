@@ -47,7 +47,7 @@ extension Equatable {
 }
 
 class Constants {
-    static let version: String = "11.2.0"
+    static let version: String = "11.3.0"
     static let configJsonName: String = "config_v6.json"
     static let configJsonCacheVersion: String = "v2"
     static let globalBaseUrl: String = "https://cdn-global.configcat.com"
