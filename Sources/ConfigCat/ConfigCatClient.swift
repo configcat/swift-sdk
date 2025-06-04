@@ -337,7 +337,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if let configService = configService {
             configService.refresh(completion: completion)
         } else {
-            let message = "Client is configured to use local-only mode, thus `.refresh()` has no effect."
+            let message = "Client is configured to use the localOnly override behavior, which prevents synchronization with external cache and making HTTP requests."
             log.warning(eventId: 3202, message: message)
             completion(RefreshResult(success: false, errorCode: .localOnlyClient, error: message))
         }
