@@ -129,7 +129,7 @@ class SnapshotTests: XCTestCase {
         await client.waitForReady()
         
         let snapshot = client.snapshot()
-        let details = snapshot.getValueDetails(for: "key", defaultValue: NSColor())
+        let details = snapshot.getValueDetails(for: "key", defaultValue: UInt8())
         
         XCTAssertEqual(EvaluationErrorCode.invalidUserInput, details.errorCode)
     }
