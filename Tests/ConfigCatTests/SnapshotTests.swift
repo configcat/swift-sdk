@@ -105,5 +105,33 @@ class SnapshotTests: XCTestCase {
             client.snapshot().cacheState == .hasUpToDateFlagData
         }
     }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testGetAllKeysEmpty() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: "", statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        
+        await client.waitForReady()
+        let snapshot = client.snapshot()
+        
+        XCTAssertEqual([], snapshot.getAllKeys())
+    }
+    
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testInvalidInput() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        
+        await client.waitForReady()
+        
+        let snapshot = client.snapshot()
+        let details = snapshot.getValueDetails(for: "key", defaultValue: NSColor())
+        
+        XCTAssertEqual(EvaluationErrorCode.invalidUserInput, details.errorCode)
+    }
     #endif
 }
