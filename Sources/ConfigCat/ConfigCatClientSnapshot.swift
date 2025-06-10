@@ -1,5 +1,6 @@
 import Foundation
 
+/// Represents the state of `ConfigCatClient` captured at a specific point in time.
 public final class ConfigCatClientSnapshot: NSObject {
     private let flagEvaluator: FlagEvaluator
     private let settingsSnapshot: SettingsResult
@@ -85,7 +86,7 @@ public final class ConfigCatClientSnapshot: NSObject {
                 key: key,
                 value: defaultValue,
                 error: error,
-                errorCode: .settingValueTypeMismatch,
+                errorCode: .invalidUserInput,
                 user: evalUser
             )
         }

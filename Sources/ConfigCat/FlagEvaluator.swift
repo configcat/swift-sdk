@@ -30,7 +30,7 @@ class FlagEvaluator {
                     key: key,
                     value: defaultValue,
                     error: message,
-                    errorCode: .settingValueTypeMismatch,
+                    errorCode: .invalidUserInput,
                     user: user
                 )
             )

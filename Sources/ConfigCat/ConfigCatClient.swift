@@ -200,7 +200,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         let evalUser = user ?? defaultUser
         
         if let error = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
-            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, errorCode: .settingValueTypeMismatch, user: evalUser))
+            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, errorCode: .invalidUserInput, user: evalUser))
             return
         }
         
@@ -329,7 +329,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Initiates a force refresh asynchronously on the cached configuration.
+     Updates the internally cached config by synchronizing with the external cache (if any),
+     then by fetching the latest version from the ConfigCat CDN (provided that the client is online).
 
      - Parameter completion: The function which will be called when refresh completed successfully.
      */
@@ -343,12 +344,36 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
     
+    /**
+     Captures the SDK's internally cached config data.
+     
+     It does not attempt to update it by synchronizing with the external cache or by fetching
+     the latest version from the ConfigCat CDN.
+     
+     Therefore, it is recommended to use snapshots in conjunction with the Auto Polling mode,
+     where the SDK automatically updates the internal cache in the background.
+     
+     For other polling modes, you will need to manually initiate a cache
+     update by invoking `.forceRefresh()`.
+     */
     @objc public func snapshot() -> ConfigCatClientSnapshot {
         let inMemorySettings = getInMemorySettings()
         return ConfigCatClientSnapshot(flagEvaluator: flagEvaluator, settingsSnapshot: inMemorySettings.0, cacheState: inMemorySettings.1, defaultUser: defaultUser, log: log)
     }
     
     #if compiler(>=5.5) && canImport(_Concurrency)
+    /**
+     Waits for the client to reach the ready state, i.e. to complete initialization.
+     
+     Ready state is reached as soon as the initial sync with the external cache (if any) completes.
+     If this does not produce up-to-date config data, and the client is online (i.e. HTTP requests are allowed),
+     the first config fetch operation is also awaited in Auto Polling mode before ready state is reported.
+     
+     That is, reaching the ready state usually means the client is ready to evaluate feature flags and settings.
+     However, please note that this is not guaranteed. In case of initialization failure or timeout,
+     the internal cache may be empty or expired even after the ready state is reported. You can verify this by
+     checking the return value.
+     */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     @discardableResult
     public func waitForReady() async -> ClientCacheState {

@@ -2,6 +2,8 @@ import Foundation
 
 /// Specifies the possible evaluation error codes.
 @objc public enum EvaluationErrorCode: Int {
+    /** Invalid user input was set on an evaluation request. */
+    case invalidUserInput = -2
     /** An unexpected error occurred during the evaluation. */
     case unexpectedError = -1
     /** No error occurred (the evaluation was successful). */

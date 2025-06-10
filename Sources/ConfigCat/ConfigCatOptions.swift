@@ -47,15 +47,15 @@ public final class ConfigCatOptions: NSObject {
     }
 }
 
-/// Describes the initialization state of the `ConfigCatClient`.
+/// Defines the possible states of the internal cache.
 @objc public enum ClientCacheState: Int {
-    /// The SDK has no feature flag data neither from the cache nor from the ConfigCat CDN.
+    /// No config data is available in the internal cache.
     case noFlagData
-    /// The SDK runs with local only feature flag data.
+    /// Only config data provided by local flag override is available in the internal cache.
     case hasLocalOverrideFlagDataOnly
-    /// The SDK has feature flag data to work with only from the cache.
+    /// Only expired config data obtained from the external cache or the ConfigCat CDN is available in the internal cache.
     case hasCachedFlagDataOnly
-    /// The SDK works with the latest feature flag data received from the ConfigCat CDN.
+    /// Up-to-date config data obtained from the external cache or the ConfigCat CDN is available in the internal cache.
     case hasUpToDateFlagData
 }
 
