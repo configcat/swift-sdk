@@ -38,16 +38,16 @@ public class EvaluationDetailsBase: NSObject {
     /// The percentage option (if any) that was used to select the evaluated value.
     @objc public let matchedPercentageOption: PercentageOption?
 
-    init(
+    fileprivate init(
         key: String,
         variationId: String?,
-        fetchTime: Date = Date.distantPast,
-        user: ConfigCatUser? = nil,
-        isDefaultValue: Bool = false,
+        fetchTime: Date,
+        user: ConfigCatUser?,
+        isDefaultValue: Bool,
         errorCode: EvaluationErrorCode,
-        error: String? = nil,
-        matchedTargetingRule: TargetingRule? = nil,
-        matchedPercentageOption: PercentageOption? = nil
+        error: String?,
+        matchedTargetingRule: TargetingRule?,
+        matchedPercentageOption: PercentageOption?
     ) {
         self.key = key
         self.variationId = variationId
