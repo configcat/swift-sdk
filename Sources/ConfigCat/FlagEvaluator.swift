@@ -16,7 +16,7 @@ class FlagEvaluator {
         key: String,
         defaultValue: Any,
         user: ConfigCatUser?
-    ) -> String? {
+    ) -> EvaluationDetails? {
         if of != String.self && of != String?.self && of != Int.self
             && of != Int?.self && of != Double.self && of != Double?.self
             && of != Bool.self && of != Bool?.self && of != Any.self
@@ -25,16 +25,17 @@ class FlagEvaluator {
             let message =
                 "Only the following types are supported: String, Int, Double, Bool, and Any (both nullable and non-nullable)."
             log.error(eventId: 2022, message: message)
-            hooks.invokeOnFlagEvaluated(
-                details: EvaluationDetails.fromError(
-                    key: key,
-                    value: defaultValue,
-                    error: message,
-                    errorCode: .invalidUserInput,
-                    user: user
-                )
+            let details = EvaluationDetails.fromError(
+                key: key,
+                value: defaultValue,
+                error: message,
+                errorCode: .invalidUserInput,
+                user: user
             )
-            return message
+            hooks.invokeOnFlagEvaluated(
+                details: details
+            )
+            return details
         }
 
         return nil
@@ -54,21 +55,19 @@ class FlagEvaluator {
                 "\(defaultValue)"
             )
             self.log.error(eventId: 1000, message: message)
-            self.hooks.invokeOnFlagEvaluated(
-                details: EvaluationDetails.fromError(
-                    key: key,
-                    value: defaultValue,
-                    error: message,
-                    errorCode: .configJsonNotAvailable,
-                    user: user
-                )
-            )
-            return TypedEvaluationDetails<Value>.fromError(
+            let details = EvaluationDetails.fromError(
                 key: key,
                 value: defaultValue,
                 error: message,
                 errorCode: .configJsonNotAvailable,
                 user: user
+            )
+            self.hooks.invokeOnFlagEvaluated(
+                details: details
+            )
+            return TypedEvaluationDetails<Value>.fromError(
+                value: defaultValue,
+                details: details
             )
         }
         guard let setting = result.settings[key] else {
@@ -83,21 +82,19 @@ class FlagEvaluator {
                 }.joined(separator: ", ")
             )
             self.log.error(eventId: 1001, message: message)
-            self.hooks.invokeOnFlagEvaluated(
-                details: EvaluationDetails.fromError(
-                    key: key,
-                    value: defaultValue,
-                    error: message,
-                    errorCode: .settingKeyMissing,
-                    user: user
-                )
-            )
-            return TypedEvaluationDetails<Value>.fromError(
+            let details = EvaluationDetails.fromError(
                 key: key,
                 value: defaultValue,
                 error: message,
                 errorCode: .settingKeyMissing,
                 user: user
+            )
+            self.hooks.invokeOnFlagEvaluated(
+                details: details
+            )
+            return TypedEvaluationDetails<Value>.fromError(
+                value: defaultValue,
+                details: details
             )
         }
         let evaluationResult = evaluator.evaluate(
@@ -113,37 +110,23 @@ class FlagEvaluator {
                 let message =
                     "The type of a setting must match the type of the specified default value. Setting's type was \(setting.settingType.text) but the default value's type was \(Value.self). Please use a default value which corresponds to the setting type \(setting.settingType.text). Learn more: https://configcat.com/docs/sdk-reference/ios/#setting-type-mapping"
                 self.log.error(eventId: 2002, message: message)
-                self.hooks.invokeOnFlagEvaluated(
-                    details: EvaluationDetails.fromError(
-                        key: key,
-                        value: defaultValue,
-                        error: message,
-                        errorCode: .settingValueTypeMismatch,
-                        user: user
-                    )
-                )
-                return TypedEvaluationDetails<Value>.fromError(
+                let details = EvaluationDetails.fromError(
                     key: key,
                     value: defaultValue,
                     error: message,
                     errorCode: .settingValueTypeMismatch,
                     user: user
                 )
+                self.hooks.invokeOnFlagEvaluated(
+                    details: details
+                )
+                return TypedEvaluationDetails<Value>.fromError(
+                    value: defaultValue,
+                    details: details
+                )
             }
 
-            hooks.invokeOnFlagEvaluated(
-                details: EvaluationDetails(
-                    key: key,
-                    value: typedValue,
-                    variationId: variationId,
-                    fetchTime: result.fetchTime,
-                    user: user,
-                    errorCode: .none,
-                    matchedTargetingRule: rule,
-                    matchedPercentageOption: option
-                )
-            )
-            return TypedEvaluationDetails<Value>(
+            let details = EvaluationDetails(
                 key: key,
                 value: typedValue,
                 variationId: variationId,
@@ -153,24 +136,29 @@ class FlagEvaluator {
                 matchedTargetingRule: rule,
                 matchedPercentageOption: option
             )
+            hooks.invokeOnFlagEvaluated(
+                details: details
+            )
+            return TypedEvaluationDetails<Value>(
+                value: typedValue,
+                details: details
+            )
         case .error(let err):
             let message = "Failed to evaluate setting '\(key)' (\(err))"
             self.log.error(eventId: 1002, message: message)
-            self.hooks.invokeOnFlagEvaluated(
-                details: EvaluationDetails.fromError(
-                    key: key,
-                    value: defaultValue,
-                    error: message,
-                    errorCode: .invalidConfigModel,
-                    user: user
-                )
-            )
-            return TypedEvaluationDetails<Value>.fromError(
+            let details = EvaluationDetails.fromError(
                 key: key,
                 value: defaultValue,
                 error: message,
                 errorCode: .invalidConfigModel,
                 user: user
+            )
+            self.hooks.invokeOnFlagEvaluated(
+                details: details
+            )
+            return TypedEvaluationDetails<Value>.fromError(
+                value: defaultValue,
+                details: details
             )
         }
     }

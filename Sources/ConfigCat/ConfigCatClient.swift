@@ -200,7 +200,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         let evalUser = user ?? defaultUser
         
         if let error = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
-            completion(TypedEvaluationDetails<Value>.fromError(key: key, value: defaultValue, error: error, errorCode: .invalidUserInput, user: evalUser))
+            completion(TypedEvaluationDetails<Value>.fromError(value: defaultValue, details: error))
             return
         }
         

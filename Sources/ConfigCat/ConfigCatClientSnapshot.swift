@@ -83,11 +83,8 @@ public final class ConfigCatClientSnapshot: NSObject {
             user: evalUser
         ) {
             return TypedEvaluationDetails<Value>.fromError(
-                key: key,
                 value: defaultValue,
-                error: error,
-                errorCode: .invalidUserInput,
-                user: evalUser
+                details: error
             )
         }
 

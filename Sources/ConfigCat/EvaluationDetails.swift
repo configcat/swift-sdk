@@ -206,46 +206,30 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
     public let value: Value
 
     init(
-        key: String,
         value: Value,
-        variationId: String?,
-        fetchTime: Date = Date.distantPast,
-        user: ConfigCatUser? = nil,
-        isDefaultValue: Bool = false,
-        errorCode: EvaluationErrorCode,
-        error: String? = nil,
-        matchedTargetingRule: TargetingRule? = nil,
-        matchedPercentageOption: PercentageOption? = nil
+        details: EvaluationDetails
     ) {
         self.value = value
         super.init(
-            key: key,
-            variationId: variationId,
-            fetchTime: fetchTime,
-            user: user,
-            isDefaultValue: isDefaultValue,
-            errorCode: errorCode,
-            error: error,
-            matchedTargetingRule: matchedTargetingRule,
-            matchedPercentageOption: matchedPercentageOption
+            key: details.key,
+            variationId: details.variationId,
+            fetchTime: details.fetchTime,
+            user: details.user,
+            isDefaultValue: details.isDefaultValue,
+            errorCode: details.errorCode,
+            error: details.error,
+            matchedTargetingRule: details.matchedTargetingRule,
+            matchedPercentageOption: details.matchedPercentageOption
         )
     }
 
     static func fromError(
-        key: String,
         value: Value,
-        error: String,
-        errorCode: EvaluationErrorCode,
-        user: ConfigCatUser?
+        details: EvaluationDetails
     ) -> TypedEvaluationDetails<Value> {
         TypedEvaluationDetails<Value>(
-            key: key,
             value: value,
-            variationId: "",
-            user: user,
-            isDefaultValue: true,
-            errorCode: errorCode,
-            error: error
+            details: details
         )
     }
 
