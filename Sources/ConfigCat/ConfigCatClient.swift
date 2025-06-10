@@ -69,7 +69,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Creates a new or gets an already existing `ConfigCatClient` for the given sdkKey.
+     Creates a new or gets an already existing `ConfigCatClient` for the given `sdkKey`.
 
      - Parameters:
        - sdkKey: The SDK Key for to communicate with the ConfigCat services.
@@ -112,7 +112,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /**
-     Creates a new or gets an already existing ConfigCatClient for the given sdkKey.
+     Creates a new or gets an already existing ConfigCatClient for the given `sdkKey`.
 
      - Parameters:
        - sdkKey: The SDK Key for to communicate with the ConfigCat services.
@@ -345,10 +345,11 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
     
     /**
-     Captures the SDK's internally cached config data.
+     Captures the current state of the client.
+     The resulting snapshot can be used to synchronously evaluate feature flags and settings based on the captured state.
      
-     It does not attempt to update it by synchronizing with the external cache or by fetching
-     the latest version from the ConfigCat CDN.
+     The operation captures the internally cached config data.
+     It does not attempt to update it by synchronizing with the external cache or by fetching the latest version from the ConfigCat CDN.
      
      Therefore, it is recommended to use snapshots in conjunction with the Auto Polling mode,
      where the SDK automatically updates the internal cache in the background.
@@ -459,17 +460,17 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         defaultUser = nil
     }
 
-    /// Configures the SDK to allow HTTP requests.
+    /// Configures the client to allow HTTP requests.
     @objc public func setOnline() {
         configService?.setOnline()
     }
 
-    /// Configures the SDK to not initiate HTTP requests.
+    /// Configures the client to not initiate HTTP requests but work using the cache only.
     @objc public func setOffline() {
         configService?.setOffline()
     }
 
-    /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
+    /// Returns `true` when the client is configured not to initiate HTTP requests, otherwise `false`.
     @objc public var isOffline: Bool {
         get {
             configService?.isOffline ?? true

@@ -45,13 +45,13 @@ public protocol ConfigCatClientProtocol {
     /// Sets the default user to null.
     func clearDefaultUser()
 
-    /// Configures the SDK to allow HTTP requests.
+    /// Configures the client to allow HTTP requests.
     func setOnline()
 
-    /// Configures the SDK to not initiate HTTP requests and work only from its cache.
+    /// Configures the client to not initiate HTTP requests but work using the cache only.
     func setOffline()
 
-    /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
+    /// Returns `true` when the client is configured not to initiate HTTP requests, otherwise `false`.
     var isOffline: Bool { get }
 
     /**
@@ -63,10 +63,11 @@ public protocol ConfigCatClientProtocol {
     func forceRefresh(completion: @escaping (RefreshResult) -> ())
     
     /**
-     Captures the SDK's internally cached config data.
+     Captures the current state of the client.
+     The resulting snapshot can be used to synchronously evaluate feature flags and settings based on the captured state.
      
-     It does not attempt to update it by synchronizing with the external cache or by fetching
-     the latest version from the ConfigCat CDN.
+     The operation captures the internally cached config data.
+     It does not attempt to update it by synchronizing with the external cache or by fetching the latest version from the ConfigCat CDN.
      
      Therefore, it is recommended to use snapshots in conjunction with the Auto Polling mode,
      where the SDK automatically updates the internal cache in the background.
