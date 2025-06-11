@@ -37,7 +37,7 @@ class InMemoryResult {
     /** No error occurred (the refresh operation was successful). */
     case none = 0
     /**
-     The refresh operation failed because the client is configured to use the `OverrideBehaviour.LocalOnly` override behavior,
+     The refresh operation failed because the client is configured to use the `OverrideBehaviour.localOnly` override behavior,
      which prevents synchronization with the external cache and making HTTP requests.
      */
     case localOnlyClient = 1
