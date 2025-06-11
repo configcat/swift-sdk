@@ -210,17 +210,7 @@ class ConfigService {
             return offline
         }
     }
-    
-    func onReady(completion: @escaping (ClientCacheState) -> Void) {
-        mutex.lock()
-        defer { mutex.unlock() }
-        if initialized {
-            completion(determineReadyState())
-        } else {
-            hooks.addOnReady(handler: completion)
-        }
-    }
-    
+
     var inMemory: InMemoryResult {
         get {
             mutex.lock()
