@@ -11,7 +11,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -47,7 +47,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -84,7 +84,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: mockCache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -117,7 +117,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 2)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: DataGovernance.global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: FailingCache(), pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { result in
@@ -145,7 +145,7 @@ class LazyLoadingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -190,7 +190,7 @@ class LazyLoadingTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -233,7 +233,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in
@@ -274,7 +274,7 @@ class LazyLoadingTests: XCTestCase {
 
         let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
 
         let expectation1 = expectation(description: "wait for settings")
         service.settings { settingsResult in

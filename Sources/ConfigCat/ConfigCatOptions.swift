@@ -47,32 +47,34 @@ public final class ConfigCatOptions: NSObject {
     }
 }
 
-/// Describes the initialization state of the `ConfigCatClient`.
-@objc public enum ClientReadyState: Int {
-    /// The SDK has no feature flag data neither from the cache nor from the ConfigCat CDN.
+/// Defines the possible states of the internal cache.
+@objc public enum ClientCacheState: Int {
+    /// No config data is available in the internal cache.
     case noFlagData
-    /// The SDK runs with local only feature flag data.
+    /// Only config data provided by local flag override is available in the internal cache.
     case hasLocalOverrideFlagDataOnly
-    /// The SDK has feature flag data to work with only from the cache.
+    /// Only expired config data obtained from the external cache or the ConfigCat CDN is available in the internal cache.
     case hasCachedFlagDataOnly
-    /// The SDK works with the latest feature flag data received from the ConfigCat CDN.
+    /// Up-to-date config data obtained from the external cache or the ConfigCat CDN is available in the internal cache.
     case hasUpToDateFlagData
 }
 
 /// Hooks for events sent by `ConfigCatClient`.
 public final class Hooks: NSObject {
     private let mutex: Mutex = Mutex(recursive: true);
-    private var readyState: ClientReadyState?
-    private var onReady: [(ClientReadyState) -> ()] = []
+    private var readyState: ClientCacheState?
+    private var onReady: [(ClientCacheState) -> ()] = []
+    private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
     private var onConfigChanged: [(Config) -> ()] = []
+    private var onConfigChangedWithSnapshot: [(Config, ConfigCatClientSnapshot) -> ()] = []
     private var onError: [(String) -> ()] = []
 
     /**
-     Subscribes a handler to the `onReady` hook.
+     Subscribes a handler to the `onReady` hook with a `ClientCacheState` parameter.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnReady(handler: @escaping (ClientReadyState) -> ()) {
+    @objc public func addOnReady(handler: @escaping (ClientCacheState) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
         if let readyState = self.readyState {
@@ -80,6 +82,19 @@ public final class Hooks: NSObject {
         } else {
             onReady.append(handler)
         }
+    }
+    
+    /**
+     Subscribes a handler to the `onReady` hook with a `ConfigCatClientSnapshot` parameter.
+     
+     Late subscriptions (through the `client.hooks` property) might not get notified if the client reached the ready state before the subscription.
+     
+     - Parameter handler: The handler to subscribe.
+     */
+    @objc public func addOnReady(snapshotHandler: @escaping (ConfigCatClientSnapshot) -> ()) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        onReadyWithSnapshot.append(snapshotHandler)
     }
 
     /**
@@ -96,10 +111,21 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onConfigChanged` hook.
      - Parameter handler: The handler to subscribe.
      */
+    @available(*, deprecated, message: "Use addOnConfigChanged(snapshotHandler:) instead.")
     @objc public func addOnConfigChanged(handler: @escaping (Config) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
         onConfigChanged.append(handler)
+    }
+    
+    /**
+     Subscribes a handler to the `onConfigChangedWithSnapshot` hook.
+     - Parameter handler: The handler to subscribe.
+     */
+    @objc public func addOnConfigChanged(snapshotHandler: @escaping (Config, ConfigCatClientSnapshot) -> ()) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        onConfigChangedWithSnapshot.append(snapshotHandler)
     }
 
     /**
@@ -112,20 +138,32 @@ public final class Hooks: NSObject {
         onError.append(handler)
     }
 
-    func invokeOnReady(state: ClientReadyState) {
+    func invokeOnReady(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
-        readyState = state
+        readyState = inMemoryResult.cacheState
         for item in onReady {
-            item(state);
+            item(inMemoryResult.cacheState);
+        }
+        if !onReadyWithSnapshot.isEmpty {
+            let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
+            for item in onReadyWithSnapshot {
+                item(snapshot);
+            }
         }
     }
 
-    func invokeOnConfigChanged(config: Config) {
+    func invokeOnConfigChanged(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
         for item in onConfigChanged {
-            item(config);
+            item(inMemoryResult.entry.config);
+        }
+        if !onConfigChangedWithSnapshot.isEmpty {
+            let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
+            for item in onConfigChangedWithSnapshot {
+                item(inMemoryResult.entry.config, snapshot);
+            }
         }
     }
 

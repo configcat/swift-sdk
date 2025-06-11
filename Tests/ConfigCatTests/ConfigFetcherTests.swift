@@ -38,7 +38,7 @@ class ConfigFetcherTests: XCTestCase {
         let expectation = self.expectation(description: "wait for response")
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: "m", dataGovernance: DataGovernance.global)
         fetcher.fetch(eTag: "") { response in
-            XCTAssertEqual(.failure(message: "", isTransient: false), response)
+            XCTAssertEqual(.failure(message: "", errorCode: RefreshErrorCode.invalidSdkKey ,isTransient: false), response)
             XCTAssertNil(response.entry)
             expectation.fulfill()
         }

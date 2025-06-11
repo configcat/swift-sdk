@@ -45,25 +45,37 @@ public protocol ConfigCatClientProtocol {
     /// Sets the default user to null.
     func clearDefaultUser()
 
-    /// Configures the SDK to allow HTTP requests.
+    /// Configures the client to allow HTTP requests.
     func setOnline()
 
-    /// Configures the SDK to not initiate HTTP requests and work only from its cache.
+    /// Configures the client to not initiate HTTP requests but work using the cache only.
     func setOffline()
 
-    /// True when the SDK is configured not to initiate HTTP requests, otherwise false.
+    /// Returns `true` when the client is configured not to initiate HTTP requests, otherwise `false`.
     var isOffline: Bool { get }
 
     /**
-     Initiates a force refresh asynchronously on the cached configuration.
+     Updates the internally cached config by synchronizing with the external cache (if any),
+     then by fetching the latest version from the ConfigCat CDN (provided that the client is online).
 
-     - Parameter completion: The function which will be called when refresh completed.
+     - Parameter completion: The function which will be called when refresh completed successfully.
      */
     func forceRefresh(completion: @escaping (RefreshResult) -> ())
     
-    /// Returns a snapshot of the current state of the feature flag data within the SDK.
-    /// The snapshot allows synchronous feature flag evaluation on the captured feature flag data.
-    func snapshot() -> ConfigCatSnapshot
+    /**
+     Captures the current state of the client.
+     The resulting snapshot can be used to synchronously evaluate feature flags and settings based on the captured state.
+     
+     The operation captures the internally cached config data.
+     It does not attempt to update it by synchronizing with the external cache or by fetching the latest version from the ConfigCat CDN.
+     
+     Therefore, it is recommended to use snapshots in conjunction with the Auto Polling mode,
+     where the SDK automatically updates the internal cache in the background.
+     
+     For other polling modes, you will need to manually initiate a cache
+     update by invoking `.forceRefresh()`.
+     */
+    func snapshot() -> ConfigCatClientSnapshot
 
     /// Async/await interface
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -107,13 +119,27 @@ public protocol ConfigCatClientProtocol {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getAllValues(user: ConfigCatUser?) async -> [String: Any]
 
-    /// Initiates a force refresh asynchronously on the cached configuration.
+    /**
+     Updates the internally cached config by synchronizing with the external cache (if any),
+     then by fetching the latest version from the ConfigCat CDN (provided that the client is online).
+     */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func forceRefresh() async -> RefreshResult
     
-    /// Awaits for SDK initialization.
+    /**
+     Waits for the client to reach the ready state, i.e. to complete initialization.
+     
+     Ready state is reached as soon as the initial sync with the external cache (if any) completes.
+     If this does not produce up-to-date config data, and the client is online (i.e. HTTP requests are allowed),
+     the first config fetch operation is also awaited in Auto Polling mode before ready state is reported.
+     
+     That is, reaching the ready state usually means the client is ready to evaluate feature flags and settings.
+     However, please note that this is not guaranteed. In case of initialization failure or timeout,
+     the internal cache may be empty or expired even after the ready state is reported. You can verify this by
+     checking the return value.
+     */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func waitForReady() async -> ClientReadyState
+    func waitForReady() async -> ClientCacheState
     #endif
 
     /// Objective-C interface

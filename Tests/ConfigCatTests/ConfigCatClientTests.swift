@@ -25,9 +25,11 @@ class ConfigCatClientTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "i", "fake", "2"), statusCode: 200))
         let client = createClient(http: engine)
         let expectation = self.expectation(description: "wait for response")
-        client.forceRefresh { _ in
-            client.getValue(for: "fakeKey", defaultValue: 10) { value in
-                XCTAssertEqual(10, value)
+        client.forceRefresh { res in
+            XCTAssertEqual(RefreshErrorCode.invalidHttpResponseContent, res.errorCode)
+            client.getValueDetails(for: "fakeKey", defaultValue: 10) { details in
+                XCTAssertEqual(EvaluationErrorCode.configJsonNotAvailable, details.errorCode)
+                XCTAssertEqual(10, details.value)
                 expectation.fulfill()
             }
         }
@@ -40,8 +42,9 @@ class ConfigCatClientTests: XCTestCase {
         let client = createClient(http: engine)
         let expectation = self.expectation(description: "wait for response")
         client.forceRefresh { _ in
-            client.getValue(for: "fakeKey", defaultValue: 10) { value in
-                XCTAssertEqual(10, value)
+            client.getValueDetails(for: "fakeKey", defaultValue: 10) { details in
+                XCTAssertEqual(EvaluationErrorCode.configJsonNotAvailable, details.errorCode)
+                XCTAssertEqual(10, details.value)
                 expectation.fulfill()
             }
         }
@@ -439,7 +442,7 @@ class ConfigCatClientTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testStringJson, statusCode: 200))
         var ready = false
-        var state = ClientReadyState.hasUpToDateFlagData
+        var state = ClientCacheState.hasUpToDateFlagData
         let hooks = Hooks()
         hooks.addOnReady { st in
             ready = true
@@ -454,7 +457,7 @@ class ConfigCatClientTests: XCTestCase {
 
         XCTAssertEqual(0, engine.requests.count)
         XCTAssertTrue(ready)
-        XCTAssertEqual(ClientReadyState.noFlagData, state)
+        XCTAssertEqual(ClientCacheState.noFlagData, state)
     }
 
     func testDefaultUser() {
@@ -509,7 +512,7 @@ class ConfigCatClientTests: XCTestCase {
         }
         hooks.addOnReady { state in
             ready = true
-            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            XCTAssertEqual(ClientCacheState.noFlagData, state)
         }
         hooks.addOnConfigChanged { _ in
             changed = true
@@ -534,12 +537,12 @@ class ConfigCatClientTests: XCTestCase {
         
         let expectation3 = self.expectation(description: "wait for ready second time")
         client.hooks.addOnReady { state in
-            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            XCTAssertEqual(ClientCacheState.noFlagData, state)
             expectation3.fulfill()
         }
         let expectation4 = self.expectation(description: "wait for ready third time")
         client.hooks.addOnReady { state in
-            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            XCTAssertEqual(ClientCacheState.noFlagData, state)
             expectation4.fulfill()
         }
         
@@ -563,7 +566,7 @@ class ConfigCatClientTests: XCTestCase {
         }
         client.hooks.addOnReady { state in
             ready = true
-            XCTAssertEqual(ClientReadyState.noFlagData, state)
+            XCTAssertEqual(ClientCacheState.noFlagData, state)
         }
 
         let expectation = self.expectation(description: "wait for response")
@@ -592,7 +595,7 @@ class ConfigCatClientTests: XCTestCase {
         let expectation = self.expectation(description: "wait for response")
         
         client.hooks.addOnReady { state in
-            XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+            XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
             client.getValue(for: "fakeKey", defaultValue: "") { val in
                 XCTAssertEqual("fake", val)
                 expectation.fulfill()
@@ -610,7 +613,7 @@ class ConfigCatClientTests: XCTestCase {
         let expectation = self.expectation(description: "wait for response")
         
         client.hooks.addOnReady { state in
-            XCTAssertEqual(ClientReadyState.hasUpToDateFlagData, state)
+            XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
             let snapshot = client.snapshot()
             let val = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("fake", val)

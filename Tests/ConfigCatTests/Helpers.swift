@@ -4,7 +4,7 @@ import XCTest
 
 extension String {
     func toEntryFromConfigString() -> ConfigEntry {
-        return try! ConfigEntry.fromConfigJson(json: self, eTag: "", fetchTime: .distantPast).get()
+        return try! ConfigEntry.fromConfigJson(json: self, eTag: String.random(len: 5), fetchTime: .distantPast).get()
     }
 
     func asEntryString(date: Date = Date()) -> String {
