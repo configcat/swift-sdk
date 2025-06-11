@@ -71,7 +71,7 @@ public final class Hooks: NSObject {
     private var onError: [(String) -> ()] = []
 
     /**
-     Subscribes a handler to the `onReady` hook.
+     Subscribes a handler to the `onReady` hook with a `ClientCacheState` parameter.
      - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnReady(handler: @escaping (ClientCacheState) -> ()) {
@@ -85,7 +85,10 @@ public final class Hooks: NSObject {
     }
     
     /**
-     Subscribes a handler to the `onReadyWithSnapshot` hook.
+     Subscribes a handler to the `onReady` hook with a `ConfigCatClientSnapshot` parameter.
+     
+     Late subscriptions (through the `client.hooks` property) might not get notified if the client reached the ready state before the subscription.
+     
      - Parameter handler: The handler to subscribe.
      */
     @objc public func addOnReady(snapshotHandler: @escaping (ConfigCatClientSnapshot) -> ()) {
@@ -108,6 +111,7 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onConfigChanged` hook.
      - Parameter handler: The handler to subscribe.
      */
+    @available(*, deprecated, message: "Use addOnConfigChanged(snapshotHandler:) instead.")
     @objc public func addOnConfigChanged(handler: @escaping (Config) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
