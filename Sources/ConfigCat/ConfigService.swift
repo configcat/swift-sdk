@@ -73,6 +73,7 @@ enum FetchResult {
 }
 
 class ConfigService {
+    private let snapshotBuilder: SnapshotBuilderProtocol
     private let log: InternalLogger
     private let fetcher: ConfigFetcher
     private let mutex: Mutex = Mutex(recursive: true)
@@ -88,7 +89,8 @@ class ConfigService {
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
 
-    init(log: InternalLogger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
+    init(snapshotBuilder: SnapshotBuilderProtocol, log: InternalLogger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
+        self.snapshotBuilder = snapshotBuilder
         self.log = log
         self.fetcher = fetcher
         self.cache = cache
@@ -115,7 +117,7 @@ class ConfigService {
                 // Max wait time expired without result, notify subscribers with the cached config.
                 if this._initialized.testAndSet(expect: false, new: true) {
                     this.log.warning(eventId: 4200, message: String(format: "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
-                    hooks.invokeOnReady(state: this.determineReadyState())
+                    hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: this.inMemory)
                     this.callCompletions(result: .success(this.cachedEntry))
                     this.completions = nil
                 }
@@ -126,7 +128,7 @@ class ConfigService {
             let entry = readCache()
             if !entry.isEmpty && entry != cachedEntry {
                 cachedEntry = entry
-                hooks.invokeOnConfigChanged(config: entry.config)
+                hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
             }
             setInitialized()
         }
@@ -234,7 +236,7 @@ class ConfigService {
         let entry = readCache()
         if !entry.isEmpty && entry != cachedEntry {
             cachedEntry = entry
-            hooks.invokeOnConfigChanged(config: entry.config)
+            hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
         }
         // Cache isn't expired
         if cachedEntry.fetchTime > threshold {
@@ -269,7 +271,7 @@ class ConfigService {
         case .fetched(let entry):
             cachedEntry = entry
             writeCache(entry: entry)
-            hooks.invokeOnConfigChanged(config: entry.config)
+            hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
             callCompletions(result: .success(entry))
         case .notModified:
             cachedEntry = cachedEntry.withFetchTime(time: Date())
@@ -288,7 +290,7 @@ class ConfigService {
 
     private func setInitialized() {
         if _initialized.testAndSet(expect: false, new: true) {
-            hooks.invokeOnReady(state: determineReadyState())
+            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
         }
     }
 

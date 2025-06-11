@@ -64,8 +64,10 @@ public final class Hooks: NSObject {
     private let mutex: Mutex = Mutex(recursive: true);
     private var readyState: ClientCacheState?
     private var onReady: [(ClientCacheState) -> ()] = []
+    private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
     private var onConfigChanged: [(Config) -> ()] = []
+    private var onConfigChangedWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onError: [(String) -> ()] = []
 
     /**
@@ -80,6 +82,16 @@ public final class Hooks: NSObject {
         } else {
             onReady.append(handler)
         }
+    }
+    
+    /**
+     Subscribes a handler to the `onReadyWithSnapshot` hook.
+     - Parameter handler: The handler to subscribe.
+     */
+    @objc public func addOnReadyWithSnapshot(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        onReadyWithSnapshot.append(handler)
     }
 
     /**
@@ -101,6 +113,16 @@ public final class Hooks: NSObject {
         defer { mutex.unlock() }
         onConfigChanged.append(handler)
     }
+    
+    /**
+     Subscribes a handler to the `onConfigChangedWithSnapshot` hook.
+     - Parameter handler: The handler to subscribe.
+     */
+    @objc public func addOnConfigChangedWithSnapshot(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
+        mutex.lock()
+        defer { mutex.unlock() }
+        onConfigChangedWithSnapshot.append(handler)
+    }
 
     /**
      Subscribes a handler to the `onError` hook.
@@ -112,20 +134,32 @@ public final class Hooks: NSObject {
         onError.append(handler)
     }
 
-    func invokeOnReady(state: ClientCacheState) {
+    func invokeOnReady(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
-        readyState = state
+        readyState = inMemoryResult.cacheState
         for item in onReady {
-            item(state);
+            item(inMemoryResult.cacheState);
+        }
+        if !onReadyWithSnapshot.isEmpty {
+            let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
+            for item in onReadyWithSnapshot {
+                item(snapshot);
+            }
         }
     }
 
-    func invokeOnConfigChanged(config: Config) {
+    func invokeOnConfigChanged(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
         for item in onConfigChanged {
-            item(config);
+            item(inMemoryResult.entry.config);
+        }
+        if !onConfigChangedWithSnapshot.isEmpty {
+            let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
+            for item in onConfigChangedWithSnapshot {
+                item(snapshot);
+            }
         }
     }
 

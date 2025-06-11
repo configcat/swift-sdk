@@ -80,8 +80,11 @@ class LocalTests: XCTestCase {
         await client.waitForReady()
         
         let snapshot = client.snapshot()
-        let values = snapshot.getAllValues()
         
+        var values = [String: Any]()
+        for key in snapshot.getAllKeys() {
+            values[key] = snapshot.getAnyValue(for: key, defaultValue: {}, user: nil)
+        }
         XCTAssertTrue(values["enabledFeature"] as? Bool ?? false)
         XCTAssertFalse(values["disabledFeature"] as? Bool ?? true)
         XCTAssertEqual(5, values["intSetting"] as? Int ?? 0)
@@ -103,8 +106,11 @@ class LocalTests: XCTestCase {
         await client.waitForReady()
         
         let snapshot = client.snapshot()
-        let values = snapshot.getAllValues()
         
+        var values = [String: Any]()
+        for key in snapshot.getAllKeys() {
+            values[key] = snapshot.getAnyValue(for: key, defaultValue: {}, user: nil)
+        }
         XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
         XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
     }
@@ -123,8 +129,11 @@ class LocalTests: XCTestCase {
         await client.waitForReady()
         
         let snapshot = client.snapshot()
-        let values = snapshot.getAllValues()
         
+        var values = [String: Any]()
+        for key in snapshot.getAllKeys() {
+            values[key] = snapshot.getAnyValue(for: key, defaultValue: {}, user: nil)
+        }
         XCTAssertFalse(values["fakeKey"] as? Bool ?? true)
         XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
     }

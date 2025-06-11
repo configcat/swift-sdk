@@ -16,8 +16,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
+    private var snapshotBuilder: SnapshotBuilderProtocol
     private var closed: Bool = false
-    private var defaultUser: ConfigCatUser?
 
     private static let mutex = Mutex()
     private static var instances: [String: Weak<ConfigCatClient>] = [:]
@@ -37,19 +37,19 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         
         self.sdkKey = sdkKey
         self.hooks = hooks ?? Hooks()
-        self.defaultUser = defaultUser
         log = InternalLogger(log: logger, level: logLevel, hooks: self.hooks)
         overrideDataSource = flagOverrides
         flagEvaluator = FlagEvaluator(log: log, evaluator: RolloutEvaluator(logger: log), hooks: self.hooks)
-
+        self.snapshotBuilder = SnapshotBuilder(flagEvaluator: flagEvaluator, defaultUser: defaultUser, overrideDataSource: overrideDataSource, log: log)
+        
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
             // configService is not needed in localOnly mode
             configService = nil
-            hooks?.invokeOnReady(state: .hasLocalOverrideFlagDataOnly)
+            hooks?.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .hasLocalOverrideFlagDataOnly))
         } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
             log.error(eventId: 0, message: "ConfigCat SDK Key '\(sdkKey)' is invalid.")
             configService = nil
-            hooks?.invokeOnReady(state: .noFlagData)
+            hooks?.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .noFlagData))
         } else {
             let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
@@ -58,7 +58,8 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                     dataGovernance: dataGovernance,
                     baseUrl: baseUrl)
 
-            configService = ConfigService(log: log,
+            configService = ConfigService(snapshotBuilder: snapshotBuilder,
+                    log: log,
                     fetcher: fetcher,
                     cache: configCache,
                     pollingMode: pollingMode,
@@ -174,7 +175,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      */
     public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
-        let evalUser = user ?? defaultUser
+        let evalUser = user ?? snapshotBuilder.defaultUser
         
         if let _ = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
             completion(defaultValue)
@@ -197,7 +198,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      */
     public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
-        let evalUser = user ?? defaultUser
+        let evalUser = user ?? snapshotBuilder.defaultUser
         
         if let error = flagEvaluator.validateFlagType(of: Value.self, key: key, defaultValue: defaultValue, user: evalUser) {
             completion(TypedEvaluationDetails<Value>.fromError(value: defaultValue, details: error))
@@ -228,7 +229,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.snapshotBuilder.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
                     detailsResult.append(details)
                 }
             }
@@ -320,7 +321,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.snapshotBuilder.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
                     allValues[key] = details.value
                 }
             }
@@ -358,8 +359,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
      update by invoking `.forceRefresh()`.
      */
     @objc public func snapshot() -> ConfigCatClientSnapshot {
-        let inMemorySettings = getInMemorySettings()
-        return ConfigCatClientSnapshot(flagEvaluator: flagEvaluator, settingsSnapshot: inMemorySettings.0, cacheState: inMemorySettings.1, defaultUser: defaultUser, log: log)
+        return snapshotBuilder.buildSnapshot(inMemoryResult: configService?.inMemory)
     }
     
     #if compiler(>=5.5) && canImport(_Concurrency)
@@ -423,41 +423,14 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         }
     }
     
-    func getInMemorySettings() -> (SettingsResult, ClientCacheState) {
-        if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            return (SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast), ClientCacheState.hasLocalOverrideFlagDataOnly)
-        }
-        guard let configService = configService else {
-            return (.empty, ClientCacheState.noFlagData)
-        }
-        
-        let inMemory = configService.inMemory
-        let entry = inMemory.entry
-        
-        if let overrideDataSource = overrideDataSource {
-            if overrideDataSource.behaviour == .localOverRemote {
-                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
-                    new
-                }, fetchTime: entry.fetchTime), inMemory.cacheState)
-            }
-            if overrideDataSource.behaviour == .remoteOverLocal {
-                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
-                    current
-                }, fetchTime: entry.fetchTime), inMemory.cacheState)
-            }
-        }
-        
-        return (SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime), inMemory.cacheState)
-    }
-
     /// Sets the default user.
     @objc public func setDefaultUser(user: ConfigCatUser) {
-        defaultUser = user
+        snapshotBuilder.defaultUser = user
     }
 
     /// Sets the default user to null.
     @objc public func clearDefaultUser() {
-        defaultUser = nil
+        snapshotBuilder.defaultUser = nil
     }
 
     /// Configures the client to allow HTTP requests.

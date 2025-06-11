@@ -108,32 +108,4 @@ public final class ConfigCatClientSnapshot: NSObject {
         }
         return [String](settingsSnapshot.settings.keys)
     }
-
-    /// Gets the values of all feature flags or settings.
-    @objc public func getAllValues(user: ConfigCatUser? = nil) -> [String: Any]
-    {
-        if settingsSnapshot.isEmpty {
-            self.log.error(
-                eventId: 1000,
-                message: "Config JSON is not present. Returning empty array."
-            )
-            return [:]
-        }
-        var allValues = [String: Any]()
-        for key in settingsSnapshot.settings.keys {
-            guard let setting = settingsSnapshot.settings[key] else {
-                continue
-            }
-            if let details = self.flagEvaluator.evaluateFlag(
-                for: setting,
-                key: key,
-                user: user ?? self.defaultUser,
-                fetchTime: settingsSnapshot.fetchTime,
-                settings: settingsSnapshot.settings
-            ) {
-                allValues[key] = details.value
-            }
-        }
-        return allValues
-    }
 }
