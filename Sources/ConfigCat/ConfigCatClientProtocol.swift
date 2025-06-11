@@ -119,7 +119,10 @@ public protocol ConfigCatClientProtocol {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func getAllValues(user: ConfigCatUser?) async -> [String: Any]
 
-    /// Initiates a force refresh asynchronously on the cached configuration.
+    /**
+     Updates the internally cached config by synchronizing with the external cache (if any),
+     then by fetching the latest version from the ConfigCat CDN (provided that the client is online).
+     */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func forceRefresh() async -> RefreshResult
     
