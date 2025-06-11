@@ -67,7 +67,7 @@ public final class Hooks: NSObject {
     private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
     private var onConfigChanged: [(Config) -> ()] = []
-    private var onConfigChangedWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
+    private var onConfigChangedWithSnapshot: [(Config, ConfigCatClientSnapshot) -> ()] = []
     private var onError: [(String) -> ()] = []
 
     /**
@@ -88,10 +88,10 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onReadyWithSnapshot` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnReadyWithSnapshot(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
+    @objc public func addOnReady(snapshotHandler: @escaping (ConfigCatClientSnapshot) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
-        onReadyWithSnapshot.append(handler)
+        onReadyWithSnapshot.append(snapshotHandler)
     }
 
     /**
@@ -118,10 +118,10 @@ public final class Hooks: NSObject {
      Subscribes a handler to the `onConfigChangedWithSnapshot` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnConfigChangedWithSnapshot(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
+    @objc public func addOnConfigChanged(snapshotHandler: @escaping (Config, ConfigCatClientSnapshot) -> ()) {
         mutex.lock()
         defer { mutex.unlock() }
-        onConfigChangedWithSnapshot.append(handler)
+        onConfigChangedWithSnapshot.append(snapshotHandler)
     }
 
     /**
@@ -158,7 +158,7 @@ public final class Hooks: NSObject {
         if !onConfigChangedWithSnapshot.isEmpty {
             let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
             for item in onConfigChangedWithSnapshot {
-                item(snapshot);
+                item(inMemoryResult.entry.config, snapshot);
             }
         }
     }

@@ -12,9 +12,9 @@ class SnapshotTests: XCTestCase {
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
-        client.hooks.addOnReady { _ in
+        client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
-        }
+        })
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()
@@ -30,9 +30,9 @@ class SnapshotTests: XCTestCase {
        
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
-        client.hooks.addOnReady { _ in
+        client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
-        }
+        })
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()
@@ -47,9 +47,9 @@ class SnapshotTests: XCTestCase {
 
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
-        client.hooks.addOnReady { _ in
+        client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
-        }
+        })
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()
@@ -142,7 +142,7 @@ class SnapshotTests: XCTestCase {
 
         let hooks = Hooks()
         var called = false
-        hooks.addOnConfigChangedWithSnapshot { snapshot in
+        hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "key1", defaultValue: false)
             XCTAssertTrue(value)
@@ -165,7 +165,8 @@ class SnapshotTests: XCTestCase {
 
         let hooks = Hooks()
         var called = false
-        hooks.addOnReadyWithSnapshot { snapshot in
+        
+        hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "key1", defaultValue: false)
             XCTAssertTrue(value)
@@ -191,7 +192,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnConfigChangedWithSnapshot { snapshot in
+        hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
@@ -217,7 +218,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnReadyWithSnapshot { snapshot in
+        hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
@@ -243,7 +244,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnConfigChangedWithSnapshot { snapshot in
+        hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
@@ -269,7 +270,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnReadyWithSnapshot { snapshot in
+        hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
@@ -295,7 +296,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnConfigChangedWithSnapshot { snapshot in
+        hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
@@ -321,7 +322,7 @@ class SnapshotTests: XCTestCase {
         
         let hooks = Hooks()
         var called = false
-        hooks.addOnReadyWithSnapshot { snapshot in
+        hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
