@@ -291,7 +291,7 @@ public class Config: NSObject, JsonSerializable {
         self.salt = preferences.salt
     }
 
-    static func fromJson(json: [String: Any]) -> Config {
+    public static func fromJson(json: [String: Any]) -> Config {
         let settingsMap = json[self.settingsKey] as? [String: Any] ?? [:]
         let settings: [String: Setting] = settingsMap.mapValues { setting in
             .fromJson(json: setting as? [String: Any] ?? [:])
