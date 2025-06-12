@@ -7,7 +7,7 @@ open class OverrideDataSource: NSObject {
         self.behaviour = behaviour
     }
 
-    @objc public func getOverrides() -> [String: Setting] {
+    @objc open func getOverrides() -> [String: Setting] {
         [:]
     }
 }
