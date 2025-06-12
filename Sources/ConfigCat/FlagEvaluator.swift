@@ -18,6 +18,7 @@ class FlagEvaluator {
         user: ConfigCatUser?
     ) -> EvaluationDetails? {
         if of != String.self && of != String?.self && of != Int.self
+            && of != Int64.self && of != Int64?.self
             && of != Int?.self && of != Double.self && of != Double?.self
             && of != Bool.self && of != Bool?.self && of != Any.self
             && of != Any?.self
