@@ -10,7 +10,7 @@ int main(int argc, const char * argv[]) {
             // Use the default Warning level to avoid too detailed logging in your application.
             options.logLevel = ConfigCatLogLevelInfo;
             
-            [options.hooks addOnReadyWithHandler:^(enum ClientReadyState state) {
+            [options.hooks addOnReadyWithHandler:^(enum ClientCacheState state) {
                 dispatch_semaphore_signal(semaphore);
             }];
         }];
@@ -25,7 +25,7 @@ int main(int argc, const char * argv[]) {
         
         NSString *featureName = @"isPOCFeatureEnabled";
         
-        ConfigCatSnapshot* snapshot = [client snapshot];
+        ConfigCatClientSnapshot* snapshot = [client snapshot];
         
         BOOL value = [snapshot getBoolValueFor:featureName defaultValue:false user:userObject];
         NSLog(@"%@: %@", featureName, value ? @"Yes" : @"No");

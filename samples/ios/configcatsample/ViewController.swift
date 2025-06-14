@@ -12,7 +12,7 @@ class ViewController: UIViewController {
         self.client = ConfigCatClient.get(
             sdkKey: "PKDVCLf-Hq-h-kCzMp-L7Q/psuH7BGHoUmdONrzzUOY7A") { options in
             options.pollingMode = PollingModes.autoPoll(autoPollIntervalInSeconds: 5)
-            options.hooks.addOnConfigChanged { _ in
+            options.hooks.addOnConfigChanged { _, _ in
                 self.configChanged()
             }
 
