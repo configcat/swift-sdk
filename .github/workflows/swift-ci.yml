@@ -31,7 +31,7 @@ jobs:
           - destination: platform=visionOS Simulator,name=Apple Vision Pro
             platform: watch
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Tests
         run: |
           set -o pipefail
@@ -53,7 +53,7 @@ jobs:
             destination: arch=x86_64
             platform: macos
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Tests
         run: |
           set -o pipefail
@@ -76,7 +76,7 @@ jobs:
           - sdk: macosx14.5
             destination: arch=x86_64
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Install Slather
         run: |
@@ -101,7 +101,7 @@ jobs:
     needs: coverage
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Install Cocoapods
         run: gem install cocoapods
@@ -120,7 +120,7 @@ jobs:
     runs-on: macos-14
     if: startsWith(github.ref, 'refs/tags')
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       
       - name: Install Cocoapods
         run: gem install cocoapods
