@@ -11,7 +11,7 @@ EXTERNAL SOURCES:
 
 CHECKOUT OPTIONS:
   ConfigCat:
-    :commit: 1bebd194c188103a2c3308ae9306903169fa1b5b
+    :commit: 7709added34832c83545c970a6882efb47cc97cb
     :git: https://github.com/configcat/swift-sdk.git
 
 SPEC CHECKSUMS:
