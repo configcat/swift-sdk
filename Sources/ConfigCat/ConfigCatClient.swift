@@ -10,7 +10,7 @@ import os.log
 }
 
 /// ConfigCat SDK client.
-public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
+public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecked Sendable {
     private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
