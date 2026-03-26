@@ -1,7 +1,7 @@
 import Foundation
 
 /// Defines the public protocol of the `ConfigCatClient`.
-public protocol ConfigCatClientProtocol {
+public protocol ConfigCatClientProtocol: Sendable {
     /**
      Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
      
