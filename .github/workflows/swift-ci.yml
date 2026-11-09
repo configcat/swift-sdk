@@ -32,6 +32,8 @@ jobs:
             platform: watch
     steps:
       - uses: actions/checkout@v7
+      - name: Start CoreSimulator
+        run: xcrun simctl list devices available
       - name: Tests
         run: |
           set -o pipefail
