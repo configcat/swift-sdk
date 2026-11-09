@@ -28,7 +28,7 @@ jobs:
             platform: appletv
           - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
             platform: watch
-          - destination: platform=visionOS Simulator,name=Apple Vision Pro
+          - destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5
             platform: watch
     steps:
       - uses: actions/checkout@v7
