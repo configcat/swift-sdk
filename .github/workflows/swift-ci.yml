@@ -110,12 +110,6 @@ jobs:
       - name: Install Cocoapods
         run: gem install cocoapods
 
-      - name: Enable VisionOS
-        run: |
-          defaults write com.apple.dt.Xcode AllowUnsupportedVisionOSHost -bool YES
-          defaults write com.apple.CoreSimulator AllowUnsupportedVisionOSHost -bool YES
-          xcodebuild -downloadPlatform visionOS
-
       - name: Lint
         run: pod lib lint
 
