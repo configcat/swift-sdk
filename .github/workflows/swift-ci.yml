@@ -32,11 +32,6 @@ jobs:
             platform: watch
     steps:
       - uses: actions/checkout@v7
-      - name: List simulators
-        run: |
-          xcodebuild -version
-          xcrun simctl list runtimes
-          xcrun simctl list devices available
       - name: Tests
         run: |
           set -o pipefail
