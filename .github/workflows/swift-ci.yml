@@ -14,24 +14,26 @@ on:
   workflow_dispatch:
 
 env:
-  DEVELOPER_DIR: /Applications/Xcode_15.4.app
+  DEVELOPER_DIR: /Applications/Xcode_16.4.app
 
 jobs:
   test-ios:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         include:
-          - destination: platform=iOS Simulator,name=iPhone 8
+          - destination: platform=iOS Simulator,name=iPhone SE (3rd generation),OS=18.5
             platform: iphone
           - destination: platform=tvOS Simulator,name=Apple TV
             platform: appletv
-          - destination: platform=watchOS Simulator,name=Apple Watch Series 8 (45mm)
+          - destination: platform=watchOS Simulator,name=Apple Watch Series 10 (46mm),OS=11.5
             platform: watch
-          - destination: platform=visionOS Simulator,name=Apple Vision Pro
+          - destination: platform=visionOS Simulator,name=Apple Vision Pro,OS=2.5
             platform: watch
     steps:
       - uses: actions/checkout@v7
+      - name: Start CoreSimulator
+        run: xcrun simctl list devices available
       - name: Tests
         run: |
           set -o pipefail
@@ -45,11 +47,11 @@ jobs:
           path: tests
 
   test-osx:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         include:
-          - sdk: macosx14.5
+          - sdk: macosx15.5
             destination: arch=x86_64
             platform: macos
     steps:
@@ -68,11 +70,11 @@ jobs:
 
   coverage:
     needs: [test-ios, test-osx]
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       matrix:
         include:
-          - sdk: macosx14.5
+          - sdk: macosx15.5
             destination: arch=x86_64
     steps:
       - uses: actions/checkout@v7
@@ -98,25 +100,19 @@ jobs:
 
   pod-lint:
     needs: coverage
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
 
       - name: Install Cocoapods
         run: gem install cocoapods
 
-      - name: Enable VisionOS
-        run: |
-          defaults write com.apple.dt.Xcode AllowUnsupportedVisionOSHost -bool YES
-          defaults write com.apple.CoreSimulator AllowUnsupportedVisionOSHost -bool YES
-          xcodebuild -downloadPlatform visionOS
-
       - name: Lint
         run: pod lib lint
 
   publish:
     needs: pod-lint
-    runs-on: macos-14
+    runs-on: macos-15
     if: startsWith(github.ref, 'refs/tags')
     steps:
       - uses: actions/checkout@v7
