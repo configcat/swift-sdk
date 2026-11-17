@@ -16,7 +16,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
-    private var snapshotBuilder: SnapshotBuilder
+    private var snapshotBuilder: SnapshotBuilderProtocol
     private var closed: Bool = false
 
     private static let mutex = Mutex()

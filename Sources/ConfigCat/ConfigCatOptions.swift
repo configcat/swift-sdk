@@ -138,7 +138,7 @@ public final class Hooks: NSObject {
         onError.append(handler)
     }
 
-    func invokeOnReady(snapshotBuilder: SnapshotBuilder, inMemoryResult: InMemoryResult) {
+    func invokeOnReady(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
         readyState = inMemoryResult.cacheState
@@ -153,7 +153,7 @@ public final class Hooks: NSObject {
         }
     }
 
-    func invokeOnConfigChanged(snapshotBuilder: SnapshotBuilder, inMemoryResult: InMemoryResult) {
+    func invokeOnConfigChanged(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         mutex.lock()
         defer { mutex.unlock() }
         for item in onConfigChanged {

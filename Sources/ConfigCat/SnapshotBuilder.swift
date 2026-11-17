@@ -1,4 +1,9 @@
-class SnapshotBuilder {
+protocol SnapshotBuilderProtocol {
+    func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot
+    var defaultUser: ConfigCatUser? { get set }
+}
+
+class SnapshotBuilder: SnapshotBuilderProtocol {
     private let flagEvaluator: FlagEvaluator
     private let mutex: Mutex = Mutex()
     private var defUser: ConfigCatUser?

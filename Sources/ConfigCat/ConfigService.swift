@@ -69,7 +69,7 @@ enum FetchResult {
 }
 
 class ConfigService {
-    private let snapshotBuilder: SnapshotBuilder
+    private let snapshotBuilder: SnapshotBuilderProtocol
     private let log: InternalLogger
     private let fetcher: ConfigFetcher
     private let mutex: Mutex = Mutex(recursive: true)
@@ -86,7 +86,7 @@ class ConfigService {
     private var initTimer: DispatchSourceTimer? = nil
 
     init(
-        snapshotBuilder: SnapshotBuilder, log: InternalLogger, fetcher: ConfigFetcher,
+        snapshotBuilder: SnapshotBuilderProtocol, log: InternalLogger, fetcher: ConfigFetcher,
         cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool
     ) {
         self.snapshotBuilder = snapshotBuilder
