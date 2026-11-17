@@ -1,7 +1,7 @@
 import Foundation
 
 @propertyWrapper
-struct Synced<Value: Equatable> {
+final class Synced<Value: Equatable> {
     private let mutex = Mutex()
     private var storedValue: Value
 
@@ -23,7 +23,7 @@ struct Synced<Value: Equatable> {
     }
 
     @discardableResult
-    mutating func testAndSet(expect: Value, new: Value) -> Bool {
+    func testAndSet(expect: Value, new: Value) -> Bool {
         mutex.lock()
         defer { mutex.unlock() }
         let challenge = storedValue == expect
@@ -31,7 +31,7 @@ struct Synced<Value: Equatable> {
         return challenge
     }
 
-    mutating func getAndSet(new: Value) -> Value {
+    func getAndSet(new: Value) -> Value {
         mutex.lock()
         defer { mutex.unlock() }
         let old = storedValue
