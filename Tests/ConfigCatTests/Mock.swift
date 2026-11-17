@@ -2,14 +2,32 @@ import Foundation
 @testable import ConfigCat
 
 class MockEngine: HttpEngine {
+    private let lock = NSLock()
+    private let autoRespond: Bool
     private var responses = [Response]()
     private var capturedRequests = [URLRequest]()
+    private var pendingCompletions: [(Data?, URLResponse?, Error?) -> Void] = []
 
-    var requests: [URLRequest] { get { capturedRequests } }
+    init(autoRespond: Bool = true) {
+        self.autoRespond = autoRespond
+    }
+
+    var requests: [URLRequest] {
+        lock.lock()
+        defer { lock.unlock() }
+        return capturedRequests
+    }
 
     func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        lock.lock()
         capturedRequests.append(request)
+        guard autoRespond else {
+            pendingCompletions.append(completion)
+            lock.unlock()
+            return
+        }
         let response = next()
+        lock.unlock()
         if response.delay <= 0 {
             completion(response.data, response.httpResponse, response.error)
             return
@@ -21,7 +39,16 @@ class MockEngine: HttpEngine {
     }
 
     func enqueueResponse(response: Response) {
+        lock.lock()
+        defer { lock.unlock() }
         responses.append(response)
+    }
+
+    func respond(_ response: Response) {
+        lock.lock()
+        let completion = pendingCompletions.isEmpty ? nil : pendingCompletions.removeFirst()
+        lock.unlock()
+        completion?(response.data, response.httpResponse, response.error)
     }
 
     private func next() -> Response {

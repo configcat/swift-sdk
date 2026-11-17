@@ -82,6 +82,7 @@ class ConfigService {
     private var closed: Bool = false
     private var cachedEntry: ConfigEntry = .empty
     private var completions: MutableQueue<(FetchResult) -> Void>?
+    private var fetchInProgress = false
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
 
@@ -112,19 +113,21 @@ class ConfigService {
                     return
                 }
                 // Max wait time expired without result, notify subscribers with the cached config.
-                if this.testAndSetInitialized() {
+                let entryAndCompletions = this.mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
+                    guard !this.initialized && !this.closed else { return nil }
+                    this.initialized = true
+                    return (this.cachedEntry, this.takeAndClearCompletions())
+                }
+                if let (entry, pendingCompletions) = entryAndCompletions {
                     this.log.warning(
                         eventId: 4200,
                         message: String(
                             format:
                                 "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
                             autoPoll.maxInitWaitTimeInSeconds))
-                    let entry = this.mutex.withLock {
-                        this.cachedEntry
-                    }
                     hooks.invokeOnReady(
                         snapshotBuilder: snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
-                    this.callAndClearCompletions(result: .success(entry))
+                    this.callCompletions(pendingCompletions, result: .success(entry))
                 }
             })
             initTimer?.resume()
@@ -140,17 +143,17 @@ class ConfigService {
     }
 
     func close() {
-        let entry: ConfigEntry? = mutex.withLock {
+        let entryAndCompletions = mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
             guard !closed else {
                 return nil
             }
             closed = true
             pollTimer?.cancel()
             initTimer?.cancel()
-            return cachedEntry
+            return (cachedEntry, takeAndClearCompletions())
         }
-        if let entry = entry {
-            callAndClearCompletions(result: .success(entry))
+        if let (entry, pendingCompletions) = entryAndCompletions {
+            callCompletions(pendingCompletions, result: .success(entry))
         }
     }
 
@@ -286,20 +289,29 @@ class ConfigService {
     private func shouldInitiateFetchOrSubscribeCompletion(
         completion: @escaping (FetchResult) -> Void
     ) -> Bool {
-        mutex.withLock {
-            if completions != nil {
-                completions?.enqueue(item: completion)
+        var closedEntry: ConfigEntry?
+        let shouldInitiate = mutex.withLock {
+            guard !closed else {
+                closedEntry = cachedEntry
                 return false
-            } else {
-                completions = MutableQueue()
-                completions?.enqueue(item: completion)
-                return true
             }
+            if completions == nil {
+                completions = MutableQueue()
+            }
+            completions?.enqueue(item: completion)
+            guard !fetchInProgress else { return false }
+            fetchInProgress = true
+            return true
         }
+        if let entry = closedEntry {
+            completion(.success(entry))
+        }
+        return shouldInitiate
     }
 
     private func processResponse(response: FetchResponse) {
         var completionResult: FetchResult?
+        var pendingCompletions: MutableQueue<(FetchResult) -> Void>?
         var configChanged = false
         var writeEntryToCache = true
         let currentEntry: ConfigEntry = mutex.withLock {
@@ -320,6 +332,8 @@ class ConfigService {
                 completionResult = .failure(error, errorCode, cachedEntry)
                 
             }
+            fetchInProgress = false
+            pendingCompletions = takeAndClearCompletions()
             return cachedEntry
         }
         if writeEntryToCache {
@@ -330,7 +344,7 @@ class ConfigService {
             reportConfigChanged(entry: currentEntry)
         }
         if let result = completionResult {
-            callAndClearCompletions(result: result)
+            callCompletions(pendingCompletions, result: result)
         }
     }
 
@@ -354,13 +368,14 @@ class ConfigService {
         hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
     }
 
-    private func callAndClearCompletions(result: FetchResult) {
-        var currentCompletions: MutableQueue<(FetchResult) -> Void>?
-        mutex.withLock {
-            currentCompletions = completions
-            completions = nil
-        }
-        if let completions = currentCompletions {
+    private func takeAndClearCompletions() -> MutableQueue<(FetchResult) -> Void>? {
+        let pending = completions
+        completions = nil
+        return pending
+    }
+
+    private func callCompletions(_ pending: MutableQueue<(FetchResult) -> Void>?, result: FetchResult) {
+        if let completions = pending {
             while !completions.isEmpty {
                 guard let current = completions.dequeue() else {
                     return

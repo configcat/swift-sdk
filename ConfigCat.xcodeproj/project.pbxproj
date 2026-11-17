@@ -38,6 +38,7 @@
 		B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
 		B4BD2B00258CA7DF007371E2 /* Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F029E89207EB3BD0019942F /* Mock.swift */; };
 		B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9720840FE900906339 /* ManualPollingTests.swift */; };
+		A7C63B012ECA100000000011 /* ConfigServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C63B012ECA100000000012 /* ConfigServiceTests.swift */; };
 		B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E1180A257532D700DA245A /* Log.swift */; };
 		B4BD2B04258CA7DF007371E2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51127B5533800D9F88A /* LocalTests.swift */; };
@@ -119,6 +120,7 @@
 		3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientProtocol.swift; sourceTree = "<group>"; };
 		3F880ACD207C072400087A6B /* ConfigCatClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClient.swift; sourceTree = "<group>"; };
 		3F8EDF9720840FE900906339 /* ManualPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualPollingTests.swift; sourceTree = "<group>"; };
+		A7C63B012ECA100000000012 /* ConfigServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigServiceTests.swift; sourceTree = "<group>"; };
 		3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
 		B4BD2ACE258CA6FF007371E2 /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -280,6 +282,7 @@
 				3F029E89207EB3BD0019942F /* Mock.swift */,
 				3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */,
 				3F8EDF9720840FE900906339 /* ManualPollingTests.swift */,
+				A7C63B012ECA100000000012 /* ConfigServiceTests.swift */,
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
 				F15F9B16216973B000F490CD /* RolloutIntegrationV1Tests.swift */,
@@ -511,6 +514,7 @@
 				F1109D0C2DF99347000EF1AA /* SnapshotBuilder.swift in Sources */,
 				C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */,
 				B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */,
+				A7C63B012ECA100000000011 /* ConfigServiceTests.swift in Sources */,
 				F17DEE29288876F7009C3E48 /* MutableQueue.swift in Sources */,
 				B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */,
 				C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
