@@ -38,19 +38,18 @@ class URLSessionEngine: HttpEngine {
     }
 
     func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
-        session.dataTask(with: request) { (data, resp, error) in
-            completion(data, resp, error)
-        }.resume()
+        session.dataTask(with: request, completionHandler: completion).resume()
     }
 }
 
 class ConfigFetcher: NSObject {
     private let log: InternalLogger
     private let httpEngine: HttpEngine
-    @Synced private var baseUrl: String
+    private var baseUrl: String
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
+    private let mutex: Mutex = Mutex()
 
     init(httpEngine: HttpEngine, logger: InternalLogger, sdkKey: String, mode: String,
          dataGovernance: DataGovernance, baseUrl: String = "") {
@@ -77,7 +76,10 @@ class ConfigFetcher: NSObject {
                 return
             }
             let newUrl = entry.config.preferences.preferencesUrl
-            if newUrl.isEmpty || newUrl == self.baseUrl {
+            let base = self.mutex.withLock {
+                self.baseUrl
+            }
+            if newUrl.isEmpty || newUrl == base {
                 completion(response)
                 return
             }
@@ -86,7 +88,9 @@ class ConfigFetcher: NSObject {
                 completion(response)
                 return
             }
-            self.baseUrl = newUrl
+            self.mutex.withLock {
+                self.baseUrl = newUrl
+            }
             if redirect == .noRedirect {
                 completion(response)
                 return
@@ -120,7 +124,7 @@ class ConfigFetcher: NSObject {
                 }
             } else {
                 let response = resp as! HTTPURLResponse
-                if response.statusCode >= 200 && response.statusCode < 300, let data = data {
+                if response.statusCode == 200, let data = data {
                     self.log.debug(message: "Fetch was successful: new config fetched")
                     let etag = response.allHeaderFields["Etag"] as? String ?? ""
                     let jsonString = String(data: data, encoding: .utf8) ?? ""

@@ -10,9 +10,7 @@ class SettingsResult {
     }
 
     var isEmpty: Bool {
-        get {
-            self === SettingsResult.empty
-        }
+        self === SettingsResult.empty
     }
 
     static let empty = SettingsResult(settings: [:], fetchTime: .distantPast)
@@ -21,16 +19,14 @@ class SettingsResult {
 class InMemoryResult {
     let entry: ConfigEntry
     let cacheState: ClientCacheState
-    
+
     init(entry: ConfigEntry, cacheState: ClientCacheState) {
         self.entry = entry
         self.cacheState = cacheState
     }
 }
 
-/**
- Specifies the possible evaluation error codes.
- */
+/// Specifies the possible evaluation error codes.
 @objc public enum RefreshErrorCode: Int {
     /** An unexpected error occurred during the refresh operation. */
     case unexpectedError = -1
@@ -73,7 +69,7 @@ enum FetchResult {
 }
 
 class ConfigService {
-    private let snapshotBuilder: SnapshotBuilderProtocol
+    private let snapshotBuilder: SnapshotBuilder
     private let log: InternalLogger
     private let fetcher: ConfigFetcher
     private let mutex: Mutex = Mutex(recursive: true)
@@ -81,15 +77,18 @@ class ConfigService {
     private let pollingMode: PollingMode
     private let hooks: Hooks
     private let cacheKey: String
-    @Synced private var initialized: Bool = false
+    private var initialized: Bool = false
     private var offline: Bool = false
-    private var completions: MutableQueue<(FetchResult) -> Void>?
+    private var closed: Bool = false
     private var cachedEntry: ConfigEntry = .empty
-    private var cachedJsonString: String = ""
+    private var completions: MutableQueue<(FetchResult) -> Void>?
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
 
-    init(snapshotBuilder: SnapshotBuilderProtocol, log: InternalLogger, fetcher: ConfigFetcher, cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool) {
+    init(
+        snapshotBuilder: SnapshotBuilder, log: InternalLogger, fetcher: ConfigFetcher,
+        cache: ConfigCache?, pollingMode: PollingMode, hooks: Hooks, sdkKey: String, offline: Bool
+    ) {
         self.snapshotBuilder = snapshotBuilder
         self.log = log
         self.fetcher = fetcher
@@ -112,56 +111,73 @@ class ConfigService {
                 guard let this = self else {
                     return
                 }
-                this.mutex.lock()
-                defer { this.mutex.unlock() }
                 // Max wait time expired without result, notify subscribers with the cached config.
-                if this._initialized.testAndSet(expect: false, new: true) {
-                    this.log.warning(eventId: 4200, message: String(format: "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.", autoPoll.maxInitWaitTimeInSeconds))
-                    hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: this.inMemory)
-                    this.callCompletions(result: .success(this.cachedEntry))
-                    this.completions = nil
+                if this.testAndSetInitialized() {
+                    this.log.warning(
+                        eventId: 4200,
+                        message: String(
+                            format:
+                                "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
+                            autoPoll.maxInitWaitTimeInSeconds))
+                    let entry = this.mutex.withLock {
+                        this.cachedEntry
+                    }
+                    hooks.invokeOnReady(
+                        snapshotBuilder: snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
+                    this.callAndClearCompletions(result: .success(entry))
                 }
             })
             initTimer?.resume()
         } else {
             // Sync up with cache before reporting ready state
-            let entry = readCache()
-            if !entry.isEmpty && entry != cachedEntry {
-                cachedEntry = entry
-                hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
+            cachedEntry = readCache()
+            setInitializedAndReportReady(entry: cachedEntry)
+            if !cachedEntry.isEmpty {
+                reportConfigChanged(entry: cachedEntry)
             }
-            setInitialized()
+            
         }
     }
 
     func close() {
-        mutex.lock()
-        defer { mutex.unlock() }
-        callCompletions(result: .success(cachedEntry))
-        completions = nil
-        pollTimer?.cancel()
-        initTimer?.cancel()
+        let entry: ConfigEntry? = mutex.withLock {
+            guard !closed else {
+                return nil
+            }
+            closed = true
+            pollTimer?.cancel()
+            initTimer?.cancel()
+            return cachedEntry
+        }
+        if let entry = entry {
+            callAndClearCompletions(result: .success(entry))
+        }
     }
 
     func settings(completion: @escaping (SettingsResult) -> Void) {
         var threshold = Date.distantPast
-        var preferCache = initialized
+        var preferCache = isInitialized
         if let lazyMode = pollingMode as? LazyLoadingMode {
             threshold = Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!
             preferCache = false
-        }
-        else if let autoPoll = pollingMode as? AutoPollingMode, !initialized {
+        } else if let autoPoll = pollingMode as? AutoPollingMode, !isInitialized {
             threshold = Date().subtract(seconds: autoPoll.autoPollIntervalInSeconds)!
         }
-        
+
         fetchIfOlder(threshold: threshold, preferCache: preferCache) { result in
             switch result {
-            case .success(let entry): completion(!entry.isEmpty
-                                                 ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                 : .empty)
-            case .failure(_, _, let entry): completion(!entry.isEmpty
-                                                    ? SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
-                                                    : .empty)
+            case .success(let entry):
+                completion(
+                    !entry.isEmpty
+                        ? SettingsResult(
+                            settings: entry.config.settings, fetchTime: entry.fetchTime)
+                        : .empty)
+            case .failure(_, _, let entry):
+                completion(
+                    !entry.isEmpty
+                        ? SettingsResult(
+                            settings: entry.config.settings, fetchTime: entry.fetchTime)
+                        : .empty)
             }
         }
     }
@@ -170,122 +186,181 @@ class ConfigService {
         if isOffline && cache == nil {
             let offlineWarning = "Client is in offline mode, it cannot initiate HTTP calls."
             log.warning(eventId: 3200, message: offlineWarning)
-            completion(RefreshResult(success: false, errorCode: .offlineClient, error: offlineWarning))
+            completion(
+                RefreshResult(success: false, errorCode: .offlineClient, error: offlineWarning))
             return
         }
 
         fetchIfOlder(threshold: .distantFuture) { result in
             switch result {
             case .success: completion(RefreshResult(success: true, errorCode: .none))
-            case .failure(let error, let errorCode, _): completion(RefreshResult(success: false, errorCode: errorCode, error: error))
+            case .failure(let error, let errorCode, _):
+                completion(RefreshResult(success: false, errorCode: errorCode, error: error))
             }
         }
     }
 
     func setOnline() {
-        mutex.lock()
-        defer { mutex.unlock() }
-        if !offline { return }
-        offline = false
-        pollTimer?.cancel()
-        pollTimer = nil
-        if let autoPoll = pollingMode as? AutoPollingMode {
-            startPoll(mode: autoPoll)
+        let stateChanged = mutex.withLock {
+            if closed || !offline {
+                return false
+            }
+            offline = false
+            pollTimer?.cancel()
+            pollTimer = nil
+            if let autoPoll = pollingMode as? AutoPollingMode {
+                startPoll(mode: autoPoll)
+            }
+            return true
         }
-        log.info(eventId: 5200, message: "Switched to ONLINE mode.")
+        if stateChanged {
+            log.info(eventId: 5200, message: "Switched to ONLINE mode.")
+        }
     }
 
     func setOffline() {
-        mutex.lock()
-        defer { mutex.unlock() }
-        if offline { return }
-        offline = true
-        log.info(eventId: 5200, message: "Switched to OFFLINE mode.")
+        let stateChanged = mutex.withLock {
+            if closed || offline {
+                return false
+            }
+            offline = true
+            return true
+        }
+        if stateChanged {
+            log.info(eventId: 5200, message: "Switched to OFFLINE mode.")
+        }
     }
 
     var isOffline: Bool {
-        get {
-            mutex.lock()
-            defer { mutex.unlock() }
-            return offline
+        return mutex.withLock {
+            offline
         }
     }
 
     var inMemory: InMemoryResult {
-        get {
-            mutex.lock()
-            defer { mutex.unlock() }
-            return InMemoryResult(entry: cachedEntry, cacheState: determineReadyState())
+        return mutex.withLock {
+            return produceInMemoryResult(entry: cachedEntry)
+        }  
+    }
+
+    private var isInitialized: Bool {
+        return mutex.withLock {
+            initialized
         }
     }
 
-    private func fetchIfOlder(threshold: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void) {
-        mutex.lock()
-        defer { mutex.unlock() }
-        // Sync up with the cache and use it when it's not expired.
+    private func fetchIfOlder(
+        threshold: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void
+    ) {
         let entry = readCache()
-        if !entry.isEmpty && entry != cachedEntry {
-            cachedEntry = entry
-            hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
+        var configChanged = false
+        var expired = false
+        var clientOffline = false
+        let currentEntry = mutex.withLock {
+            if !entry.isEmpty && entry != cachedEntry {
+                cachedEntry = entry
+                configChanged = true
+            }
+            expired = cachedEntry.fetchTime <= threshold
+            clientOffline = offline
+            return cachedEntry
         }
-        // Cache isn't expired
-        if cachedEntry.fetchTime > threshold {
-            setInitialized()
-            completion(.success(cachedEntry))
+
+        if configChanged {
+            reportConfigChanged(entry: currentEntry)
+        }
+
+        if !expired || clientOffline || preferCache {
+            setInitializedAndReportReady(entry: currentEntry)
+            completion(.success(currentEntry))
             return
         }
-        // If we are in offline mode or the caller prefers cached values, do not initiate fetch.
-        if offline || preferCache {
-            setInitialized()
-            completion(.success(cachedEntry))
-            return
+
+        if shouldInitiateFetchOrSubscribeCompletion(completion: completion) {
+            fetcher.fetch(eTag: currentEntry.eTag) { response in
+                self.processResponse(response: response)
+            }
         }
-        // There's an ongoing fetch running, save the callback to call it later when the ongoing fetch finishes.
-        if completions != nil {
-            completions?.enqueue(item: completion)
-            return
-        }
-        // No fetch is running, initiate a new one.
-        completions = MutableQueue<(FetchResult) -> Void>()
-        completions?.enqueue(item: completion)
-        fetcher.fetch(eTag: cachedEntry.eTag) { response in
-            self.processResponse(response: response)
+    }
+
+    private func shouldInitiateFetchOrSubscribeCompletion(
+        completion: @escaping (FetchResult) -> Void
+    ) -> Bool {
+        mutex.withLock {
+            if completions != nil {
+                completions?.enqueue(item: completion)
+                return false
+            } else {
+                completions = MutableQueue()
+                completions?.enqueue(item: completion)
+                return true
+            }
         }
     }
 
     private func processResponse(response: FetchResponse) {
-        mutex.lock()
-        defer { mutex.unlock() }
-
-        switch response {
-        case .fetched(let entry):
-            cachedEntry = entry
-            writeCache(entry: entry)
-            hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
-            callCompletions(result: .success(entry))
-        case .notModified:
-            cachedEntry = cachedEntry.withFetchTime(time: Date())
-            writeCache(entry: cachedEntry)
-            callCompletions(result: .success(cachedEntry))
-        case .failure(let error, let errorCode, let isTransient):
-            if !isTransient && !cachedEntry.isEmpty {
+        var completionResult: FetchResult?
+        var configChanged = false
+        var writeEntryToCache = true
+        let currentEntry: ConfigEntry = mutex.withLock {
+            switch response {
+            case .fetched(let entry):
+                cachedEntry = entry
+                configChanged = true
+                completionResult = .success(entry)
+            case .notModified:
                 cachedEntry = cachedEntry.withFetchTime(time: Date())
-                writeCache(entry: cachedEntry)
+                completionResult = .success(cachedEntry)
+            case .failure(let error, let errorCode, let isTransient):
+                if !isTransient && !cachedEntry.isEmpty {
+                    cachedEntry = cachedEntry.withFetchTime(time: Date())
+                } else {
+                    writeEntryToCache = false
+                }
+                completionResult = .failure(error, errorCode, cachedEntry)
+                
             }
-            callCompletions(result: .failure(error, errorCode, cachedEntry))
+            return cachedEntry
         }
-        completions = nil
-        setInitialized()
+        if writeEntryToCache {
+            writeCache(entry: currentEntry)
+        }
+        setInitializedAndReportReady(entry: currentEntry)
+        if configChanged {
+            reportConfigChanged(entry: currentEntry)
+        }
+        if let result = completionResult {
+            callAndClearCompletions(result: result)
+        }
     }
 
-    private func setInitialized() {
-        if _initialized.testAndSet(expect: false, new: true) {
-            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: inMemory)
+    private func setInitializedAndReportReady(entry: ConfigEntry) {
+        if testAndSetInitialized() {
+            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
         }
     }
 
-    private func callCompletions(result: FetchResult) {
-        if let completions = completions {
+    private func testAndSetInitialized() -> Bool {
+        mutex.withLock {
+            guard !initialized else {
+                return false
+            }
+            initialized = true
+            return true
+        }
+    }
+
+    private func reportConfigChanged(entry: ConfigEntry) {
+        hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
+    }
+
+    private func callAndClearCompletions(result: FetchResult) {
+        var currentCompletions: MutableQueue<(FetchResult) -> Void>?
+        mutex.withLock {
+            currentCompletions = completions
+            completions = nil
+        }
+        if let completions = currentCompletions {
             while !completions.isEmpty {
                 guard let current = completions.dequeue() else {
                     return
@@ -316,11 +391,13 @@ class ConfigService {
             return
         }
         do {
-            let jsonString = entry.serialize()
-            cachedJsonString = jsonString
-            try cache.write(for: cacheKey, value: jsonString)
+            try cache.write(for: cacheKey, value: entry.cacheString)
         } catch {
-            log.error(eventId: 2201, message: String(format: "Error occurred while writing the cache. %@", error.localizedDescription))
+            log.error(
+                eventId: 2201,
+                message: String(
+                    format: "Error occurred while writing the cache. %@", error.localizedDescription
+                ))
         }
     }
 
@@ -330,42 +407,56 @@ class ConfigService {
         }
         do {
             let json = try cache.read(for: cacheKey)
-            if json.isEmpty || json == cachedJsonString {
+            let entry = mutex.withLock {
+                cachedEntry
+            }
+            if json.isEmpty || json == entry.cacheString {
                 return .empty
             }
             let cached = ConfigEntry.fromCached(cached: json)
             switch cached {
             case .success(let entry):
-                cachedJsonString = json
                 return entry
             case .failure(let error):
-                log.error(eventId: 2200, message: String(format: "Error occurred while reading the cache. %@", error.localizedDescription))
+                log.error(
+                    eventId: 2200,
+                    message: String(
+                        format: "Error occurred while reading the cache. %@",
+                        error.localizedDescription))
                 return .empty
             }
         } catch {
-            log.error(eventId: 2200, message: String(format: "Error occurred while reading the cache. %@", error.localizedDescription))
+            log.error(
+                eventId: 2200,
+                message: String(
+                    format: "Error occurred while reading the cache. %@", error.localizedDescription
+                ))
             return .empty
         }
     }
-    
-    private func determineReadyState() -> ClientCacheState {
-        if cachedEntry.isEmpty {
+
+    private func produceInMemoryResult(entry: ConfigEntry) -> InMemoryResult {
+        return InMemoryResult(entry: entry, cacheState: determineReadyState(entry: entry))
+    }
+
+    private func determineReadyState(entry: ConfigEntry) -> ClientCacheState {
+        if entry.isEmpty {
             return .noFlagData
         }
-        
+
         switch pollingMode {
         case let lazyMode as LazyLoadingMode:
-            if cachedEntry.isExpired(seconds: lazyMode.cacheRefreshIntervalInSeconds) {
+            if entry.isExpired(seconds: lazyMode.cacheRefreshIntervalInSeconds) {
                 return .hasCachedFlagDataOnly
             }
         case let autoMode as AutoPollingMode:
-            if cachedEntry.isExpired(seconds: autoMode.autoPollIntervalInSeconds) {
+            if entry.isExpired(seconds: autoMode.autoPollIntervalInSeconds) {
                 return .hasCachedFlagDataOnly
             }
-        default: // manual polling
+        default:  // manual polling
             return .hasCachedFlagDataOnly
         }
-        
+
         return .hasUpToDateFlagData
     }
 }

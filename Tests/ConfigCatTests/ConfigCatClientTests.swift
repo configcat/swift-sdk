@@ -238,7 +238,7 @@ class ConfigCatClientTests: XCTestCase {
         let cache = InMemoryConfigCache()
         let sdkKey = randomSdkKey()
         let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
-        try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().serialize())
+        try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().cacheString)
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine, configCache: cache)
@@ -255,7 +255,7 @@ class ConfigCatClientTests: XCTestCase {
         let cache = InMemoryConfigCache()
         let sdkKey = randomSdkKey()
         let cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
-        try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().serialize())
+        try cache.write(for: cacheKey, value: testStringJson.toEntryFromConfigString().cacheString)
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
         let client = ConfigCatClient(sdkKey: sdkKey, pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 120), logger: NoLogger(), httpEngine: engine, configCache: cache)

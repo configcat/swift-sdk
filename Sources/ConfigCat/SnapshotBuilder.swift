@@ -1,11 +1,7 @@
-protocol SnapshotBuilderProtocol {
-    func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot
-    var defaultUser: ConfigCatUser? { get set }
-}
-
-class SnapshotBuilder: SnapshotBuilderProtocol {
+class SnapshotBuilder {
     private let flagEvaluator: FlagEvaluator
-    @Synced public var defaultUser: ConfigCatUser?
+    private let mutex: Mutex = Mutex()
+    private var defUser: ConfigCatUser?
     private let overrideDataSource: OverrideDataSource?
     private let log: InternalLogger
     
@@ -16,9 +12,18 @@ class SnapshotBuilder: SnapshotBuilderProtocol {
         log: InternalLogger
     ) {
         self.flagEvaluator = flagEvaluator
-        self.defaultUser = defaultUser
+        self.defUser = defaultUser
         self.overrideDataSource = overrideDataSource
         self.log = log
+    }
+
+    var defaultUser: ConfigCatUser? {
+        get {
+            return mutex.withLock { defUser }
+        }
+        set {
+            mutex.withLock { defUser = newValue }
+        }
     }
   
     public func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {

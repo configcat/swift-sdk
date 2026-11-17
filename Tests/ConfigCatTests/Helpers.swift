@@ -8,7 +8,7 @@ extension String {
     }
 
     func asEntryString(date: Date = Date()) -> String {
-        toEntryFromConfigString().withFetchTime(time: date).serialize()
+        toEntryFromConfigString().withFetchTime(time: date).cacheString
     }
     
     func removeTrailingNewLine() -> String {
