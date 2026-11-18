@@ -245,7 +245,7 @@ class AsyncAwaitTests: XCTestCase {
         let val = await client.getValue(for: "fakeKey", defaultValue: "")
         XCTAssertEqual("test1", val)
         
-        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date()))
+        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date().add(seconds: 1)!))
         
         let res = await client.forceRefresh()
         XCTAssertTrue(res.success)
