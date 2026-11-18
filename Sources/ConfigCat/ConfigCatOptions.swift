@@ -190,5 +190,7 @@ public final class Hooks: NSObject {
         onFlagEvaluated.removeAll()
         onConfigChanged.removeAll()
         onReady.removeAll()
+        onConfigChangedWithSnapshot.removeAll()
+        onReadyWithSnapshot.removeAll()
     }
 }

@@ -331,7 +331,7 @@ class AutoPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)

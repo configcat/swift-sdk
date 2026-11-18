@@ -260,7 +260,7 @@ class ConfigService {
         var expired = false
         var clientOffline = false
         let currentEntry = mutex.withLock {
-            if !entry.isEmpty && entry != cachedEntry {
+            if !entry.isEmpty, entry != cachedEntry, entry.fetchTime > cachedEntry.fetchTime {
                 cachedEntry = entry
                 configChanged = true
             }
@@ -420,12 +420,12 @@ class ConfigService {
         guard let cache = cache else {
             return .empty
         }
+        let entryAtReadStart = mutex.withLock {
+            cachedEntry
+        }
         do {
             let json = try cache.read(for: cacheKey)
-            let entry = mutex.withLock {
-                cachedEntry
-            }
-            if json.isEmpty || json == entry.cacheString {
+            if json.isEmpty || json == entryAtReadStart.cacheString {
                 return .empty
             }
             let cached = ConfigEntry.fromCached(cached: json)

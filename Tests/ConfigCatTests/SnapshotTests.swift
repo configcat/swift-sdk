@@ -239,7 +239,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
@@ -265,7 +265,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()

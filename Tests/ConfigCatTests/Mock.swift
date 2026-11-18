@@ -112,6 +112,56 @@ class SingleValueCache: NSObject, ConfigCache {
     }
 }
 
+class BlockingCache: ConfigCache {
+    private let lock = NSLock()
+    private var readCount = 0
+    private var storedValue: String
+    var staleReadNumber = 2
+    var blockStaleRead = true
+    var blockWrite = false
+    let blockedReadStarted = DispatchSemaphore(value: 0)
+    let releaseBlockedRead = DispatchSemaphore(value: 0)
+    let blockedWriteStarted = DispatchSemaphore(value: 0)
+    let releaseBlockedWrite = DispatchSemaphore(value: 0)
+    var staleValue = ""
+
+    init(initialValue: String) {
+        storedValue = initialValue
+    }
+
+    func read(for key: String) throws -> String {
+        lock.lock()
+        readCount += 1
+        let currentRead = readCount
+        let value = storedValue
+        lock.unlock()
+
+        if currentRead == staleReadNumber {
+            guard blockStaleRead else { return staleValue }
+            blockedReadStarted.signal()
+            _ = releaseBlockedRead.wait(timeout: .now() + 5)
+            return staleValue
+        }
+        return currentRead == 1 ? value : ""
+    }
+
+    func write(for key: String, value: String) throws {
+        if blockWrite {
+            blockedWriteStarted.signal()
+            _ = releaseBlockedWrite.wait(timeout: .now() + 5)
+        }
+        lock.lock()
+        storedValue = value
+        lock.unlock()
+    }
+
+    var stored: String {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedValue
+    }
+}
+
 class EmptySnapshotBuilder: SnapshotBuilderProtocol {
     func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {
         ConfigCatClientSnapshot(flagEvaluator: FlagEvaluator(log: InternalLogger.noLogger, evaluator: RolloutEvaluator(logger: InternalLogger.noLogger), hooks: Hooks()), settingsSnapshot: SettingsResult.empty, cacheState: .noFlagData, defaultUser: nil, log: InternalLogger.noLogger)

@@ -230,7 +230,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(""), statusCode: 304))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(days: 2)!)
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: mode, logger: NoLogger(), httpEngine: engine, configCache: cache)
@@ -245,7 +245,7 @@ class AsyncAwaitTests: XCTestCase {
         let val = await client.getValue(for: "fakeKey", defaultValue: "")
         XCTAssertEqual("test1", val)
         
-        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date.distantPast))
+        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date()))
         
         let res = await client.forceRefresh()
         XCTAssertTrue(res.success)
@@ -258,7 +258,7 @@ class AsyncAwaitTests: XCTestCase {
         client.setOnline()
         XCTAssertFalse(client.isOffline)
         
-        waitFor {
+        waitFor(timeout: 4) {
             engine.requests.count > 1
         }
     }
@@ -268,7 +268,7 @@ class AsyncAwaitTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(""), statusCode: 304))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(days: 2)!)
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 1)
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: mode, logger: NoLogger(), httpEngine: engine, configCache: cache, offline: true)
@@ -281,7 +281,7 @@ class AsyncAwaitTests: XCTestCase {
             return val == "test1"
         }
         
-        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date.distantPast))
+        try! cache.write(for: "", value: String(format: testJsonFormat, "test2").asEntryString(date: Date().subtract(days: 1)!))
         
         waitFor {
             let snapshot = client.snapshot()
