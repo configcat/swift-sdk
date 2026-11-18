@@ -125,8 +125,7 @@ class ConfigService {
                             format:
                                 "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
                             autoPoll.maxInitWaitTimeInSeconds))
-                    hooks.invokeOnReady(
-                        snapshotBuilder: snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
+                    this.hooks.invokeOnReady(snapshotBuilder: this.snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
                     this.callCompletions(pendingCompletions, result: .success(entry))
                 }
             })

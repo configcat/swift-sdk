@@ -85,14 +85,25 @@ class FailingCache: ConfigCache {
 }
 
 class InMemoryConfigCache: NSObject, ConfigCache {
-    public var store = [String: String]()
+    private let lock = NSLock()
+    private var values = [String: String]()
+
+    var store: [String: String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return values
+    }
 
     public func read(for key: String) throws -> String {
-        store[key] ?? ""
+        lock.lock()
+        defer { lock.unlock() }
+        return values[key] ?? ""
     }
 
     public func write(for key: String, value: String) throws {
-        store[key] = value
+        lock.lock()
+        defer { lock.unlock() }
+        values[key] = value
     }
 }
 

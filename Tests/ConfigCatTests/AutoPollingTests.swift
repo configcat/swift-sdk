@@ -62,17 +62,16 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        var called = false
+        let configChanged = expectation(description: "config changed hook called")
+        configChanged.assertForOverFulfill = false
         let hooks = Hooks()
         hooks.addOnConfigChanged { _ in
-            called = true
+            configChanged.fulfill()
         }
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
-        sleep(1)
-
-        XCTAssertTrue(called)
+        wait(for: [configChanged], timeout: 5)
 
         sleep(3)
 
