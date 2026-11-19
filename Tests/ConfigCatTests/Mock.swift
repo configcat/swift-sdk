@@ -108,6 +108,7 @@ class InMemoryConfigCache: NSObject, ConfigCache {
 }
 
 class SingleValueCache: NSObject, ConfigCache {
+    private let lock = NSLock()
     var value: String
 
     init(initValue: String) {
@@ -115,10 +116,14 @@ class SingleValueCache: NSObject, ConfigCache {
     }
 
     public func read(for key: String) throws -> String {
-        value
+        lock.lock()
+        defer { lock.unlock() }
+        return value
     }
 
     public func write(for key: String, value: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
         self.value = value
     }
 }
