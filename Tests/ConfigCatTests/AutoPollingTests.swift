@@ -303,10 +303,10 @@ class AutoPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
 
-        var ready = false
+        let readyExpectation = expectation(description: "wait for ready")
         let hooks = Hooks()
         hooks.addOnReady { state in
-            ready = true
+            readyExpectation.fulfill()
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         }
         let initValue = String(format: testJsonFormat, "test").asEntryString()
@@ -315,15 +315,13 @@ class AutoPollingTests: XCTestCase {
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
-        let expectation1 = expectation(description: "wait for settings")
+        let settingsExpectation = expectation(description: "wait for settings")
         service.settings { settingsResult in
             XCTAssertFalse(settingsResult.settings.isEmpty)
-            expectation1.fulfill()
+            settingsExpectation.fulfill()
         }
-        wait(for: [expectation1], timeout: 5)
-
+        wait(for: [settingsExpectation, readyExpectation], timeout: 5)
         XCTAssertTrue(engine.requests.isEmpty)
-        XCTAssertTrue(ready)
     }
 
     func testInitWaitTimeReturnCached() throws {
@@ -337,12 +335,12 @@ class AutoPollingTests: XCTestCase {
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
-        let expectation1 = expectation(description: "wait for settings")
+        let settingsExpectation = expectation(description: "wait for settings")
         service.settings { settingsResult in
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
-            expectation1.fulfill()
+            settingsExpectation.fulfill()
         }
-        wait(for: [expectation1], timeout: 5)
+        wait(for: [settingsExpectation], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)
