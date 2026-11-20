@@ -141,21 +141,19 @@ class SnapshotTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "config changed hook called")
         hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "key1", defaultValue: false)
             XCTAssertTrue(value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -164,22 +162,20 @@ class SnapshotTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "ready hook called")
         
         hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "key1", defaultValue: false)
             XCTAssertTrue(value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -191,21 +187,19 @@ class SnapshotTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "cached config changed hook called")
         hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -217,21 +211,19 @@ class SnapshotTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "cached ready hook called")
         hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -239,25 +231,23 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "expired config changed hook called")
         hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -265,25 +255,23 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 500))
 
-        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test1").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "expired ready hook called")
         hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -295,21 +283,19 @@ class SnapshotTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "manual config changed hook called")
         hooks.addOnConfigChanged { _, snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -321,21 +307,19 @@ class SnapshotTests: XCTestCase {
         let cache = SingleValueCache(initValue: initValue)
         
         let hooks = Hooks()
-        var called = false
+        let hookCalled = expectation(description: "manual ready hook called")
         hooks.addOnReady { snapshot in
             XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, snapshot.cacheState)
             let value = snapshot.getValue(for: "fakeKey", defaultValue: "")
             XCTAssertEqual("test1", value)
-            called = true
+            hookCalled.fulfill()
         }
         
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
-        waitFor {
-            called
-        }
+        await fulfillment(of: [hookCalled], timeout: 5)
     }
     #endif
 }

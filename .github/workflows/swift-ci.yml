@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: "0 8 * * 1"
   push:
-    branches: [master]
+    branches: ["*"]
     paths-ignore:
       - "**.md"
     tags: ["[0-9]+.[0-9]+.[0-9]+"]
@@ -68,8 +68,28 @@ jobs:
           name: test-results
           path: tests
 
+  test-thread-sanitizer:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Tests with Thread Sanitizer
+        run: |
+          xcodebuild test \
+            -project ConfigCat.xcodeproj \
+            -scheme "ConfigCat" \
+            -destination 'platform=macOS,arch=x86_64' \
+            -enableThreadSanitizer YES \
+            CODE_SIGNING_REQUIRED=NO \
+            -resultBundlePath ThreadSanitizer.xcresult
+      - name: Archive results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: thread-sanitizer-results
+          path: ThreadSanitizer.xcresult
+
   coverage:
-    needs: [test-ios, test-osx]
+    needs: [test-ios, test-osx, test-thread-sanitizer]
     runs-on: macos-15
     strategy:
       matrix:

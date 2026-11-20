@@ -2,14 +2,32 @@ import Foundation
 @testable import ConfigCat
 
 class MockEngine: HttpEngine {
+    private let lock = NSLock()
+    private let autoRespond: Bool
     private var responses = [Response]()
     private var capturedRequests = [URLRequest]()
+    private var pendingCompletions: [(Data?, URLResponse?, Error?) -> Void] = []
 
-    var requests: [URLRequest] { get { capturedRequests } }
+    init(autoRespond: Bool = true) {
+        self.autoRespond = autoRespond
+    }
+
+    var requests: [URLRequest] {
+        lock.lock()
+        defer { lock.unlock() }
+        return capturedRequests
+    }
 
     func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+        lock.lock()
         capturedRequests.append(request)
+        guard autoRespond else {
+            pendingCompletions.append(completion)
+            lock.unlock()
+            return
+        }
         let response = next()
+        lock.unlock()
         if response.delay <= 0 {
             completion(response.data, response.httpResponse, response.error)
             return
@@ -21,7 +39,16 @@ class MockEngine: HttpEngine {
     }
 
     func enqueueResponse(response: Response) {
+        lock.lock()
+        defer { lock.unlock() }
         responses.append(response)
+    }
+
+    func respond(_ response: Response) {
+        lock.lock()
+        let completion = pendingCompletions.isEmpty ? nil : pendingCompletions.removeFirst()
+        lock.unlock()
+        completion?(response.data, response.httpResponse, response.error)
     }
 
     private func next() -> Response {
@@ -58,18 +85,30 @@ class FailingCache: ConfigCache {
 }
 
 class InMemoryConfigCache: NSObject, ConfigCache {
-    public var store = [String: String]()
+    private let lock = NSLock()
+    private var values = [String: String]()
+
+    var store: [String: String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return values
+    }
 
     public func read(for key: String) throws -> String {
-        store[key] ?? ""
+        lock.lock()
+        defer { lock.unlock() }
+        return values[key] ?? ""
     }
 
     public func write(for key: String, value: String) throws {
-        store[key] = value
+        lock.lock()
+        defer { lock.unlock() }
+        values[key] = value
     }
 }
 
 class SingleValueCache: NSObject, ConfigCache {
+    private let lock = NSLock()
     var value: String
 
     init(initValue: String) {
@@ -77,11 +116,65 @@ class SingleValueCache: NSObject, ConfigCache {
     }
 
     public func read(for key: String) throws -> String {
-        value
+        lock.lock()
+        defer { lock.unlock() }
+        return value
     }
 
     public func write(for key: String, value: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
         self.value = value
+    }
+}
+
+class BlockingCache: ConfigCache {
+    private let lock = NSLock()
+    private var readCount = 0
+    private var storedValue: String
+    var staleReadNumber = 2
+    var blockStaleRead = true
+    var blockWrite = false
+    let blockedReadStarted = DispatchSemaphore(value: 0)
+    let releaseBlockedRead = DispatchSemaphore(value: 0)
+    let blockedWriteStarted = DispatchSemaphore(value: 0)
+    let releaseBlockedWrite = DispatchSemaphore(value: 0)
+    var staleValue = ""
+
+    init(initialValue: String) {
+        storedValue = initialValue
+    }
+
+    func read(for key: String) throws -> String {
+        lock.lock()
+        readCount += 1
+        let currentRead = readCount
+        let value = storedValue
+        lock.unlock()
+
+        if currentRead == staleReadNumber {
+            guard blockStaleRead else { return staleValue }
+            blockedReadStarted.signal()
+            _ = releaseBlockedRead.wait(timeout: .now() + 5)
+            return staleValue
+        }
+        return currentRead == 1 ? value : ""
+    }
+
+    func write(for key: String, value: String) throws {
+        if blockWrite {
+            blockedWriteStarted.signal()
+            _ = releaseBlockedWrite.wait(timeout: .now() + 5)
+        }
+        lock.lock()
+        storedValue = value
+        lock.unlock()
+    }
+
+    var stored: String {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedValue
     }
 }
 

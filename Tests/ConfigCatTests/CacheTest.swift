@@ -17,7 +17,7 @@ class CacheTests: XCTestCase {
         
         let entry = try! ConfigEntry.fromConfigJson(json: testJson, eTag: "test-etag", fetchTime: time).get()
         
-        XCTAssertEqual(expectedPayload, entry.serialize())
+        XCTAssertEqual(expectedPayload, entry.cacheString)
         
         let fromCache = try! ConfigEntry.fromCached(cached: expectedPayload).get()
         
@@ -34,15 +34,15 @@ class CacheTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJson, "remote"), statusCode: 200))
         
         let entry = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local"), eTag: "test-etag", fetchTime: Date()).get()
-        let cache = SingleValueCache(initValue: entry.serialize())
+        let cache = SingleValueCache(initValue: entry.cacheString)
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine, configCache: cache)
         var val = await client.getValue(for: "testKey", defaultValue: "")
         
         XCTAssertEqual("local", val)
         XCTAssertEqual(0, engine.requests.count)
         
-        let entry2 = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local2"), eTag: "test-etag2", fetchTime: Date()).get()
-        try! cache.write(for: "", value: entry2.serialize())
+        let entry2 = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local2"), eTag: "test-etag2", fetchTime: Date().add(seconds: 1)!).get()
+        try! cache.write(for: "", value: entry2.cacheString)
         
         val = await client.getValue(for: "testKey", defaultValue: "")
         
