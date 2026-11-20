@@ -70,16 +70,16 @@ class ConfigFetcher: NSObject {
     }
 
     private func executeFetch(eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
-        sendFetchRequest(url: baseUrl, eTag: eTag, completion: { response in
+        let url = self.mutex.withLock {
+            self.baseUrl
+        }
+        sendFetchRequest(url: url, eTag: eTag, completion: { response in
             guard case .fetched(let entry) = response else {
                 completion(response)
                 return
             }
             let newUrl = entry.config.preferences.preferencesUrl
-            let base = self.mutex.withLock {
-                self.baseUrl
-            }
-            if newUrl.isEmpty || newUrl == base {
+            if newUrl.isEmpty || newUrl == url {
                 completion(response)
                 return
             }
