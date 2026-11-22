@@ -212,6 +212,7 @@ class ConfigEntry: Equatable {
 
     let config: Config
     let configJson: String
+    let cacheString: String
     let eTag: String
     let fetchTime: Date
 
@@ -220,6 +221,7 @@ class ConfigEntry: Equatable {
         self.eTag = eTag
         self.fetchTime = fetchTime
         self.configJson = configJson
+        self.cacheString = ConfigEntry.toCacheString(configJson: configJson, eTag: eTag, fetchTime: fetchTime)
     }
 
     func withFetchTime(time: Date) -> ConfigEntry {
@@ -257,14 +259,14 @@ class ConfigEntry: Equatable {
         return fromConfigJson(json: configJson, eTag: eTag, fetchTime: Date(timeIntervalSince1970: time / 1000))
     }
 
-    func serialize() -> String {
-        String(format: "%.0f", floor(fetchTime.timeIntervalSince1970 * 1000)) + "\n" + eTag + "\n" + configJson
-    }
-
     var isEmpty: Bool {
         get {
             self === ConfigEntry.empty
         }
+    }
+
+    private static func toCacheString(configJson: String, eTag: String, fetchTime: Date) -> String {
+        String(format: "%.0f", floor(fetchTime.timeIntervalSince1970 * 1000)) + "\n" + eTag + "\n" + configJson
     }
 
     static let empty = ConfigEntry(eTag: "empty")

@@ -16,7 +16,6 @@
 		B4BD2AB8258CA6FF007371E2 /* KeyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = C45414AE24AF2BF2004E66E0 /* KeyValue.swift */; };
 		B4BD2AB9258CA6FF007371E2 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AEDBE8223876064008803E7 /* Config.swift */; };
 		B4BD2ABA258CA6FF007371E2 /* RolloutEvaluator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AFB216922F000F490CD /* RolloutEvaluator.swift */; };
-		B4BD2ABE258CA6FF007371E2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		B4BD2AC1258CA6FF007371E2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		B4BD2AC3258CA6FF007371E2 /* ConfigCatClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */; };
 		B4BD2AC5258CA6FF007371E2 /* ConfigCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA1207BF1B100087A6B /* ConfigCache.swift */; };
@@ -35,11 +34,11 @@
 		B4BD2AF8258CA7DF007371E2 /* ConfigCatClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */; };
 		B4BD2AF9258CA7DF007371E2 /* ConfigCatClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880ACD207C072400087A6B /* ConfigCatClient.swift */; };
 		B4BD2AFA258CA7DF007371E2 /* ConfigCatClientProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */; };
-		B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F880AA2207BF1B100087A6B /* Synced.swift */; };
 		B4BD2AFC258CA7DF007371E2 /* AutoPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */; };
 		B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C41F8AB324AD38F70004CF03 /* VariationIdTests.swift */; };
 		B4BD2B00258CA7DF007371E2 /* Mock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F029E89207EB3BD0019942F /* Mock.swift */; };
 		B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F8EDF9720840FE900906339 /* ManualPollingTests.swift */; };
+		A7C63B012ECA100000000011 /* ConfigServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7C63B012ECA100000000012 /* ConfigServiceTests.swift */; };
 		B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1E1180A257532D700DA245A /* Log.swift */; };
 		B4BD2B04258CA7DF007371E2 /* ConfigCatUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = F15F9AF62169176A00F490CD /* ConfigCatUser.swift */; };
 		C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C40CF51127B5533800D9F88A /* LocalTests.swift */; };
@@ -118,10 +117,10 @@
 		3F880A2C207BE8F000087A6B /* ConfigCat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConfigCat.h; sourceTree = "<group>"; };
 		3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigFetcher.swift; sourceTree = "<group>"; };
 		3F880AA1207BF1B100087A6B /* ConfigCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ConfigCache.swift; sourceTree = "<group>"; };
-		3F880AA2207BF1B100087A6B /* Synced.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Synced.swift; sourceTree = "<group>"; };
 		3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientProtocol.swift; sourceTree = "<group>"; };
 		3F880ACD207C072400087A6B /* ConfigCatClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClient.swift; sourceTree = "<group>"; };
 		3F8EDF9720840FE900906339 /* ManualPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualPollingTests.swift; sourceTree = "<group>"; };
+		A7C63B012ECA100000000012 /* ConfigServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigServiceTests.swift; sourceTree = "<group>"; };
 		3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AutoPollingTests.swift; sourceTree = "<group>"; };
 		3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigCatClientTests.swift; sourceTree = "<group>"; };
 		B4BD2ACE258CA6FF007371E2 /* ConfigCat.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ConfigCat.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -252,7 +251,6 @@
 				1AEDBE8223876064008803E7 /* Config.swift */,
 				3F880AA1207BF1B100087A6B /* ConfigCache.swift */,
 				3F880A9F207BF1B100087A6B /* ConfigFetcher.swift */,
-				3F880AA2207BF1B100087A6B /* Synced.swift */,
 				3F880AC8207BFFA400087A6B /* ConfigCatClientProtocol.swift */,
 				3F880ACD207C072400087A6B /* ConfigCatClient.swift */,
 				F15F9AF62169176A00F490CD /* ConfigCatUser.swift */,
@@ -284,6 +282,7 @@
 				3F029E89207EB3BD0019942F /* Mock.swift */,
 				3F4D40C4207EC17000BBAEC6 /* ConfigFetcherTests.swift */,
 				3F8EDF9720840FE900906339 /* ManualPollingTests.swift */,
+				A7C63B012ECA100000000012 /* ConfigServiceTests.swift */,
 				3F8EDF9B208415FC00906339 /* AutoPollingTests.swift */,
 				3F8EDF9F2084194700906339 /* ConfigCatClientTests.swift */,
 				F15F9B16216973B000F490CD /* RolloutIntegrationV1Tests.swift */,
@@ -458,7 +457,6 @@
 				F1109D0D2DF99347000EF1AA /* SnapshotBuilder.swift in Sources */,
 				B4BD2AB9258CA6FF007371E2 /* Config.swift in Sources */,
 				B4BD2ABA258CA6FF007371E2 /* RolloutEvaluator.swift in Sources */,
-				B4BD2ABE258CA6FF007371E2 /* Synced.swift in Sources */,
 				C40CF51427B557EE00D9F88A /* LocalDictionaryDataSource.swift in Sources */,
 				C4FA1B40278D953300BFA8C3 /* OverrideBehaviour.swift in Sources */,
 				B4BD2AC1258CA6FF007371E2 /* ConfigCatUser.swift in Sources */,
@@ -506,7 +504,6 @@
 				F14961CF28FF71400095A72A /* EvaluationDetailsExtensionTests.swift in Sources */,
 				F183A1AB2B8F836A0015967E /* RolloutIntegrationV2Tests.swift in Sources */,
 				B4BD2AFA258CA7DF007371E2 /* ConfigCatClientProtocol.swift in Sources */,
-				B4BD2AFB258CA7DF007371E2 /* Synced.swift in Sources */,
 				C480E82C2768144400916320 /* ConfigCatClientIntegrationTests.swift in Sources */,
 				B4BD2AFC258CA7DF007371E2 /* AutoPollingTests.swift in Sources */,
 				B4BD2AFF258CA7DF007371E2 /* VariationIdTests.swift in Sources */,
@@ -517,6 +514,7 @@
 				F1109D0C2DF99347000EF1AA /* SnapshotBuilder.swift in Sources */,
 				C40CF51227B5533800D9F88A /* LocalTests.swift in Sources */,
 				B4BD2B02258CA7DF007371E2 /* ManualPollingTests.swift in Sources */,
+				A7C63B012ECA100000000011 /* ConfigServiceTests.swift in Sources */,
 				F17DEE29288876F7009C3E48 /* MutableQueue.swift in Sources */,
 				B4BD2B03258CA7DF007371E2 /* Log.swift in Sources */,
 				C4FA1B3E278D919A00BFA8C3 /* OverrideDataSource.swift in Sources */,
@@ -659,11 +657,13 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Sources/ConfigCat/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -671,8 +671,11 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
@@ -726,20 +729,25 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Sources/ConfigCat/Resources/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
 				VALIDATE_PRODUCT = YES;
 				VERSIONING_SYSTEM = "apple-generic";
 				VERSION_INFO_PREFIX = "";
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};
@@ -795,18 +803,22 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Tests/ConfigCatTests/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.configcat.Tests.client;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				WATCHOS_DEPLOYMENT_TARGET = 9.1;
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
@@ -856,18 +868,22 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = Tests/ConfigCatTests/Resources/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.configcat.Tests.client;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
 				VALIDATE_PRODUCT = YES;
-				WATCHOS_DEPLOYMENT_TARGET = 9.1;
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};

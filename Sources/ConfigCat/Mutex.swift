@@ -36,4 +36,10 @@ final class Mutex {
         let result = pthread_mutex_unlock(mutex)
         assert(result == 0, "Failed to unlock mutex.")
     }
+
+    func withLock<Result>(_ body: () throws -> Result) rethrows -> Result {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
 }

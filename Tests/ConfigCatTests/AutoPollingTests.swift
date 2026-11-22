@@ -62,17 +62,16 @@ class AutoPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 200))
 
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
-        var called = false
+        let configChanged = expectation(description: "config changed hook called")
+        configChanged.assertForOverFulfill = false
         let hooks = Hooks()
         hooks.addOnConfigChanged { _ in
-            called = true
+            configChanged.fulfill()
         }
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
-        sleep(1)
-
-        XCTAssertTrue(called)
+        wait(for: [configChanged], timeout: 5)
 
         sleep(3)
 
@@ -304,10 +303,10 @@ class AutoPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
 
-        var ready = false
+        let readyExpectation = expectation(description: "wait for ready")
         let hooks = Hooks()
         hooks.addOnReady { state in
-            ready = true
+            readyExpectation.fulfill()
             XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         }
         let initValue = String(format: testJsonFormat, "test").asEntryString()
@@ -316,34 +315,32 @@ class AutoPollingTests: XCTestCase {
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
 
-        let expectation1 = expectation(description: "wait for settings")
+        let settingsExpectation = expectation(description: "wait for settings")
         service.settings { settingsResult in
             XCTAssertFalse(settingsResult.settings.isEmpty)
-            expectation1.fulfill()
+            settingsExpectation.fulfill()
         }
-        wait(for: [expectation1], timeout: 5)
-
+        wait(for: [settingsExpectation, readyExpectation], timeout: 5)
         XCTAssertTrue(engine.requests.isEmpty)
-        XCTAssertTrue(ready)
     }
 
     func testInitWaitTimeReturnCached() throws {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200, delay: 5))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date.distantPast)
+        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().subtract(months: 1)!)
         let cache = SingleValueCache(initValue: initValue)
         let start = Date()
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
 
-        let expectation1 = expectation(description: "wait for settings")
+        let settingsExpectation = expectation(description: "wait for settings")
         service.settings { settingsResult in
             XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
-            expectation1.fulfill()
+            settingsExpectation.fulfill()
         }
-        wait(for: [expectation1], timeout: 5)
+        wait(for: [settingsExpectation], timeout: 5)
 
         let endTime = Date()
         let elapsedTimeInSeconds = endTime.timeIntervalSince(start)

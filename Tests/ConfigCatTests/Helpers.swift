@@ -4,11 +4,11 @@ import XCTest
 
 extension String {
     func toEntryFromConfigString() -> ConfigEntry {
-        return try! ConfigEntry.fromConfigJson(json: self, eTag: String.random(len: 5), fetchTime: .distantPast).get()
+        return try! ConfigEntry.fromConfigJson(json: self, eTag: String.random(len: 5), fetchTime: Date().subtract(months: 1)!).get()
     }
 
     func asEntryString(date: Date = Date()) -> String {
-        toEntryFromConfigString().withFetchTime(time: date).serialize()
+        toEntryFromConfigString().withFetchTime(time: date).cacheString
     }
     
     func removeTrailingNewLine() -> String {
