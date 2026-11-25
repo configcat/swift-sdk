@@ -58,7 +58,7 @@ class MockEngine: HttpEngine {
 
 struct Response {
     let data: Data?
-    let httpResponse: HTTPURLResponse
+    let httpResponse: URLResponse?
     let error: Error?
     let delay: Int
 
@@ -67,6 +67,13 @@ struct Response {
         httpResponse = HTTPURLResponse(url: URL(string: "url")!, statusCode: statusCode, httpVersion: nil, headerFields: headers)!
         self.error = error
         self.delay = delay
+    }
+
+    init(response: URLResponse?) {
+        data = nil
+        httpResponse = response
+        error = nil
+        delay = 0
     }
 }
 

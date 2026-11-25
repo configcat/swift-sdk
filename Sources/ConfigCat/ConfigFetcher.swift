@@ -109,7 +109,12 @@ class ConfigFetcher: NSObject {
     }
 
     private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
-        let request = getRequest(url: url, eTag: eTag)
+        guard let request = getRequest(url: url, eTag: eTag) else {
+            let message = "Unexpected error occurred while trying to fetch config JSON. The configuration URL is invalid."
+            self.log.error(eventId: 1103, message: message)
+            completion(.failure(message: message, errorCode: .httpRequestFailure, isTransient: true))
+            return
+        }
         httpEngine.get(request: request) { (data, resp, error) in
             if let error = error {
                 if error._code == NSURLErrorTimedOut {
@@ -123,7 +128,12 @@ class ConfigFetcher: NSObject {
                     completion(.failure(message: message, errorCode: .httpRequestFailure, isTransient: true))
                 }
             } else {
-                let response = resp as! HTTPURLResponse
+                guard let response = resp as? HTTPURLResponse else {
+                    let message = "Unexpected error occurred while trying to fetch config JSON. The network request did not return an HTTP response."
+                    self.log.error(eventId: 1103, message: message)
+                    completion(.failure(message: message, errorCode: .httpRequestFailure, isTransient: true))
+                    return
+                }
                 if response.statusCode == 200, let data = data {
                     self.log.debug(message: "Fetch was successful: new config fetched")
                     let etag = response.allHeaderFields["Etag"] as? String ?? ""
@@ -157,8 +167,11 @@ class ConfigFetcher: NSObject {
         }
     }
 
-    private func getRequest(url: String, eTag: String) -> URLRequest {
-        var request = URLRequest(url: URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName)!)
+    private func getRequest(url: String, eTag: String) -> URLRequest? {
+        guard let requestUrl = URL(string: url + "/configuration-files/" + sdkKey + "/" + Constants.configJsonName) else {
+            return nil
+        }
+        var request = URLRequest(url: requestUrl)
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.addValue("ConfigCat-Swift/" + mode + "-" + Constants.version, forHTTPHeaderField: "X-ConfigCat-UserAgent")
         if !eTag.isEmpty {
