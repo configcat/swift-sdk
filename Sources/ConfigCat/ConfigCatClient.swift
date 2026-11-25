@@ -18,6 +18,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     private let overrideDataSource: OverrideDataSource?
     private var snapshotBuilder: SnapshotBuilderProtocol
     private var closed: Bool = false
+    private var lifecycleMutex = Mutex()
 
     private static let mutex = Mutex()
     private static var instances: [String: Weak<ConfigCatClient>] = [:]
@@ -128,13 +129,15 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
     /// Closes all ConfigCatClient instances.
     @objc public static func closeAll() {
-        mutex.lock()
-        defer { mutex.unlock() }
+        let clientsToClose = mutex.withLock {
+            let clients = instances
+            instances.removeAll()
+            return clients
+        }
 
-        for item in instances {
+        for item in clientsToClose {
             item.value.get()?.closeResources()
         }
-        instances.removeAll()
     }
 
     /// Hooks for subscribing events.
@@ -142,20 +145,24 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
     /// Closes the underlying resources.
     @objc public func close() {
-        ConfigCatClient.mutex.lock()
-        defer { ConfigCatClient.mutex.unlock() }
-
-        closeResources()
-        if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
-            ConfigCatClient.instances.removeValue(forKey: sdkKey)
+        ConfigCatClient.mutex.withLock {
+            if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
+                ConfigCatClient.instances.removeValue(forKey: sdkKey)
+            }
         }
+        closeResources()
     }
 
     func closeResources() {
-        if !closed {
+        let isClosed = lifecycleMutex.withLock {
+            guard !closed else { return true }
+            closed = true
+            return false
+        }
+
+        if !isClosed {
             configService?.close()
             hooks.clear()
-            closed = true
         }
     }
 
