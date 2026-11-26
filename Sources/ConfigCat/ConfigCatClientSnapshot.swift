@@ -1,7 +1,8 @@
 import Foundation
 
 /// Represents the state of `ConfigCatClient` captured at a specific point in time.
-public final class ConfigCatClientSnapshot: NSObject {
+/// Evaluations can invoke hooks and custom loggers concurrently.
+public final class ConfigCatClientSnapshot: NSObject, Sendable {
     private let flagEvaluator: FlagEvaluator
     private let settingsSnapshot: SettingsResult
     private let defaultUser: ConfigCatUser?

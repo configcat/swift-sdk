@@ -61,7 +61,8 @@ public final class ConfigCatOptions: NSObject {
 
 /// Hooks for events sent by `ConfigCatClient`.
 /// Handlers can run on different threads and may be invoked concurrently.
-public final class Hooks: NSObject {
+// Callback registration is locked; handlers must follow the concurrency contract above.
+public final class Hooks: NSObject, @unchecked Sendable {
     private let mutex: Mutex = Mutex(recursive: true);
     private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []

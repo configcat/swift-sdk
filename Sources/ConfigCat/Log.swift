@@ -18,7 +18,8 @@ import Foundation
     func error(message: String)
 }
 
-class InternalLogger {
+// Custom loggers must support concurrent calls as required by ConfigCatLogger.
+final class InternalLogger: @unchecked Sendable {
     static var noLogger: InternalLogger { InternalLogger(log: NoLogger(), level: .nolog, hooks: Hooks()) }
     let log: ConfigCatLogger
     let level: ConfigCatLogLevel

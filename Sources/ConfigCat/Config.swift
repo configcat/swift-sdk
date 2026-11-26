@@ -31,7 +31,7 @@ enum RedirectMode: Int, Sendable {
     }
 }
 
-@objc public enum SettingType: Int {
+@objc public enum SettingType: Int, Sendable {
     case unknown = -1
     /// The on/off type (feature flag).
     case bool = 0
@@ -294,16 +294,15 @@ public class Config: NSObject, JsonSerializable {
         let segments: [Segment] = segmentsMap.map { segment in
             .fromJson(json: segment)
         }
-        let settingsMap = json[self.settingsKey] as? [String: Any] ?? [:]
-        let settings: [String: Setting] = settingsMap.mapValues { setting in
-            .fromJson(json: setting as? [String: Any] ?? [:], segments: segments)
-        }
-        var preferences: Preferences = .empty
+        let preferences: Preferences
         if let pref = json[Config.preferencesKey] as? [String: Any] {
             preferences = .fromJson(json: pref)
+        } else {
+            preferences = .empty
         }
-        for setting in settings {
-            setting.value.salt = preferences.salt
+        let settingsMap = json[self.settingsKey] as? [String: Any] ?? [:]
+        let settings: [String: Setting] = settingsMap.mapValues { setting in
+            .fromJson(json: setting as? [String: Any] ?? [:], segments: segments, salt: preferences.salt)
         }
         return Config(preferences: preferences, settings: settings, segments: segments)
     }
@@ -366,7 +365,7 @@ final class Preferences: JsonSerializable, Sendable {
     }
 }
 
-public final class Setting: NSObject, JsonSerializable {
+public final class Setting: NSObject, JsonSerializable, Sendable {
     static let valueKey = "v"
     static let percentageAttributeKey = "a"
     static let settingTypeKey = "t"
@@ -392,18 +391,19 @@ public final class Setting: NSObject, JsonSerializable {
     /// The setting's type. It can be `bool`, `string`, `int` or `double`.
     @objc public let settingType: SettingType
     
-    var salt: String?
+    let salt: String?
 
-    init(value: SettingValue, variationId: String?, percentageAttribute: String, settingType: SettingType, percentageOptions: [PercentageOption], targetingRules: [TargetingRule]) {
+    init(value: SettingValue, variationId: String?, percentageAttribute: String, settingType: SettingType, percentageOptions: [PercentageOption], targetingRules: [TargetingRule], salt: String? = nil) {
         self.value = value
         self.percentageAttribute = percentageAttribute
         self.settingType = settingType
         self.variationId = variationId;
         self.percentageOptions = percentageOptions
         self.targetingRules = targetingRules
+        self.salt = salt
     }
 
-    static func fromJson(json: [String: Any], segments: [Segment]) -> Setting {
+    static func fromJson(json: [String: Any], segments: [Segment], salt: String?) -> Setting {
         let targetingRules = json[self.targetingRulesKey] as? [[String: Any]] ?? []
         let percentageOptions = json[self.percentageOptionsKey] as? [[String: Any]] ?? []
 
@@ -416,7 +416,8 @@ public final class Setting: NSObject, JsonSerializable {
                        },
                        targetingRules: targetingRules.map { rule in
                            .fromJson(json: rule, segments: segments)
-                       })
+                       },
+                       salt: salt)
     }
 
     func toJsonMap() -> [String: Any] {

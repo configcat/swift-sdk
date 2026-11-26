@@ -1,6 +1,6 @@
 import Foundation
 
-class FlagEvaluator {
+final class FlagEvaluator: Sendable {
     private let log: InternalLogger
     private let evaluator: RolloutEvaluator
     private let hooks: Hooks

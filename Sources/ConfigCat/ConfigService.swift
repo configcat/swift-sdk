@@ -1,6 +1,6 @@
 import Foundation
 
-class SettingsResult {
+final class SettingsResult: Sendable {
     let settings: [String: Setting]
     let fetchTime: Date
     let isEmpty: Bool

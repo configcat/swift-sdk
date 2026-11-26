@@ -64,7 +64,7 @@ enum EvalResult {
     case error(String)
 }
 
-class RolloutEvaluator {
+final class RolloutEvaluator: Sendable {
     static let ruleIgnoredMessage = "The current targeting rule is ignored and the evaluation continues with the next rule."
     static let saltMissingMessage = "Config JSON salt is missing"
     static let invalidValueText = "<invalid value>"

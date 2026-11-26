@@ -64,6 +64,48 @@ class SnapshotTests: XCTestCase {
     
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testSnapshotEvaluatesSensitiveTargetingWithConfigSalt() async {
+        let json = #"""
+        {"p":{"s":"test-salt"},"f":{"flag":{"t":0,"v":{"b":false},"r":[{"c":[{"u":{"a":"Identifier","c":20,"s":"5a44b77e7ef5591d88bd1509ddba6228bf9b0c805b0cb98a39af742d93103de7"}}],"s":{"v":{"b":true}}}]}}}
+        """#
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: json, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+        await client.waitForReady()
+
+        let snapshot = client.snapshot()
+        XCTAssertTrue(snapshot.getValue(for: "flag", defaultValue: false, user: ConfigCatUser(identifier: "user-1")))
+        XCTAssertFalse(snapshot.getValue(for: "flag", defaultValue: true, user: ConfigCatUser(identifier: "user-2")))
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testSnapshotEvaluationsAcrossTasks() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+        await client.waitForReady()
+
+        let snapshot = client.snapshot()
+        let user = self.user
+        let results = await withTaskGroup(of: Bool.self, returning: [Bool].self) { group in
+            for _ in 0..<32 {
+                group.addTask {
+                    snapshot.getValue(for: "key2", defaultValue: false, user: user)
+                }
+            }
+            var values: [Bool] = []
+            for await value in group {
+                values.append(value)
+            }
+            return values
+        }
+        XCTAssertEqual(results.count, 32)
+        XCTAssertTrue(results.allSatisfy { $0 })
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetValueWait() async {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
