@@ -77,6 +77,7 @@ class ConfigService {
     private let pollingMode: PollingMode
     private let hooks: Hooks
     private let cacheKey: String
+    private var started: Bool = false
     private var initialized: Bool = false
     private var offline: Bool = false
     private var closed: Bool = false
@@ -98,46 +99,53 @@ class ConfigService {
         self.hooks = hooks
         self.offline = offline
         cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
+    }
 
+    func start() {
         if let autoPoll = pollingMode as? AutoPollingMode {
+            mutex.withLock {
+                if closed || started { return }
 
-            startPoll(mode: autoPoll)
+                started = true
+                startPoll(mode: autoPoll)
 
-            // Waiting for the client initialization.
-            // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
-            // the default value will be returned.
-            initTimer = DispatchSource.makeTimerSource()
-            initTimer?.schedule(deadline: .now() + .seconds(autoPoll.maxInitWaitTimeInSeconds))
-            initTimer?.setEventHandler(handler: { [weak self] in
-                guard let this = self else {
-                    return
-                }
-                // Max wait time expired without result, notify subscribers with the cached config.
-                let entryAndCompletions = this.mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
-                    guard !this.initialized && !this.closed else { return nil }
-                    this.initialized = true
-                    return (this.cachedEntry, this.takeAndClearCompletions())
-                }
-                if let (entry, pendingCompletions) = entryAndCompletions {
-                    this.log.warning(
-                        eventId: 4200,
-                        message: String(
-                            format:
-                                "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
-                            autoPoll.maxInitWaitTimeInSeconds))
-                    this.hooks.invokeOnReady(snapshotBuilder: this.snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
-                    this.callCompletions(pendingCompletions, result: .success(entry))
-                }
-            })
-            initTimer?.resume()
-        } else {
-            // Sync up with cache before reporting ready state
-            cachedEntry = readCache()
-            setInitializedAndReportReady(entry: cachedEntry)
-            if !cachedEntry.isEmpty {
-                reportConfigChanged(entry: cachedEntry)
+                // Waiting for the client initialization.
+                // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
+                // the default value will be returned.
+                initTimer = DispatchSource.makeTimerSource()
+                initTimer?.schedule(deadline: .now() + .seconds(autoPoll.maxInitWaitTimeInSeconds))
+                initTimer?.setEventHandler(handler: { [weak self] in
+                    guard let this = self else {
+                        return
+                    }
+                    // Max wait time expired without result, notify subscribers with the cached config.
+                    let entryAndCompletions = this.mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
+                        guard !this.initialized && !this.closed else { return nil }
+                        this.initialized = true
+                        return (this.cachedEntry, this.takeAndClearCompletions())
+                    }
+                    if let (entry, pendingCompletions) = entryAndCompletions {
+                        this.log.warning(
+                            eventId: 4200,
+                            message: String(
+                                format:
+                                    "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
+                                autoPoll.maxInitWaitTimeInSeconds))
+                        this.hooks.invokeOnReady(snapshotBuilder: this.snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
+                        this.callCompletions(pendingCompletions, result: .success(entry))
+                    }
+                })
+                initTimer?.resume()
             }
-            
+        } else {
+            let shouldSync = mutex.withLock {
+                if closed || started { return false }
+                started = true
+                return true
+            }
+            if shouldSync {
+                fetchIfOlder(threshold: Date.distantPast, preferCache: true) { _ in }
+            }
         }
     }
 
@@ -164,6 +172,8 @@ class ConfigService {
             preferCache = false
         } else if let autoPoll = pollingMode as? AutoPollingMode, !isInitialized {
             threshold = Date().subtract(seconds: autoPoll.autoPollIntervalInSeconds)!
+        } else if pollingMode is ManualPollingMode {
+            preferCache = true
         }
 
         fetchIfOlder(threshold: threshold, preferCache: preferCache) { result in
@@ -208,6 +218,9 @@ class ConfigService {
                 return false
             }
             offline = false
+            if !started {
+                return true
+            }
             pollTimer?.cancel()
             pollTimer = nil
             if let autoPoll = pollingMode as? AutoPollingMode {
@@ -258,14 +271,23 @@ class ConfigService {
         var configChanged = false
         var expired = false
         var clientOffline = false
-        let currentEntry = mutex.withLock {
-            if !entry.isEmpty, entry != cachedEntry, entry.fetchTime > cachedEntry.fetchTime {
+        let (currentEntry, isClosed) = mutex.withLock {
+            guard !closed else {
+                return (cachedEntry, true)
+            }
+
+            if !entry.isEmpty, entry != cachedEntry, cachedEntry.isEmpty || entry.fetchTime > cachedEntry.fetchTime {
                 cachedEntry = entry
                 configChanged = true
             }
             expired = cachedEntry.fetchTime <= threshold
             clientOffline = offline
-            return cachedEntry
+            return (cachedEntry, false)
+        }
+
+        if isClosed {
+            completion(.success(currentEntry))
+            return
         }
 
         if configChanged {
@@ -288,19 +310,17 @@ class ConfigService {
     private func shouldInitiateFetchOrSubscribeCompletion(
         completion: @escaping (FetchResult) -> Void
     ) -> Bool {
-        var closedEntry: ConfigEntry?
-        let shouldInitiate = mutex.withLock {
+        let (closedEntry, shouldInitiate): (ConfigEntry?, Bool) = mutex.withLock {
             guard !closed else {
-                closedEntry = cachedEntry
-                return false
+                return (cachedEntry, false)
             }
             if completions == nil {
                 completions = MutableQueue()
             }
             completions?.enqueue(item: completion)
-            guard !fetchInProgress else { return false }
+            guard !fetchInProgress else { return (nil, false) }
             fetchInProgress = true
-            return true
+            return (nil, true)
         }
         if let entry = closedEntry {
             completion(.success(entry))
@@ -348,18 +368,15 @@ class ConfigService {
     }
 
     private func setInitializedAndReportReady(entry: ConfigEntry) {
-        if testAndSetInitialized() {
-            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
-        }
-    }
-
-    private func testAndSetInitialized() -> Bool {
-        mutex.withLock {
+        let reported = mutex.withLock {
             guard !initialized else {
-                return false
+                return true
             }
             initialized = true
-            return true
+            return false
+        }
+        if !reported {
+            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
         }
     }
 

@@ -16,7 +16,7 @@ class ConfigServiceTests: XCTestCase {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
 
         let settingsCompleted = expectation(description: "settings completed with fresh entry")
@@ -59,7 +59,7 @@ class ConfigServiceTests: XCTestCase {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
 
         let refreshed = expectation(description: "HTTP refresh completed")
@@ -88,7 +88,7 @@ class ConfigServiceTests: XCTestCase {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
         let timedOut = expectation(description: "initial settings released on timeout")
         service.settings { result in
@@ -115,7 +115,7 @@ class ConfigServiceTests: XCTestCase {
         let mode = PollingModes.manualPoll()
         let hooks = Hooks()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
         var subscribed = false
         var secondCompleted = false
@@ -145,7 +145,7 @@ class ConfigServiceTests: XCTestCase {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
         let second = expectation(description: "nested refresh receives second response")
         service.refresh { first in
@@ -167,7 +167,7 @@ class ConfigServiceTests: XCTestCase {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.manualPoll()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
         let pending = expectation(description: "pending refresh completed on close")
         pending.assertForOverFulfill = true
         service.refresh { _ in pending.fulfill() }
@@ -179,5 +179,78 @@ class ConfigServiceTests: XCTestCase {
         engine.respond(Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
         wait(for: [pending, afterClose], timeout: 5)
         engine.respond(Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+    }
+
+    func testCloseDuringStartupCacheReadDoesNotApplyEntryOrNotify() throws {
+        let entry = try ConfigEntry.fromConfigJson(
+            json: String(format: testJsonFormat, "cached"), eTag: "", fetchTime: Date()
+        ).get()
+        let cache = BlockingCache(initialValue: "")
+        cache.staleReadNumber = 1
+        cache.staleValue = entry.cacheString
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.manualPoll()
+        let hooks = Hooks()
+        let ready = expectation(description: "ready is not reported after close")
+        ready.isInverted = true
+        let changed = expectation(description: "config changed is not reported after close")
+        changed.isInverted = true
+        hooks.addOnReady(handler: { _ in ready.fulfill() })
+        hooks.addOnConfigChanged(snapshotHandler: { _, _ in changed.fulfill() })
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let finished = expectation(description: "startup finishes")
+        DispatchQueue.global().async {
+            service.start()
+            finished.fulfill()
+        }
+        XCTAssertEqual(.success, cache.blockedReadStarted.wait(timeout: .now() + 5))
+        service.close()
+        cache.releaseBlockedRead.signal()
+        wait(for: [finished], timeout: 5)
+        wait(for: [ready, changed], timeout: 0.1)
+        XCTAssertTrue(service.inMemory.entry.isEmpty)
+        XCTAssertTrue(engine.requests.isEmpty)
+    }
+
+    func testOnlineBeforeStartDoesNotPollUntilStarted() {
+        let cache = ObservingCache()
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true)
+        defer { service.close() }
+        service.setOnline()
+        XCTAssertEqual(.timedOut, cache.readStarted.wait(timeout: .now() + 0.2))
+        service.start()
+        XCTAssertEqual(.success, cache.readStarted.wait(timeout: .now() + 5))
+    }
+
+    func testCloseBeforeStartDoesNotReadCacheOrPoll() {
+        for mode in [PollingModes.manualPoll(), PollingModes.autoPoll()] {
+            let cache = ObservingCache()
+            let engine = MockEngine(autoRespond: false)
+            let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+            let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+            service.close()
+            service.start()
+            XCTAssertEqual(.timedOut, cache.readStarted.wait(timeout: .now() + 0.1))
+            XCTAssertTrue(engine.requests.isEmpty)
+        }
+    }
+
+    func testManualSettingsBeforeStartDoesNotFetch() {
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.manualPoll()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false)
+        defer { service.close() }
+        let completed = expectation(description: "manual settings completes without fetch")
+        service.settings { result in
+            XCTAssertTrue(result.isEmpty)
+            completed.fulfill()
+        }
+        wait(for: [completed], timeout: 1)
+        XCTAssertTrue(engine.requests.isEmpty)
     }
 }

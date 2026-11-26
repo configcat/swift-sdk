@@ -142,13 +142,9 @@ public final class Hooks: NSObject {
     }
 
     func invokeOnReady(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
-        var readyCallbacks: [((ClientCacheState) -> ())] = []
-        var snapshotCallbacks: [((ConfigCatClientSnapshot) -> ())] = []
-
-        mutex.withLock {
+        let (readyCallbacks, snapshotCallbacks) = mutex.withLock {
             readyState = inMemoryResult.cacheState
-            readyCallbacks = onReady
-            snapshotCallbacks = onReadyWithSnapshot
+            return (onReady, onReadyWithSnapshot)
         }
         for item in readyCallbacks {
             item(inMemoryResult.cacheState);
@@ -162,14 +158,9 @@ public final class Hooks: NSObject {
     }
 
     func invokeOnConfigChanged(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
-        var changedCallbacks: [((Config) -> ())] = []
-        var snapshotCallbacks: [((Config, ConfigCatClientSnapshot) -> ())] = []
-
-        mutex.withLock {
-            changedCallbacks = onConfigChanged
-            snapshotCallbacks = onConfigChangedWithSnapshot
+        let (changedCallbacks, snapshotCallbacks) = mutex.withLock {
+            return (onConfigChanged, onConfigChangedWithSnapshot)
         }
-
         for item in changedCallbacks {
             item(inMemoryResult.entry.config);
         }

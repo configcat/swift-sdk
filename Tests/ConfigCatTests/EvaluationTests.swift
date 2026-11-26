@@ -29,7 +29,7 @@ class EvaluationTests: XCTestCase {
         
         for test in tests {
             let logger = RecordingLogger()
-            let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: engine)
+            let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: engine).ensureStarted()
             let _ = await client.getValue(for: test.0, defaultValue: "")
             
             XCTAssertTrue(logger.entries.last?.contains(test.1) ?? false)
@@ -71,7 +71,7 @@ class EvaluationTests: XCTestCase {
         
         for test in tests {
             let logger = RecordingLogger()
-            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: TestDictionaryDataSource(source: [test.1: test.2], behaviour: .localOverRemote))
+            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: TestDictionaryDataSource(source: [test.1: test.2], behaviour: .localOverRemote)).ensureStarted()
             
             let res = await client.getAnyValue(for: test.0, defaultValue: nil)
             
@@ -119,7 +119,7 @@ class EvaluationTests: XCTestCase {
         for test in tests {
             let logger = NoLogger()
             let source = test.3 != nil ? try! BundleResourceDataSource(json: jsonContent, behaviour: test.3!) : nil
-            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: source, logLevel: .info)
+            let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: source, logLevel: .info).ensureStarted()
             
             let user = ConfigCatUser(identifier: test.1, email: test.2)
             let res = await client.getAnyValue(for: test.0, defaultValue: nil, user: user)
@@ -148,7 +148,7 @@ class EvaluationTests: XCTestCase {
             let logger = NoLogger()
             var client = clientCache[test.0]
             if client == nil {
-                client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil)
+                client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil).ensureStarted()
                 clientCache[test.0] = client
             }
             
@@ -164,7 +164,7 @@ class EvaluationTests: XCTestCase {
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testObjectAttributeValueConversion() async {
         let logger = RecordingLogger()
-        let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/OfQqcTjfFUGBwMKqtyEOrQ", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil)
+        let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/OfQqcTjfFUGBwMKqtyEOrQ", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil).ensureStarted()
         
         let user = ConfigCatUser(identifier: "12345", custom: ["Custom1": 42])
         let _ = await client.getAnyValueDetails(for: "boolTextEqualsNumber", defaultValue: nil, user: user)
@@ -276,7 +276,7 @@ class EvaluationTests: XCTestCase {
             let logger = NoLogger()
             var client = clientCache[test.0]
             if client == nil {
-                client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil)
+                client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil).ensureStarted()
                 clientCache[test.0] = client
             }
             
@@ -322,7 +322,7 @@ class EvaluationTests: XCTestCase {
         
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: jsonContent, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         for test in tests {
             let user = ConfigCatUser(identifier: "12345", custom: ["Custom1": test.1])
@@ -339,7 +339,7 @@ class EvaluationTests: XCTestCase {
             ("specialCharactersHashed", "äöüÄÖÜçéèñışğâ¢™✓😀", "äöüÄÖÜçéèñışğâ¢™✓😀"),
         ]
         
-        let client = ConfigCatClient(sdkKey: "configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/u28_1qNyZ0Wz-ldYHIU7-g", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: nil)
+        let client = ConfigCatClient(sdkKey: "configcat-sdk-1/PKDVCLf-Hq-h-kCzMp-L7Q/u28_1qNyZ0Wz-ldYHIU7-g", pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: nil).ensureStarted()
         
         
         for test in tests {
@@ -397,7 +397,7 @@ class EvaluationTests: XCTestCase {
         
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: jsonContent, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         for test in tests {
             let user = ConfigCatUser(identifier: " 12345 ", country: "[\" USA \"]", custom: ["Version": " 1.0.0 ", "Number": " 3 ", "Date": " 1705253400 "])
@@ -447,7 +447,7 @@ class EvaluationTests: XCTestCase {
         
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: jsonContent, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         for test in tests {
             let user = ConfigCatUser(identifier: "12345", country: "[\"USA\"]", custom: ["Version": "1.0.0", "Number": "3", "Date": "1705253400"])

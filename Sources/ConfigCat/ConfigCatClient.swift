@@ -16,8 +16,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
+    private let baseUrl: String
     private var snapshotBuilder: SnapshotBuilderProtocol
     private var closed: Bool = false
+    private var initialized: Bool = false
     private var lifecycleMutex = Mutex()
 
     private static let mutex = Mutex()
@@ -42,15 +44,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
         overrideDataSource = flagOverrides
         flagEvaluator = FlagEvaluator(log: log, evaluator: RolloutEvaluator(logger: log), hooks: self.hooks)
         self.snapshotBuilder = SnapshotBuilder(flagEvaluator: flagEvaluator, defaultUser: defaultUser, overrideDataSource: overrideDataSource, log: log)
-        
-        if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
-            // configService is not needed in localOnly mode
+        self.baseUrl = baseUrl
+
+        if overrideDataSource?.behaviour == .localOnly || !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
             configService = nil
-            hooks?.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .hasLocalOverrideFlagDataOnly))
-        } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
-            log.error(eventId: 0, message: "ConfigCat SDK Key '\(sdkKey)' is invalid.")
-            configService = nil
-            hooks?.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .noFlagData))
         } else {
             let fetcher = ConfigFetcher(httpEngine: httpEngine ?? URLSessionEngine(session: URLSession(configuration: URLSessionConfiguration.default)),
                     logger: log,
@@ -70,6 +67,25 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
         }
     }
 
+    func start() {
+        let shouldInit = lifecycleMutex.withLock {
+            guard !initialized && !closed else { return false }
+            initialized = true
+            return true
+        }
+
+        if shouldInit {
+            if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
+                self.hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .hasLocalOverrideFlagDataOnly))
+            } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
+                log.error(eventId: 0, message: "ConfigCat SDK Key is invalid.")
+                self.hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .noFlagData))
+            } else {
+                configService?.start()
+            }
+        }
+    }
+
     /**
      Creates a new or gets an already existing `ConfigCatClient` for the given `sdkKey`.
 
@@ -79,25 +95,18 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
      - Returns: The ConfigCatClient instance.
      */
     @objc public static func get(sdkKey: String, options: ConfigCatOptions? = nil) -> ConfigCatClient {
-        mutex.lock()
-        defer { mutex.unlock() }
-
         let isCustomUrl = !(options?.baseUrl ?? "").isEmpty
         if options?.flagOverrides == nil || options?.flagOverrides?.behaviour != .localOnly {
             assert(Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: isCustomUrl), "invalid 'sdkKey' passed to the ConfigCatClient")
         }
         
-        if let client = instances[sdkKey]?.get() {
-            if options != nil {
-                client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
-                    + "No new client instance will be created and the specified configuration action is ignored. "
-                    + "Returning the existing client instance. SDK Key: '%@'.",
-                    sdkKey))
+        let (client, isNew) = mutex.withLock {
+            if let existing = instances[sdkKey]?.get() {
+                return (existing, false)
             }
-            return client
-        }
-        let opts = options ?? .default
-        let client = ConfigCatClient(sdkKey: sdkKey,
+
+            let opts = options ?? .default
+            let client = ConfigCatClient(sdkKey: sdkKey,
                                      pollingMode: opts.pollingMode,
                                      logger: opts.logger,
                                      httpEngine: URLSessionEngine(session: URLSession(configuration: opts.sessionConfiguration)),
@@ -109,7 +118,21 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
                                      defaultUser: opts.defaultUser,
                                      logLevel: opts.logLevel,
                                      offline: opts.offline)
-        instances[sdkKey] = Weak(value: client)
+            instances[sdkKey] = Weak(value: client)
+            return (client, true)
+        }
+
+        if isNew {
+            client.start()
+        } else if options != nil {
+            if options != nil {
+                client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
+                    + "No new client instance will be created and the specified configuration action is ignored. "
+                    + "Returning the existing client instance. SDK Key: '%@'.",
+                    sdkKey))
+            }
+        }
+
         return client
     }
 

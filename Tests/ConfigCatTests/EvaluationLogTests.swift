@@ -105,7 +105,7 @@ class EvaluationLogTests: XCTestCase {
             }
             localSource = try! BundleResourceDataSource(json: overrideJson, behaviour: .localOnly)
         }
-        let client = ConfigCatClient(sdkKey: suite.sdkKey ?? randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, flagOverrides: localSource, logLevel: .info)
+        let client = ConfigCatClient(sdkKey: suite.sdkKey ?? randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, flagOverrides: localSource, logLevel: .info).ensureStarted()
         await client.forceRefresh()
         
         for test in suite.tests {

@@ -35,7 +35,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote)).ensureStarted()
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
@@ -53,7 +53,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal)).ensureStarted()
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
             XCTAssertFalse(values["fakeKey"] as? Bool ?? true)
@@ -101,7 +101,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote)).ensureStarted()
         
         await client.waitForReady()
         
@@ -124,7 +124,7 @@ class LocalTests: XCTestCase {
             "fakeKey": true,
             "nonexisting": true
         ]
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal)).ensureStarted()
         
         await client.waitForReady()
         

@@ -10,7 +10,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
@@ -28,7 +28,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
        
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
@@ -45,7 +45,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
@@ -65,7 +65,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         await client.waitForReady()
         
@@ -81,7 +81,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         await client.waitForReady()
         let state = await client.waitForReady()
@@ -95,7 +95,7 @@ class SnapshotTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: "", statusCode: 200))
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(autoPollIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         let state = await client.waitForReady()
         
@@ -112,7 +112,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "", statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         await client.waitForReady()
         let snapshot = client.snapshot()
@@ -125,7 +125,7 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
         
         await client.waitForReady()
         
@@ -149,7 +149,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
@@ -171,7 +171,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
@@ -195,7 +195,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
@@ -219,7 +219,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
         
@@ -243,7 +243,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
@@ -267,7 +267,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
@@ -291,7 +291,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         
@@ -315,7 +315,7 @@ class SnapshotTests: XCTestCase {
             hookCalled.fulfill()
         }
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks, configCache: cache).ensureStarted()
         let state = await client.waitForReady()
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         

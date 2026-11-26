@@ -1,6 +1,20 @@
 import Foundation
 @testable import ConfigCat
 
+extension ConfigCatClient {
+    func ensureStarted() -> ConfigCatClient {
+        start()
+        return self
+    }
+}
+
+extension ConfigService {
+    func ensureStarted() -> ConfigService {
+        start()
+        return self
+    }
+}
+
 class MockEngine: HttpEngine {
     private let lock = NSLock()
     private let autoRespond: Bool
@@ -133,6 +147,17 @@ class SingleValueCache: NSObject, ConfigCache {
         defer { lock.unlock() }
         self.value = value
     }
+}
+
+class ObservingCache: ConfigCache {
+    let readStarted = DispatchSemaphore(value: 0)
+
+    func read(for key: String) throws -> String {
+        readStarted.signal()
+        return ""
+    }
+
+    func write(for key: String, value: String) throws {}
 }
 
 class BlockingCache: ConfigCache {

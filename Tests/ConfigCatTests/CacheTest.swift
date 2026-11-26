@@ -35,7 +35,7 @@ class CacheTests: XCTestCase {
         
         let entry = try! ConfigEntry.fromConfigJson(json: String(format: testJson, "local"), eTag: "test-etag", fetchTime: Date()).get()
         let cache = SingleValueCache(initValue: entry.cacheString)
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine, configCache: cache)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 1), logger: NoLogger(), httpEngine: engine, configCache: cache).ensureStarted()
         var val = await client.getValue(for: "testKey", defaultValue: "")
         
         XCTAssertEqual("local", val)
