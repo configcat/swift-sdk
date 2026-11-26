@@ -73,6 +73,25 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertEqual("Email", details.matchedTargetingRule?.conditions.first?.userCondition?.comparisonAttribute)
     }
 
+    func testUntypedValueReturnsFlagAndPreservesUnsupportedFallback() {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+        let fallback = NSMutableArray(array: ["original"])
+        let flagCompleted = expectation(description: "flag returned")
+        let fallbackCompleted = expectation(description: "untyped fallback returned")
+        client.getAnyValue(for: "key1", defaultValue: fallback, user: nil) { value in
+            XCTAssertEqual(value as? Bool, true)
+            flagCompleted.fulfill()
+        }
+        client.getAnyValue(for: "missing", defaultValue: fallback, user: nil) { value in
+            XCTAssertTrue((value as? NSMutableArray) === fallback)
+            fallbackCompleted.fulfill()
+        }
+        wait(for: [flagCompleted, fallbackCompleted], timeout: 5)
+    }
+
     func testUntypedDetailsPreserveUnsupportedFallback() {
         let fallback = NSMutableArray(array: ["original"])
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine()).ensureStarted()

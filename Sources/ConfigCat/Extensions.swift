@@ -65,7 +65,9 @@ extension ConfigCatClient {
     ) {
         return getValue(
             for: key,
-            defaultValue: defaultValue,
+            // Prevent Swift 6.1 from opening the Any existential and crashing
+            // while compiling this generic call.
+            defaultValue: defaultValue as Any,
             user: user,
             completion: completion
         )
