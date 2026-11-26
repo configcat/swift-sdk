@@ -95,17 +95,6 @@ public final class Hooks: NSObject {
     }
 
     /**
-     Subscribes a handler to the `onConfigChanged` hook.
-     - Parameter handler: The handler to subscribe.
-     */
-    @available(*, deprecated, message: "Use addOnConfigChanged(snapshotHandler:) instead.")
-    @objc public func addOnConfigChanged(handler: @escaping (Config) -> ()) {
-        mutex.withLock {
-            onConfigChanged.append(handler)
-        }
-    }
-    
-    /**
      Subscribes a handler to the `onConfigChangedWithSnapshot` hook.
      - Parameter handler: The handler to subscribe.
      */

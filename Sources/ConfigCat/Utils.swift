@@ -37,15 +37,6 @@ extension Date {
     }
 }
 
-extension Equatable {
-    func isEqual(_ other: any Equatable) -> Bool {
-        guard let other = other as? Self else {
-            return false
-        }
-        return self == other
-    }
-}
-
 class Constants {
     static let version: String = "11.3.2"
     static let configJsonName: String = "config_v6.json"
@@ -83,16 +74,6 @@ class Utils {
         }
     }
     
-    static func anyEq(a: Any?, b: Any?) -> Bool {
-        if a == nil && b == nil {
-            return true
-        }
-        guard let eq1 = a as? any Equatable, let eq2 = b as? any Equatable else {
-            return false
-        }
-        return eq1.isEqual(eq2)
-    }
-
     static func toJson(obj: Any) -> String {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: obj, options: [])

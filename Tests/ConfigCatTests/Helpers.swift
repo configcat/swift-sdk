@@ -32,16 +32,13 @@ extension JsonSerializable {
 
 func createTestConfigWithRules() -> Config {
     Config(preferences: .empty, settings: [
-        "key": Setting(value: SettingValue(boolValue: nil,
-                                           stringValue: "def",
-                                           doubleValue: nil,
-                                           intValue: nil),
+        "key": Setting(value: SettingValue(value: .string("def")),
                        variationId: "defVar",
                        percentageAttribute: "",
                        settingType: .string,
                        percentageOptions: [],
                        targetingRules: [
-                        TargetingRule(servedValue: ServedValue(value: SettingValue(boolValue: nil, stringValue: "fake1", doubleValue: nil, intValue: nil), variationId: "id1"),
+                        TargetingRule(servedValue: ServedValue(value: SettingValue(value: .string("fake1")), variationId: "id1"),
                                       conditions: [
                                         Condition(userCondition: UserCondition(stringValue: nil,
                                                                                doubleValue: nil,
@@ -52,7 +49,7 @@ func createTestConfigWithRules() -> Config {
                                                   prerequisiteFlagCondition: nil)
                                       ],
                                       percentageOptions: []),
-                        TargetingRule(servedValue: ServedValue(value: SettingValue(boolValue: nil, stringValue: "fake2", doubleValue: nil, intValue: nil), variationId: "id2"),
+                        TargetingRule(servedValue: ServedValue(value: SettingValue(value: .string("fake2")), variationId: "id2"),
                                       conditions: [
                                         Condition(userCondition: UserCondition(stringValue: nil,
                                                                                doubleValue: nil,
@@ -76,6 +73,25 @@ func loadResource(bundle: Bundle, path: String) -> String? {
         return nil
     }
     return content
+}
+
+func anyEq(a: Any?, b: Any?) -> Bool {
+    if a == nil && b == nil {
+        return true
+    }
+    guard let eq1 = a as? any Equatable, let eq2 = b as? any Equatable else {
+        return false
+    }
+    return eq1.isEqual(eq2)
+}
+
+private extension Equatable {
+    func isEqual(_ other: any Equatable) -> Bool {
+        guard let other = other as? Self else {
+            return false
+        }
+        return self == other
+    }
 }
 
 func parseDate(val: String) -> Date {

@@ -514,7 +514,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertEqual(ClientCacheState.noFlagData, snapshot.cacheState)
             ready.fulfill()
         }
-        hooks.addOnConfigChanged { _ in
+        hooks.addOnConfigChanged { (_, _) in
             changed.fulfill()
         }
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, hooks: hooks).ensureStarted()
@@ -554,7 +554,7 @@ class ConfigCatClientTests: XCTestCase {
             XCTAssertTrue(e.contains("404"))
             error.fulfill()
         }
-        client.hooks.addOnConfigChanged { _ in
+        client.hooks.addOnConfigChanged { (_, _) in
             changed.fulfill()
         }
         client.hooks.addOnReady { snapshot in

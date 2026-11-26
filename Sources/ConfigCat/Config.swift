@@ -445,16 +445,16 @@ public final class Setting: NSObject, JsonSerializable {
         ]
     }
     
-    static func fromAnyValue(value: Any?) -> Setting {
+    public static func fromAnyValue(value: Any?) -> Setting {
         switch value {
         case let val as String:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: val, doubleValue: nil, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .string, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(value: .string(val)), variationId: nil, percentageAttribute: "", settingType: .string, percentageOptions: [], targetingRules: [])
         case let val as Bool:
-            return Setting(value: SettingValue(boolValue: val, stringValue: nil, doubleValue: nil, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .bool, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(value: .bool(val)), variationId: nil, percentageAttribute: "", settingType: .bool, percentageOptions: [], targetingRules: [])
         case let val as Double:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: val, intValue: nil), variationId: nil, percentageAttribute: "", settingType: .double, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(value: .double(val)), variationId: nil, percentageAttribute: "", settingType: .double, percentageOptions: [], targetingRules: [])
         case let val as Int:
-            return Setting(value: SettingValue(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: val), variationId: nil, percentageAttribute: "", settingType: .int, percentageOptions: [], targetingRules: [])
+            return Setting(value: SettingValue(value: .int(val)), variationId: nil, percentageAttribute: "", settingType: .int, percentageOptions: [], targetingRules: [])
         default:
             return Setting(value: SettingValue(invalidValue: value), variationId: "", percentageAttribute: "", settingType: .unknown, percentageOptions: [], targetingRules: [])
         }
@@ -763,7 +763,7 @@ public final class PrerequisiteFlagCondition: NSObject, JsonSerializable {
     }
 }
 
-enum ScalarValue: Sendable {
+public enum ScalarValue: Equatable, Sendable {
     case bool(Bool)
     case string(String)
     case int(Int)
@@ -776,6 +776,34 @@ enum ScalarValue: Sendable {
         case .int(let value): return value
         case .double(let value): return value
         }
+    }
+
+    public func asBool() -> Bool? {
+        if case let .bool(value) = self {
+            return value
+        }
+        return nil
+    }
+    
+    public func asString() -> String? {
+        if case let .string(value) = self {
+            return value
+        }
+        return nil
+    }
+
+    public func asInt() -> Int? {
+        if case let .int(value) = self {
+            return value
+        }
+        return nil
+    }
+
+    public func asDouble() -> Double? {
+        if case let .double(value) = self {
+            return value
+        }
+        return nil
     }
 }
 
@@ -792,44 +820,40 @@ public final class SettingValue: NSObject, JsonSerializable {
     
     static let settingValueMissingMessage = "Setting value is missing"
     
-    /// Holds a bool feature flag's value.
-    public let boolValue: Bool?
+    /// Holds the feature flag's value.
+    public let value: ScalarValue?
     
     @objc public let boolValueObjC: NSNumber?
     
     /// Holds a string setting's value.
     @objc public let stringValue: String?
     
-    /// Holds a decimal number setting's value.
-    public let doubleValue: Double?
-    
     @objc public let doubleValueObjC: NSNumber?
-    
-    /// Holds a whole number setting's value.
-    public let intValue: Int?
     
     @objc public let intValueObjC: NSNumber?
     
     private let invalidValue: Any?
     
-    init(boolValue: Bool?, stringValue: String?, doubleValue: Double?, intValue: Int?, invalidValue: Any? = nil) {
-        self.boolValue = boolValue
-        self.stringValue = stringValue
-        self.doubleValue = doubleValue
-        self.intValue = intValue
+    init(value: ScalarValue?, invalidValue: Any? = nil) {
+        self.value = value
         self.invalidValue = invalidValue
         
-        if let val = boolValue {
+        if case let .bool(val)? = value {
             self.boolValueObjC = NSNumber(value: val)
         } else {
             self.boolValueObjC = nil
         }
-        if let val = doubleValue {
+        if case let .string(val)? = value {
+            self.stringValue = val
+        } else {
+            self.stringValue = nil
+        }
+        if case let .double(val)? = value {
             self.doubleValueObjC = NSNumber(value: val)
         } else {
             self.doubleValueObjC = nil
         }
-        if let val = intValue {
+        if case let .int(val)? = value {
             self.intValueObjC = NSNumber(value: val)
         } else {
             self.intValueObjC = nil
@@ -837,74 +861,56 @@ public final class SettingValue: NSObject, JsonSerializable {
     }
     
     convenience init(invalidValue: Any?) {
-        self.init(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: nil, invalidValue: invalidValue)
+        self.init(value: nil, invalidValue: invalidValue)
     }
     
     static func fromJson(json: [String: Any]) -> SettingValue {
-        SettingValue(boolValue: json[self.boolKey] as? Bool,
-                     stringValue: json[self.stringKey] as? String,
-                     doubleValue: json[self.doubleKey] as? Double,
-                     intValue: json[self.intKey] as? Int)
+        SettingValue(value: (json[self.boolKey] as? Bool).map { ScalarValue.bool($0) } ??
+                           (json[self.stringKey] as? String).map { ScalarValue.string($0) } ??
+                           (json[self.doubleKey] as? Double).map { ScalarValue.double($0) } ??
+                           (json[self.intKey] as? Int).map { ScalarValue.int($0) })
     }
     
     func toJsonMap() -> [String: Any] {
         [
-            SettingValue.boolKey: boolValue as Any,
-            SettingValue.stringKey: stringValue as Any,
-            SettingValue.doubleKey: doubleValue as Any,
-            SettingValue.intKey: intValue as Any,
+            SettingValue.boolKey: value?.asBool() as Any,
+            SettingValue.stringKey: value?.asString() as Any,
+            SettingValue.doubleKey: value?.asDouble() as Any,
+            SettingValue.intKey: value?.asInt() as Any,
         ]
     }
     
     static func fromAnyValue(value: Any?) -> SettingValue {
         switch value {
         case let val as String:
-            return SettingValue(boolValue: nil, stringValue: val, doubleValue: nil, intValue: nil)
+            return SettingValue(value: .string(val))
         case let val as Bool:
-            return SettingValue(boolValue: val, stringValue: nil, doubleValue: nil, intValue: nil)
+            return SettingValue(value: .bool(val))
         case let val as Double:
-            return SettingValue(boolValue: nil, stringValue: nil, doubleValue: val, intValue: nil)
+            return SettingValue(value: .double(val))
         case let val as Int:
-            return SettingValue(boolValue: nil, stringValue: nil, doubleValue: nil, intValue: val)
+            return SettingValue(value: .int(val))
         default:
             return SettingValue(invalidValue: value)
         }
     }
     
     var settingType: SettingType {
-        if boolValue != nil {
-            return .bool
+        switch value {
+        case .bool: return .bool
+        case .string: return .string
+        case .double: return .double
+        case .int: return .int
+        default: return .unknown
         }
-        if stringValue != nil {
-            return .string
-        }
-        if doubleValue != nil  {
-            return .double
-        }
-        if intValue != nil {
-            return .int
-        }
-        return .unknown
     }
     
     var anyValue: Any? {
-        if let val = boolValue {
-            return val
-        }
-        if let val = stringValue {
-            return val
-        }
-        if let val = doubleValue {
-            return val
-        }
-        if let val = intValue {
-            return val
-        }
-        return invalidValue
+        value?.anyValue ?? invalidValue
     }
     
     var isValid: Bool {
-        return boolValue != nil || stringValue != nil || doubleValue != nil || intValue != nil
+        return value != nil
     }
     
     var isEmpty: Bool {
@@ -920,22 +926,22 @@ public final class SettingValue: NSObject, JsonSerializable {
         }
         switch settingType {
         case .bool:
-            guard let val = boolValue else {
+            guard let val = value?.asBool() else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
             return .success(.bool(val))
         case .string:
-            guard let val = stringValue else {
+            guard let val = value?.asString() else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
             return .success(.string(val))
         case .int:
-            guard let val = intValue else {
+            guard let val = value?.asInt() else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
             return .success(.int(val))
         case .double:
-            guard let val = doubleValue else {
+            guard let val = value?.asDouble() else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
             return .success(.double(val))

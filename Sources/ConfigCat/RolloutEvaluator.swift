@@ -60,7 +60,7 @@ enum EvalPercentageResult {
 }
 
 enum EvalResult {
-    case success(Any, String?, TargetingRule?, PercentageOption?)
+    case success(ScalarValue, String?, TargetingRule?, PercentageOption?)
     case error(String)
 }
 
@@ -87,7 +87,7 @@ class RolloutEvaluator {
         let result = setting.settingType == .unknown ? .error("Setting type is invalid") : evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
         
         if case .success(let val, _, _, _) = result {
-            evalLogger?.newLine(msg: "Returning '\(val)'.")
+            evalLogger?.newLine(msg: "Returning '\(val.anyValue)'.")
         } else {
             evalLogger?.resetIndent().incIndent()
             evalLogger?.newLine(msg: "Returning '\(defaultValue ?? "nil")'.")
@@ -187,7 +187,7 @@ class RolloutEvaluator {
         let valResult = value.toCheckedValue(settingType: settingType)
         switch valResult {
         case .success(let val):
-            return .success(val.anyValue, variationId, rule, opt)
+            return .success(val, variationId, rule, opt)
         case .error(let err):
             return .error(err)
         }
@@ -332,12 +332,12 @@ class RolloutEvaluator {
         }
         
         let compValChecked = cond.flagValue.toCheckedValue(settingType: prereq.settingType)
-        var compVal: Any? = nil
+        var compVal: ScalarValue? = nil
         if case .error(_) = compValChecked, prereq.settingType != .unknown {
             return .fatal("Type mismatch between comparison value '\(cond.flagValue.anyValue ?? "")' and prerequisite flag '\(flagKey)'.")
         }
         if case .success(let val) = compValChecked {
-            compVal = val.anyValue
+            compVal = val
         }
         cycleTracker.append(key)
         if cycleTracker.contains(flagKey) {
@@ -356,8 +356,8 @@ class RolloutEvaluator {
         
         switch evalResult {
         case .success(let val, _, _, _):
-            let match = needsTrue == (Utils.anyEq(a: compVal, b: val))
-            evalLogger?.newLine(msg: "Prerequisite flag evaluation result: '\(val)'.")
+            let match = needsTrue == (compVal == val)
+            evalLogger?.newLine(msg: "Prerequisite flag evaluation result: '\(val.anyValue)'.")
                 .newLine(msg: "Condition (").append(value: cond).append(value: ") evaluates to ").append(value: "\(match ? "true" : "false").")
                 .decIndent()
                 .newLine(msg: ")")

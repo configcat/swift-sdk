@@ -106,7 +106,7 @@ class FlagEvaluator {
         )
         switch evaluationResult {
         case .success(let value, let variationId, let rule, let option):
-            guard let typedValue = value as? Value else {
+            guard let typedValue = value.anyValue as? Value else {
                 let message =
                     "The type of a setting must match the type of the specified default value. Setting's type was \(setting.settingType.text) but the default value's type was \(Value.self). Please use a default value which corresponds to the setting type \(setting.settingType.text). Learn more: https://configcat.com/docs/sdk-reference/ios/#setting-type-mapping"
                 self.log.error(eventId: 2002, message: message)
@@ -181,7 +181,7 @@ class FlagEvaluator {
         case .success(let value, let variationId, let rule, let option):
             let details = EvaluationDetails(
                 key: key,
-                value: value,
+                value: value.anyValue,
                 variationId: variationId,
                 fetchTime: fetchTime,
                 user: user,

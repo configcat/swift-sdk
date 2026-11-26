@@ -100,7 +100,7 @@ class AutoPollingTests: XCTestCase {
         let configChanged = expectation(description: "config changed hook called")
         configChanged.assertForOverFulfill = false
         let hooks = Hooks()
-        hooks.addOnConfigChanged { _ in
+        hooks.addOnConfigChanged { (_, _) in
             configChanged.fulfill()
         }
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
