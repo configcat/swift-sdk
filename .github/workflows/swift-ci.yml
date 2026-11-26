@@ -72,6 +72,8 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v7
+      - name: Build SDK in Swift 6 mode
+        run: swift build -Xswiftc -swift-version -Xswiftc 6
       - name: Type-check Swift 6 client
         run: |
           swift build

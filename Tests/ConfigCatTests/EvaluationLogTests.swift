@@ -115,13 +115,16 @@ class EvaluationLogTests: XCTestCase {
                 return
             }
             let user = test.user == nil ? nil : ConfigCatUser(custom: test.user!)
-            let res = await client.getAnyValue(for: test.key, defaultValue: test.defaultVal, user: user)
-            
-            let exp = (test.user?.count ?? 0) > 1 ? expLogContent.removeTrailingNewLine().trimUserSection() : expLogContent.removeTrailingNewLine()
-            let logs = (test.user?.count ?? 0) > 1 ? logger.entries.joined(separator: "\n").trimUserSection() : logger.entries.joined(separator: "\n")
-            
-            XCTAssertTrue(anyEq(a: test.returnVal, b: res), "\(test.returnVal) is not equal to \(res ?? "invalid")")
-            XCTAssertEqual(exp, logs)
+            let completed = expectation(description: "evaluation completed")
+            client.getAnyValue(for: test.key, defaultValue: test.defaultVal, user: user) { res in
+                let exp = (test.user?.count ?? 0) > 1 ? expLogContent.removeTrailingNewLine().trimUserSection() : expLogContent.removeTrailingNewLine()
+                let logs = (test.user?.count ?? 0) > 1 ? logger.entries.joined(separator: "\n").trimUserSection() : logger.entries.joined(separator: "\n")
+
+                XCTAssertTrue(anyEq(a: test.returnVal, b: res), "\(test.returnVal) is not equal to \(res)")
+                XCTAssertEqual(exp, logs)
+                completed.fulfill()
+            }
+            await fulfillment(of: [completed], timeout: 5)
         }
     }
     #endif

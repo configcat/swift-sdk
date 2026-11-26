@@ -146,7 +146,7 @@ extension ConfigCatClient {
 
     #if compiler(>=5.5) && canImport(_Concurrency)
         @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getValue<Value>(
+        public func getValue<Value: Sendable>(
             for key: String,
             defaultValue: Value,
             user: ConfigCatUser? = nil
@@ -160,42 +160,11 @@ extension ConfigCatClient {
         }
 
         @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getAnyValue(
-            for key: String,
-            defaultValue: Any?,
-            user: ConfigCatUser? = nil
-        ) async -> Any? {
-            await withUnsafeContinuation { continuation in
-                getValue(for: key, defaultValue: defaultValue, user: user) {
-                    value in
-                    continuation.resume(returning: value)
-                }
-            }
-        }
-
-        @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getValueDetails<Value>(
+        public func getValueDetails<Value: Sendable>(
             for key: String,
             defaultValue: Value,
             user: ConfigCatUser? = nil
         ) async -> TypedEvaluationDetails<Value> {
-            await withUnsafeContinuation { continuation in
-                getValueDetails(
-                    for: key,
-                    defaultValue: defaultValue,
-                    user: user
-                ) { details in
-                    continuation.resume(returning: details)
-                }
-            }
-        }
-
-        @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getAnyValueDetails(
-            for key: String,
-            defaultValue: Any?,
-            user: ConfigCatUser? = nil
-        ) async -> TypedEvaluationDetails<Any?> {
             await withUnsafeContinuation { continuation in
                 getValueDetails(
                     for: key,

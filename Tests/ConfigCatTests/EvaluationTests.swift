@@ -196,7 +196,7 @@ class EvaluationTests: XCTestCase {
             let logger = RecordingLogger()
             let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: TestDictionaryDataSource(source: [test.1: test.2], behaviour: .localOverRemote)).ensureStarted()
             
-            let res = await client.getAnyValue(for: test.0, defaultValue: nil)
+            let res = await client.getValue(for: test.0, defaultValue: Optional<String>.none)
             
             XCTAssertTrue(anyEq(a: test.3, b: res))
             
@@ -245,7 +245,7 @@ class EvaluationTests: XCTestCase {
             let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/JoGwdqJZQ0K2xDy7LnbyOg", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil, flagOverrides: source, logLevel: .info).ensureStarted()
             
             let user = ConfigCatUser(identifier: test.1, email: test.2)
-            let res = await client.getAnyValue(for: test.0, defaultValue: nil, user: user)
+            let res = await client.getValue(for: test.0, defaultValue: Optional<String>.none, user: user)
             
             XCTAssertTrue(anyEq(a: test.4, b: res))
         }
@@ -276,7 +276,7 @@ class EvaluationTests: XCTestCase {
             }
             
             let user = test.2 != nil ? ConfigCatUser(identifier: test.2!, email: test.3, custom: test.4 == nil ? nil : ["PercentageBase": test.4!]) : nil
-            let res = await client!.getAnyValueDetails(for: test.1, defaultValue: nil, user: user)
+            let res = await client!.getValueDetails(for: test.1, defaultValue: Optional<String>.none, user: user)
             
             XCTAssertTrue(anyEq(a: test.5, b: res.value), "\(test.5) is not equal to \(String(describing: res.value))")
             XCTAssertEqual(test.6, res.matchedTargetingRule != nil)
@@ -290,7 +290,7 @@ class EvaluationTests: XCTestCase {
         let client = ConfigCatClient(sdkKey: "configcat-sdk-1/JcPbCGl_1E-K9M-fJOyKyQ/OfQqcTjfFUGBwMKqtyEOrQ", pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: nil).ensureStarted()
         
         let user = ConfigCatUser(identifier: "12345", custom: ["Custom1": 42])
-        let _ = await client.getAnyValueDetails(for: "boolTextEqualsNumber", defaultValue: nil, user: user)
+        let _ = await client.getValueDetails(for: "boolTextEqualsNumber", defaultValue: Optional<Bool>.none, user: user)
         
         XCTAssertTrue(logger.entries.last?.contains("Evaluation of condition (User.Custom1 EQUALS '42') for setting 'boolTextEqualsNumber' may not produce the expected result (the User.Custom1 attribute is not a string value, thus it was automatically converted to the string value '42'). Please make sure that using a non-string value was intended.") ?? false)
     }
@@ -404,9 +404,15 @@ class EvaluationTests: XCTestCase {
             }
             
             let user = ConfigCatUser(identifier: test.2,  custom: [test.3: test.4])
-            let res = await client!.getAnyValue(for: test.1, defaultValue: nil, user: user)
-            
-            XCTAssertTrue(anyEq(a: test.5, b: res))
+            if let expected = test.5 as? Bool {
+                let res = await client!.getValue(for: test.1, defaultValue: Optional<Bool>.none, user: user)
+                XCTAssertEqual(expected, res)
+            } else if let expected = test.5 as? String {
+                let res = await client!.getValue(for: test.1, defaultValue: Optional<String>.none, user: user)
+                XCTAssertEqual(expected, res)
+            } else {
+                XCTFail("Unexpected expected value type: \(type(of: test.5))")
+            }
         }
     }
     

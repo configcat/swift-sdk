@@ -87,23 +87,25 @@ public protocol ConfigCatClientProtocol: Sendable {
     #if compiler(>=5.5) && canImport(_Concurrency)
     /**
      Gets a value asynchronously as `Value` from the configuration identified by the given `key`.
+     `Value` must conform to `Sendable`. Use the completion API for arbitrary fallback objects.
 
      - Parameter key: The identifier of the configuration value.
      - Parameter defaultValue: In case of any failure, this value will be returned.
      - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> Value
+    func getValue<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> Value
 
     /**
      Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
+     `Value` must conform to `Sendable`. Use the completion API for arbitrary fallback objects.
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
      - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> TypedEvaluationDetails<Value>
+    func getValueDetails<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser?) async -> TypedEvaluationDetails<Value>
 
     /**
      Gets the values along with evaluation details of all feature flags and settings.

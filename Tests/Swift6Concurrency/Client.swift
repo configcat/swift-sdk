@@ -11,14 +11,18 @@ func checkAsyncResults(client: ConfigCatClient, user: ConfigCatUser) async {
 
     let values = await Task.detached { await client.getAllValues(user: user) }.value
     let details = await Task.detached { await client.getAllValueDetails(user: user) }.value
+    let value = await Task.detached { await client.getValue(for: "flag", defaultValue: false, user: user) }.value
+    let valueDetails = await Task.detached { await client.getValueDetails(for: "flag", defaultValue: Optional<String>.none, user: user) }.value
     let refresh = await Task.detached { await client.forceRefresh() }.value
     let state = await Task.detached { await client.waitForReady() }.value
-    _ = (values, details, refresh, state)
+    _ = (values, details, value, valueDetails, refresh, state)
 }
 
 @MainActor
 func checkProtocolResults(client: any ConfigCatClientProtocol, user: ConfigCatUser) async {
     let values = await Task.detached { await client.getAllValues(user: user) }.value
     let details = await Task.detached { await client.getAllValueDetails(user: user) }.value
-    _ = (values, details)
+    let value = await Task.detached { await client.getValue(for: "flag", defaultValue: false, user: user) }.value
+    let valueDetails = await Task.detached { await client.getValueDetails(for: "flag", defaultValue: Optional<String>.none, user: user) }.value
+    _ = (values, details, value, valueDetails)
 }
