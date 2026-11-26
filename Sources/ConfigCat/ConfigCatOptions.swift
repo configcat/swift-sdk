@@ -48,7 +48,7 @@ public final class ConfigCatOptions: NSObject {
 }
 
 /// Defines the possible states of the internal cache.
-@objc public enum ClientCacheState: Int {
+@objc public enum ClientCacheState: Int, Sendable {
     /// No config data is available in the internal cache.
     case noFlagData
     /// Only config data provided by local flag override is available in the internal cache.

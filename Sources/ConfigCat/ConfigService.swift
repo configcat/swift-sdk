@@ -3,17 +3,15 @@ import Foundation
 class SettingsResult {
     let settings: [String: Setting]
     let fetchTime: Date
+    let isEmpty: Bool
 
-    init(settings: [String: Setting], fetchTime: Date) {
+    init(settings: [String: Setting], fetchTime: Date, isEmpty: Bool = false) {
         self.settings = settings
         self.fetchTime = fetchTime
+        self.isEmpty = isEmpty
     }
 
-    var isEmpty: Bool {
-        self === SettingsResult.empty
-    }
-
-    static let empty = SettingsResult(settings: [:], fetchTime: .distantPast)
+    static var empty: SettingsResult { SettingsResult(settings: [:], fetchTime: .distantPast, isEmpty: true) }
 }
 
 class InMemoryResult {
@@ -27,7 +25,7 @@ class InMemoryResult {
 }
 
 /// Specifies the possible evaluation error codes.
-@objc public enum RefreshErrorCode: Int {
+@objc public enum RefreshErrorCode: Int, Sendable {
     /** An unexpected error occurred during the refresh operation. */
     case unexpectedError = -1
     /** No error occurred (the refresh operation was successful). */
@@ -51,7 +49,7 @@ class InMemoryResult {
     case invalidHttpResponseContent = 1105
 }
 
-public final class RefreshResult: NSObject {
+public final class RefreshResult: NSObject, Sendable {
     @objc public let success: Bool
     @objc public let error: String?
     @objc public let errorCode: RefreshErrorCode

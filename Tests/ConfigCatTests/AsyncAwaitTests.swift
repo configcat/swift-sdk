@@ -58,6 +58,32 @@ class AsyncAwaitTests: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testGetValueDetailsAcrossTasks() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        let user = self.user
+
+        let details = await Task.detached {
+            await client.getValueDetails(for: "key2", defaultValue: false, user: user)
+        }.value
+        XCTAssertTrue(details.value)
+        XCTAssertEqual("9f21c24c", details.variationId)
+        XCTAssertEqual("test@example.com", details.user?.attribute(for: ConfigCatUser.emailKey) as? String)
+        XCTAssertEqual("Email", details.matchedTargetingRule?.conditions.first?.userCondition?.comparisonAttribute)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testUntypedDetailsPreserveUnsupportedFallback() async {
+        let fallback = NSMutableArray(array: ["original"])
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine()).ensureStarted()
+
+        let details = await client.getAnyValueDetails(for: "missing", defaultValue: fallback)
+        XCTAssertTrue((details.value as? NSMutableArray) === fallback)
+        XCTAssertTrue(details.isDefaultValue)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetKeyValue() async {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
@@ -109,6 +135,27 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertTrue(result.success)
         XCTAssertFalse(value)
         XCTAssertEqual(1, engine.requests.count)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testRefreshAndReadyStateAcrossTasks() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+
+        let state = await Task.detached { await client.waitForReady() }.value
+        XCTAssertEqual(.noFlagData, state)
+
+        let result = await Task.detached { await client.forceRefresh() }.value
+        XCTAssertTrue(result.success)
+        XCTAssertEqual(.none, result.errorCode)
+
+        client.setOffline()
+        let failure = await Task.detached { await client.forceRefresh() }.value
+        XCTAssertFalse(failure.success)
+        XCTAssertEqual(.offlineClient, failure.errorCode)
+        XCTAssertNotNil(failure.error)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

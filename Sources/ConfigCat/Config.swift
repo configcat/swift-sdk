@@ -1,13 +1,13 @@
 import Foundation
 
-enum RedirectMode: Int {
+enum RedirectMode: Int, Sendable {
     case unknown = -1
     case noRedirect = 0
     case shouldRedirect = 1
     case forceRedirect = 2
 }
 
-@objc public enum SegmentComparator: Int {
+@objc public enum SegmentComparator: Int, Sendable {
     case unknown = -1
     /// Checks whether the conditions of the specified segment are evaluated to true.
     case isIn = 0
@@ -19,7 +19,7 @@ enum RedirectMode: Int {
     }
 }
 
-@objc public enum PrerequisiteFlagComparator: Int {
+@objc public enum PrerequisiteFlagComparator: Int, Sendable {
     case unknown = -1
     /// Checks whether the evaluated value of the specified prerequisite flag is equal to the comparison value.
     case eq = 0
@@ -58,7 +58,7 @@ enum RedirectMode: Int {
     }
 }
 
-@objc public enum UserComparator: Int {
+@objc public enum UserComparator: Int, Sendable {
     case unknown = -1
     /// Checks whether the comparison attribute is equal to any of the comparison values.
     case oneOf = 0
@@ -215,13 +215,15 @@ class ConfigEntry: Equatable {
     let cacheString: String
     let eTag: String
     let fetchTime: Date
+    let isEmpty: Bool
 
-    init(config: Config = Config.empty, configJson: String = "", eTag: String = "", fetchTime: Date = .distantPast) {
+    init(config: Config = Config.empty, configJson: String = "", eTag: String = "", fetchTime: Date = .distantPast, isEmpty: Bool = false) {
         self.config = config
         self.eTag = eTag
         self.fetchTime = fetchTime
         self.configJson = configJson
         self.cacheString = ConfigEntry.toCacheString(configJson: configJson, eTag: eTag, fetchTime: fetchTime)
+        self.isEmpty = isEmpty
     }
 
     func withFetchTime(time: Date) -> ConfigEntry {
@@ -259,17 +261,11 @@ class ConfigEntry: Equatable {
         return fromConfigJson(json: configJson, eTag: eTag, fetchTime: Date(timeIntervalSince1970: time / 1000))
     }
 
-    var isEmpty: Bool {
-        get {
-            self === ConfigEntry.empty
-        }
-    }
-
     private static func toCacheString(configJson: String, eTag: String, fetchTime: Date) -> String {
         String(format: "%.0f", floor(fetchTime.timeIntervalSince1970 * 1000)) + "\n" + eTag + "\n" + configJson
     }
 
-    static let empty = ConfigEntry(eTag: "empty")
+    static var empty: ConfigEntry { ConfigEntry(eTag: "empty", isEmpty: true) }
 }
 
 public class Config: NSObject, JsonSerializable {
@@ -294,13 +290,13 @@ public class Config: NSObject, JsonSerializable {
     }
 
     public static func fromJson(json: [String: Any]) -> Config {
-        let settingsMap = json[self.settingsKey] as? [String: Any] ?? [:]
-        let settings: [String: Setting] = settingsMap.mapValues { setting in
-            .fromJson(json: setting as? [String: Any] ?? [:])
-        }
         let segmentsMap = json[self.segmentsKey] as? [[String: Any]] ?? []
         let segments: [Segment] = segmentsMap.map { segment in
             .fromJson(json: segment)
+        }
+        let settingsMap = json[self.settingsKey] as? [String: Any] ?? [:]
+        let settings: [String: Setting] = settingsMap.mapValues { setting in
+            .fromJson(json: setting as? [String: Any] ?? [:], segments: segments)
         }
         var preferences: Preferences = .empty
         if let pref = json[Config.preferencesKey] as? [String: Any] {
@@ -308,13 +304,6 @@ public class Config: NSObject, JsonSerializable {
         }
         for setting in settings {
             setting.value.salt = preferences.salt
-            for rule in setting.value.targetingRules {
-                for condition in rule.conditions {
-                    if let cond = condition.segmentCondition {
-                        cond.segment = segments.count > cond.index ? segments[cond.index] : nil
-                    }
-                }
-            }
         }
         return Config(preferences: preferences, settings: settings, segments: segments)
     }
@@ -336,10 +325,10 @@ public class Config: NSObject, JsonSerializable {
             settings.isEmpty
         }
     }
-    static let empty = Config(preferences: .empty)
+    static var empty: Config { Config(preferences: .empty) }
 }
 
-class Preferences: JsonSerializable {
+final class Preferences: JsonSerializable, Sendable {
     static let preferencesUrlKey = "u"
     static let preferencesRedirectKey = "r"
     static let saltKey = "s"
@@ -414,7 +403,7 @@ public final class Setting: NSObject, JsonSerializable {
         self.targetingRules = targetingRules
     }
 
-    static func fromJson(json: [String: Any]) -> Setting {
+    static func fromJson(json: [String: Any], segments: [Segment]) -> Setting {
         let targetingRules = json[self.targetingRulesKey] as? [[String: Any]] ?? []
         let percentageOptions = json[self.percentageOptionsKey] as? [[String: Any]] ?? []
 
@@ -426,7 +415,7 @@ public final class Setting: NSObject, JsonSerializable {
                            .fromJson(json: opt)
                        },
                        targetingRules: targetingRules.map { rule in
-                           .fromJson(json: rule)
+                           .fromJson(json: rule, segments: segments)
                        })
     }
 
@@ -461,7 +450,7 @@ public final class Setting: NSObject, JsonSerializable {
     }
 }
 
-public final class Segment: NSObject, JsonSerializable {
+public final class Segment: NSObject, JsonSerializable, Sendable {
     static let nameKey = "n"
     static let conditionsKey = "r"
 
@@ -495,7 +484,7 @@ public final class Segment: NSObject, JsonSerializable {
     }
 }
 
-public final class TargetingRule: NSObject, JsonSerializable {
+public final class TargetingRule: NSObject, JsonSerializable, Sendable {
     static let valueKey = "s"
     static let conditionsKey = "c"
     static let percentageOptionsKey = "p"
@@ -515,14 +504,14 @@ public final class TargetingRule: NSObject, JsonSerializable {
         self.percentageOptions = percentageOptions
     }
 
-    static func fromJson(json: [String: Any]) -> TargetingRule {
+    static func fromJson(json: [String: Any], segments: [Segment]) -> TargetingRule {
         let conditions = json[self.conditionsKey] as? [[String: Any]] ?? []
         let percentageOptions = json[self.percentageOptionsKey] as? [[String: Any]] ?? []
         let servedValueJson = json[self.valueKey] as? [String: Any]
         
         return TargetingRule(servedValue: servedValueJson != nil ? .fromJson(json: servedValueJson!) : nil,
                              conditions: conditions.map { cond in
-                                .fromJson(json: cond)
+                                .fromJson(json: cond, segments: segments)
                              },
                              percentageOptions: percentageOptions.map { opt in
                                 .fromJson(json: opt)
@@ -546,7 +535,7 @@ public final class TargetingRule: NSObject, JsonSerializable {
     }
 }
 
-public final class Condition: NSObject, JsonSerializable {
+public final class Condition: NSObject, JsonSerializable, Sendable {
     static let userKey = "u"
     static let segmentKey = "s"
     static let prereqKey = "p"
@@ -566,12 +555,12 @@ public final class Condition: NSObject, JsonSerializable {
         self.prerequisiteFlagCondition = prerequisiteFlagCondition
     }
 
-    static func fromJson(json: [String: Any]) -> Condition {
+    static func fromJson(json: [String: Any], segments: [Segment]) -> Condition {
         if let cond = json[self.userKey] as? [String: Any] {
             return Condition(userCondition: .fromJson(json: cond), segmentCondition: nil, prerequisiteFlagCondition: nil)
         }
         if let cond = json[self.segmentKey] as? [String: Any] {
-            return Condition(userCondition: nil, segmentCondition: .fromJson(json: cond), prerequisiteFlagCondition: nil)
+            return Condition(userCondition: nil, segmentCondition: .fromJson(json: cond, segments: segments), prerequisiteFlagCondition: nil)
         }
         if let cond = json[self.prereqKey] as? [String: Any] {
             return Condition(userCondition: nil, segmentCondition: nil, prerequisiteFlagCondition: .fromJson(json: cond))
@@ -594,7 +583,7 @@ public final class Condition: NSObject, JsonSerializable {
     }
 }
 
-public final class UserCondition: NSObject, JsonSerializable {
+public final class UserCondition: NSObject, JsonSerializable, Sendable {
     static let stringListMaxLength = 10
     static let comparatorKey = "c"
     static let comparisonAttributeKey = "a"
@@ -690,7 +679,7 @@ public final class UserCondition: NSObject, JsonSerializable {
     }
 }
 
-public final class SegmentCondition: NSObject, JsonSerializable {
+public final class SegmentCondition: NSObject, JsonSerializable, Sendable {
     static let indexKey = "s"
     static let comparatorKey = "c"
 
@@ -700,16 +689,19 @@ public final class SegmentCondition: NSObject, JsonSerializable {
     /// The operator which defines the expected result of the evaluation of the segment.
     @objc public let segmentComparator: SegmentComparator
     
-    var segment: Segment?
+    let segment: Segment?
 
-    init(index: Int, segmentComparator: SegmentComparator) {
+    init(index: Int, segmentComparator: SegmentComparator, segment: Segment? = nil) {
         self.index = index
         self.segmentComparator = segmentComparator
+        self.segment = segment
     }
 
-    static func fromJson(json: [String: Any]) -> SegmentCondition {
-        SegmentCondition(index: json[self.indexKey] as? Int ?? -1,
-                         segmentComparator: SegmentComparator(rawValue: (json[self.comparatorKey] as? Int ?? -1)) ?? .unknown)
+    static func fromJson(json: [String: Any], segments: [Segment]) -> SegmentCondition {
+        let index = json[self.indexKey] as? Int ?? -1
+        return SegmentCondition(index: index,
+                                segmentComparator: SegmentComparator(rawValue: (json[self.comparatorKey] as? Int ?? -1)) ?? .unknown,
+                                segment: segments.indices.contains(index) ? segments[index] : nil)
     }
 
     func toJsonMap() -> [String: Any] {
@@ -724,7 +716,7 @@ public final class SegmentCondition: NSObject, JsonSerializable {
     }
 }
 
-public final class PrerequisiteFlagCondition: NSObject, JsonSerializable {
+public final class PrerequisiteFlagCondition: NSObject, JsonSerializable, Sendable {
     static let flagKeyKey = "f"
     static let comparatorKey = "c"
     static let valueKey = "v"
@@ -812,7 +804,12 @@ enum ValueResult {
     case error(String)
 }
 
-public final class SettingValue: NSObject, JsonSerializable {
+private struct InvalidSettingValue: Sendable {
+    let description: String
+    let type: String
+}
+
+public final class SettingValue: NSObject, JsonSerializable, Sendable {
     static let boolKey = "b"
     static let stringKey = "s"
     static let doubleKey = "d"
@@ -832,11 +829,11 @@ public final class SettingValue: NSObject, JsonSerializable {
     
     @objc public let intValueObjC: NSNumber?
     
-    private let invalidValue: Any?
+    private let invalidValue: InvalidSettingValue?
     
     init(value: ScalarValue?, invalidValue: Any? = nil) {
         self.value = value
-        self.invalidValue = invalidValue
+        self.invalidValue = invalidValue.map { InvalidSettingValue(description: "\($0)", type: "\(type(of: $0))") }
         
         if case let .bool(val)? = value {
             self.boolValueObjC = NSNumber(value: val)
@@ -906,7 +903,7 @@ public final class SettingValue: NSObject, JsonSerializable {
     }
     
     var anyValue: Any? {
-        value?.anyValue ?? invalidValue
+        value?.anyValue ?? invalidValue?.description
     }
     
     var isValid: Bool {
@@ -922,7 +919,7 @@ public final class SettingValue: NSObject, JsonSerializable {
             return .error(SettingValue.settingValueMissingMessage)
         }
         if let inv = invalidValue {
-            return .error("Setting value '\(inv)' is of an unsupported type (\(type(of: inv))")
+            return .error("Setting value '\(inv.description)' is of an unsupported type (\(inv.type)")
         }
         switch settingType {
         case .bool:
@@ -951,7 +948,7 @@ public final class SettingValue: NSObject, JsonSerializable {
     }
 }
 
-public final class ServedValue: NSObject, JsonSerializable {
+public final class ServedValue: NSObject, JsonSerializable, Sendable {
     static let valueKey = "v"
     static let idKey = "i"
 
@@ -980,7 +977,7 @@ public final class ServedValue: NSObject, JsonSerializable {
 }
 
 
-public final class PercentageOption: NSObject, JsonSerializable {
+public final class PercentageOption: NSObject, JsonSerializable, Sendable {
     static let valueKey = "v"
     static let percentageKey = "p"
     static let variationIdKey = "i"

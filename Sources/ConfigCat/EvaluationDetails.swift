@@ -1,7 +1,7 @@
 import Foundation
 
 /// Specifies the possible evaluation error codes.
-@objc public enum EvaluationErrorCode: Int {
+@objc public enum EvaluationErrorCode: Int, Sendable {
     /** Invalid arguments were passed to the evaluation method. */
     case invalidUserInput = -2
     /** An unexpected error occurred during the evaluation. */
@@ -18,7 +18,8 @@ import Foundation
     case settingKeyMissing = 1001
 }
 
-public class EvaluationDetailsBase: NSObject {
+/// Metadata describing how a feature flag or setting was evaluated.
+public final class EvaluationMetadata: NSObject, Sendable {
     /// Key of the feature flag or setting.
     @objc public let key: String
     /// Variation ID of the feature flag or setting (if available).
@@ -61,7 +62,37 @@ public class EvaluationDetailsBase: NSObject {
     }
 }
 
-public final class EvaluationDetails: EvaluationDetailsBase {
+/// Provides the metadata shared by evaluation detail types.
+public protocol HasEvaluationMetadata {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    var metadata: EvaluationMetadata { get }
+}
+
+public extension HasEvaluationMetadata {
+    /// Key of the feature flag or setting.
+    var key: String { metadata.key }
+    /// Variation ID of the feature flag or setting, if available.
+    var variationId: String? { metadata.variationId }
+    /// The User Object used for evaluation, if available.
+    var user: ConfigCatUser? { metadata.user }
+    /// Whether the specified default value was returned.
+    var isDefaultValue: Bool { metadata.isDefaultValue }
+    /// Error message, if evaluation failed.
+    var error: String? { metadata.error }
+    /// Code identifying the evaluation error.
+    var errorCode: EvaluationErrorCode { metadata.errorCode }
+    /// Time of the last successful config download.
+    var fetchTime: Date { metadata.fetchTime }
+    /// The targeting rule matched during evaluation, if any.
+    var matchedTargetingRule: TargetingRule? { metadata.matchedTargetingRule }
+    /// The percentage option matched during evaluation, if any.
+    var matchedPercentageOption: PercentageOption? { metadata.matchedPercentageOption }
+}
+
+public final class EvaluationDetails: NSObject, HasEvaluationMetadata {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    @objc public let metadata: EvaluationMetadata
+    /// Evaluated value of the feature flag or setting.
     @objc public let value: Any
 
     init(
@@ -77,7 +108,7 @@ public final class EvaluationDetails: EvaluationDetailsBase {
         matchedPercentageOption: PercentageOption? = nil
     ) {
         self.value = value
-        super.init(
+        self.metadata = EvaluationMetadata(
             key: key,
             variationId: variationId,
             fetchTime: fetchTime,
@@ -109,99 +140,57 @@ public final class EvaluationDetails: EvaluationDetailsBase {
     }
 }
 
-public final class StringEvaluationDetails: EvaluationDetailsBase {
+public final class StringEvaluationDetails: NSObject, HasEvaluationMetadata, Sendable {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    @objc public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
     @objc public let value: String
 
-    init(
-        value: String,
-        base: EvaluationDetailsBase
-    ) {
+    init(value: String, metadata: EvaluationMetadata) {
         self.value = value
-        super.init(
-            key: base.key,
-            variationId: base.variationId,
-            fetchTime: base.fetchTime,
-            user: base.user,
-            isDefaultValue: base.isDefaultValue,
-            errorCode: base.errorCode,
-            error: base.error,
-            matchedTargetingRule: base.matchedTargetingRule,
-            matchedPercentageOption: base.matchedPercentageOption
-        )
+        self.metadata = metadata
     }
 }
 
-public final class BoolEvaluationDetails: EvaluationDetailsBase {
+public final class BoolEvaluationDetails: NSObject, HasEvaluationMetadata, Sendable {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    @objc public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
     @objc public let value: Bool
 
-    init(
-        value: Bool,
-        base: EvaluationDetailsBase
-    ) {
+    init(value: Bool, metadata: EvaluationMetadata) {
         self.value = value
-        super.init(
-            key: base.key,
-            variationId: base.variationId,
-            fetchTime: base.fetchTime,
-            user: base.user,
-            isDefaultValue: base.isDefaultValue,
-            errorCode: base.errorCode,
-            error: base.error,
-            matchedTargetingRule: base.matchedTargetingRule,
-            matchedPercentageOption: base.matchedPercentageOption
-        )
+        self.metadata = metadata
     }
 }
 
-public final class IntEvaluationDetails: EvaluationDetailsBase {
+public final class IntEvaluationDetails: NSObject, HasEvaluationMetadata, Sendable {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    @objc public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
     @objc public let value: Int
 
-    init(
-        value: Int,
-        base: EvaluationDetailsBase
-    ) {
+    init(value: Int, metadata: EvaluationMetadata) {
         self.value = value
-        super.init(
-            key: base.key,
-            variationId: base.variationId,
-            fetchTime: base.fetchTime,
-            user: base.user,
-            isDefaultValue: base.isDefaultValue,
-            errorCode: base.errorCode,
-            error: base.error,
-            matchedTargetingRule: base.matchedTargetingRule,
-            matchedPercentageOption: base.matchedPercentageOption
-        )
+        self.metadata = metadata
     }
 }
 
-public final class DoubleEvaluationDetails: EvaluationDetailsBase {
+public final class DoubleEvaluationDetails: NSObject, HasEvaluationMetadata, Sendable {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    @objc public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
     @objc public let value: Double
 
-    init(
-        value: Double,
-        base: EvaluationDetailsBase
-    ) {
+    init(value: Double, metadata: EvaluationMetadata) {
         self.value = value
-        super.init(
-            key: base.key,
-            variationId: base.variationId,
-            fetchTime: base.fetchTime,
-            user: base.user,
-            isDefaultValue: base.isDefaultValue,
-            errorCode: base.errorCode,
-            error: base.error,
-            matchedTargetingRule: base.matchedTargetingRule,
-            matchedPercentageOption: base.matchedPercentageOption
-        )
+        self.metadata = metadata
     }
 }
 
-public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
+public struct TypedEvaluationDetails<Value>: HasEvaluationMetadata {
+    /// Metadata associated with the evaluation of the feature flag or setting.
+    public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
     public let value: Value
 
@@ -210,17 +199,7 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
         details: EvaluationDetails
     ) {
         self.value = value
-        super.init(
-            key: details.key,
-            variationId: details.variationId,
-            fetchTime: details.fetchTime,
-            user: details.user,
-            isDefaultValue: details.isDefaultValue,
-            errorCode: details.errorCode,
-            error: details.error,
-            matchedTargetingRule: details.matchedTargetingRule,
-            matchedPercentageOption: details.matchedPercentageOption
-        )
+        self.metadata = details.metadata
     }
 
     static func fromError(
@@ -234,18 +213,20 @@ public final class TypedEvaluationDetails<Value>: EvaluationDetailsBase {
     }
 
     func toStringDetails() -> StringEvaluationDetails {
-        StringEvaluationDetails(value: value as? String ?? "", base: self)
+        StringEvaluationDetails(value: value as? String ?? "", metadata: metadata)
     }
 
     func toBoolDetails() -> BoolEvaluationDetails {
-        BoolEvaluationDetails(value: value as? Bool ?? false, base: self)
+        BoolEvaluationDetails(value: value as? Bool ?? false, metadata: metadata)
     }
 
     func toIntDetails() -> IntEvaluationDetails {
-        IntEvaluationDetails(value: value as? Int ?? 0, base: self)
+        IntEvaluationDetails(value: value as? Int ?? 0, metadata: metadata)
     }
 
     func toDoubleDetails() -> DoubleEvaluationDetails {
-        DoubleEvaluationDetails(value: value as? Double ?? 0, base: self)
+        DoubleEvaluationDetails(value: value as? Double ?? 0, metadata: metadata)
     }
 }
+
+extension TypedEvaluationDetails: Sendable where Value: Sendable {}

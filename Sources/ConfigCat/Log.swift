@@ -18,7 +18,7 @@ import Foundation
 }
 
 class InternalLogger {
-    static let noLogger: InternalLogger = InternalLogger(log: NoLogger(), level: .nolog, hooks: Hooks())
+    static var noLogger: InternalLogger { InternalLogger(log: NoLogger(), level: .nolog, hooks: Hooks()) }
     let log: ConfigCatLogger
     let level: ConfigCatLogLevel
     let hooks: Hooks

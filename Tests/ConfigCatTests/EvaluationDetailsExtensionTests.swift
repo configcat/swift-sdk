@@ -7,6 +7,37 @@ class EvaluationDetailsExtensionTests: XCTestCase {
     let testDoubleJson = #"{ "f": { "key": { "v": { "d": 3.14 }, "i": "fakeId1", "t":3 } } }"#
     let testStringJson = #"{ "f": { "key": { "v": { "s": "fake" }, "i": "fakeId1", "t":1 } } }"#
 
+    func testEvaluationDetailsShareMetadata() {
+        let user = ConfigCatUser(identifier: "user")
+        let rule = TargetingRule(servedValue: nil, conditions: [], percentageOptions: [])
+        let option = PercentageOption(servedValue: SettingValue(value: .bool(true)), percentage: 100, variationId: "option")
+        let date = Date(timeIntervalSince1970: 42)
+        let details = EvaluationDetails(
+            key: "key", value: true, variationId: "variation", fetchTime: date,
+            user: user, isDefaultValue: true, errorCode: .unexpectedError,
+            error: "error", matchedTargetingRule: rule, matchedPercentageOption: option
+        )
+        let boolDetails = TypedEvaluationDetails(value: true, details: details)
+        let values: [any HasEvaluationMetadata] = [
+            details, boolDetails, boolDetails.toBoolDetails(),
+            TypedEvaluationDetails(value: "value", details: details).toStringDetails(),
+            TypedEvaluationDetails(value: 1, details: details).toIntDetails(),
+            TypedEvaluationDetails(value: 1.5, details: details).toDoubleDetails()
+        ]
+        for value in values {
+            XCTAssertTrue(value.metadata === details.metadata)
+            XCTAssertEqual(value.key, "key")
+            XCTAssertEqual(value.variationId, "variation")
+            XCTAssertTrue(value.user === user)
+            XCTAssertTrue(value.isDefaultValue)
+            XCTAssertEqual(value.error, "error")
+            XCTAssertEqual(value.errorCode, .unexpectedError)
+            XCTAssertEqual(value.fetchTime, date)
+            XCTAssertTrue(value.matchedTargetingRule === rule)
+            XCTAssertTrue(value.matchedPercentageOption === option)
+        }
+    }
+
     func testBoolDetails() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testBoolJson, statusCode: 200))

@@ -4,6 +4,16 @@ import XCTest
 class ConfigServiceTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 1, "v": { "s": "%@" } } } }"#
 
+    func testEmptySentinelsAreDistinctFromEmptyConfigData() throws {
+        XCTAssertTrue(ConfigEntry.empty.isEmpty)
+        let emptyConfig = try ConfigEntry.fromConfigJson(json: #"{"f":{}}"#, eTag: "", fetchTime: .distantPast).get()
+        XCTAssertFalse(emptyConfig.isEmpty)
+        XCTAssertFalse(ConfigEntry.empty.withFetchTime(time: .distantPast).isEmpty)
+
+        XCTAssertTrue(SettingsResult.empty.isEmpty)
+        XCTAssertFalse(SettingsResult(settings: [:], fetchTime: .distantPast).isEmpty)
+    }
+
     func testSlowCacheReadCannotOverwriteNewHttpEntry() throws {
         let initialEntry = try ConfigEntry.fromConfigJson(
             json: String(format: testJsonFormat, "initial"), eTag: "initial", fetchTime: Date()

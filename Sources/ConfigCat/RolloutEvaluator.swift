@@ -194,12 +194,12 @@ class RolloutEvaluator {
     }
     
     private func evalPercentageOptions(opts: [PercentageOption], user: ConfigCatUser, key: String, percentageAttr: String, evalLogger: EvaluationLogger?) -> EvalPercentageResult {
-        guard let attrVal = user.attribute(for: percentageAttr) else {
+        guard let attrVal = user.attributeValue(for: percentageAttr) else {
             evalLogger?.newLine(msg: "Skipping % options because the User.\(percentageAttr) attribute is missing.")
             return .userAttrMissing(percentageAttr)
         }
         evalLogger?.newLine(msg: "Evaluating % options based on the User.\(percentageAttr) attribute:")
-        let (stringAttrVal, _) = asString(value: attrVal)
+        let (stringAttrVal, _) = attrVal.asString()
         let hashCandidate = key + stringAttrVal
         let hash = hashCandidate.sha1hex.prefix(7)
         let hashString = String(hash)
@@ -371,7 +371,7 @@ class RolloutEvaluator {
         guard let comparisonAttribute = cond.comparisonAttribute else {
             return .fatal("Comparison attribute is missing")
         }
-        guard let userAnyVal = user.attribute(for: comparisonAttribute) else {
+        guard let userAttribute = user.attributeValue(for: comparisonAttribute) else {
             return .attributeMissing(cond)
         }
         switch cond.comparator {
@@ -379,7 +379,7 @@ class RolloutEvaluator {
             guard let compVal = cond.stringValue else {
                 return .compValueInvalid(nil)
             }
-            let (userVal, converted) = asString(value: userAnyVal)
+            let (userVal, converted) = userAttribute.asString()
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
@@ -389,7 +389,7 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            let (userVal, converted) = asString(value: userAnyVal)
+            let (userVal, converted) = userAttribute.asString()
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
@@ -399,7 +399,7 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            let (userVal, converted) = asString(value: userAnyVal)
+            let (userVal, converted) = userAttribute.asString()
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
@@ -409,7 +409,7 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            let (userVal, converted) = asString(value: userAnyVal)
+            let (userVal, converted) = userAttribute.asString()
             if converted {
                 logConverted(cond: cond, key: key, attrValue: userVal)
             }
@@ -419,8 +419,8 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userVal = asSemver(value: userAnyVal) else {
-                return .attributeInvalid("'\(userAnyVal)' is not a valid semantic version", cond)
+            guard let userVal = userAttribute.asSemver() else {
+                return .attributeInvalid("'\(userAttribute.anyValue)' is not a valid semantic version", cond)
             }
             return evalSemverIsOneOf(comparisonValue: compVal, userValue: userVal, comp: cond.comparator)
         
@@ -428,8 +428,8 @@ class RolloutEvaluator {
             guard let compVal = cond.stringValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userVal = asSemver(value: userAnyVal) else {
-                return .attributeInvalid("'\(userAnyVal)' is not a valid semantic version", cond)
+            guard let userVal = userAttribute.asSemver() else {
+                return .attributeInvalid("'\(userAttribute.anyValue)' is not a valid semantic version", cond)
             }
             return evalSemverCompare(comparisonValue: compVal, userValue: userVal, comp: cond.comparator)
             
@@ -437,8 +437,8 @@ class RolloutEvaluator {
             guard let compVal = cond.doubleValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userVal = asDouble(value: userAnyVal) else {
-                return .attributeInvalid("'\(userAnyVal)' is not a valid decimal number", cond)
+            guard let userVal = userAttribute.asDouble() else {
+                return .attributeInvalid("'\(userAttribute.anyValue)' is not a valid decimal number", cond)
             }
             return evalNumberCompare(comparisonValue: compVal, userValue: userVal, comp: cond.comparator)
             
@@ -446,8 +446,8 @@ class RolloutEvaluator {
             guard let compVal = cond.doubleValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userVal = asDateDouble(value: userAnyVal) else {
-                return .attributeInvalid("'\(userAnyVal)' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)", cond)
+            guard let userVal = userAttribute.asDateDouble() else {
+                return .attributeInvalid("'\(userAttribute.anyValue)' is not a valid Unix timestamp (number of seconds elapsed since Unix epoch)", cond)
             }
             return evalDateTime(comparisonValue: compVal, userValue: userVal, comp: cond.comparator)
             
@@ -455,8 +455,8 @@ class RolloutEvaluator {
             guard let compVal = cond.stringArrayValue else {
                 return .compValueInvalid(nil)
             }
-            guard let userVal = asSlice(value: userAnyVal) else {
-                return .attributeInvalid("'\(userAnyVal)' is not a valid string array", cond)
+            guard let userVal = userAttribute.asSlice() else {
+                return .attributeInvalid("'\(userAttribute.anyValue)' is not a valid string array", cond)
             }
             return evalArrayContains(comparisonValue: compVal, userValue: userVal, comp: cond.comparator, salt: salt, ctxSalt: ctxSalt)
         default:
@@ -616,119 +616,6 @@ class RolloutEvaluator {
             }
         }
         return .success(!needsTrue)
-    }
-    
-    private func asString(value: Any) -> (String, Bool) {
-        switch value {
-        case let val as String:
-            return (val, false)
-        case let val as [String]:
-            return (Utils.toJson(obj: val), true)
-        case let val as Int:
-            return (val.description, true)
-        case let val as Int8:
-            return (val.description, true)
-        case let val as Int16:
-            return (val.description, true)
-        case let val as Int32:
-            return (val.description, true)
-        case let val as Int64:
-            return (val.description, true)
-        case let val as UInt:
-            return (val.description, true)
-        case let val as UInt8:
-            return (val.description, true)
-        case let val as UInt16:
-            return (val.description, true)
-        case let val as UInt32:
-            return (val.description, true)
-        case let val as UInt64:
-            return (val.description, true)
-        case let val as Float:
-            return val.isNaN ? ("NaN", true) : val.isInfinite ? (val < 0 ? "-Infinity" : "Infinity", true) : (val.description, true)
-        case let val as Float32:
-            return val.isNaN ? ("NaN", true) : val.isInfinite ? (val < 0 ? "-Infinity" : "Infinity", true) : (val.description, true)
-        case let val as Float64:
-            return val.isNaN ? ("NaN", true) : val.isInfinite ? (val < 0 ? "-Infinity" : "Infinity", true) : (val.description, true)
-        case let val as Double:
-            return val.isNaN ? ("NaN", true) : val.isInfinite ? (val < 0 ? "-Infinity" : "Infinity", true) : (val.description, true)
-        case let val as Date:
-            return (val.timeIntervalSince1970.description, true)
-        default:
-            return ("\(value)", true)
-        }
-    }
-    
-    private func asDouble(value: Any) -> Double? {
-        switch value {
-        case let val as String:
-            let stringVal = val.trimmingCharacters(in: .whitespacesAndNewlines)
-            switch stringVal {
-            case "Infinity", "+Infinity":
-                return Double.infinity
-            case "-Infinity":
-                return -Double.infinity
-            case "NaN":
-                return Double.nan
-            default:
-                return Double(stringVal.replacingOccurrences(of: ",", with: "."))
-            }
-        case let val as Int:
-            return Double(val)
-        case let val as Int8:
-            return Double(val)
-        case let val as Int16:
-            return Double(val)
-        case let val as Int32:
-            return Double(val)
-        case let val as Int64:
-            return Double(val)
-        case let val as UInt:
-            return Double(val)
-        case let val as UInt8:
-            return Double(val)
-        case let val as UInt16:
-            return Double(val)
-        case let val as UInt32:
-            return Double(val)
-        case let val as UInt64:
-            return Double(val)
-        case let val as Float:
-            return Double(val)
-        case let val as Float32:
-            return Double(val)
-        case let val as Float64:
-            return Double(val)
-        case let val as Double:
-            return Double(val)
-        default:
-            return nil
-        }
-    }
-    
-    private func asDateDouble(value: Any) -> Double? {
-        if case let val as Date = value {
-            return val.timeIntervalSince1970
-        }
-        return asDouble(value: value)
-    }
-    
-    private func asSemver(value: Any) -> Version? {
-        if case let val as String = value {
-            return val.toVersion()
-        }
-        return nil
-    }
-    
-    private func asSlice(value: Any) -> [String]? {
-        switch value {
-        case let val as [String]:
-            return val
-        case let val as String:
-            return Utils.fromJson(json: val)
-        default:
-            return nil
-        }
     }
     
     private func logConverted(cond: UserCondition, key: String, attrValue: String) {

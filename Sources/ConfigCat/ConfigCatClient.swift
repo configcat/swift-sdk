@@ -22,8 +22,16 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     private var initialized: Bool = false
     private var lifecycleMutex = Mutex()
 
-    private static let mutex = Mutex()
-    private static var instances: [String: Weak<ConfigCatClient>] = [:]
+    private final class ClientRegistry: @unchecked Sendable {
+        private let mutex = Mutex()
+        private var instances: [String: Weak<ConfigCatClient>] = [:]
+
+        func withLock<Result>(_ body: (inout [String: Weak<ConfigCatClient>]) -> Result) -> Result {
+            mutex.withLock { body(&instances) }
+        }
+    }
+
+    private static let registry = ClientRegistry()
 
     init(sdkKey: String,
          pollingMode: PollingMode,
@@ -100,7 +108,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
             assert(Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: isCustomUrl), "invalid 'sdkKey' passed to the ConfigCatClient")
         }
         
-        let (client, isNew) = mutex.withLock {
+        let (client, isNew) = registry.withLock { instances in
             if let existing = instances[sdkKey]?.get() {
                 return (existing, false)
             }
@@ -152,7 +160,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
     /// Closes all ConfigCatClient instances.
     @objc public static func closeAll() {
-        let clientsToClose = mutex.withLock {
+        let clientsToClose = registry.withLock { instances in
             let clients = instances
             instances.removeAll()
             return clients
@@ -168,9 +176,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
     /// Closes the underlying resources.
     @objc public func close() {
-        ConfigCatClient.mutex.withLock {
-            if let weakClient = ConfigCatClient.instances[sdkKey], weakClient.get() == self {
-                ConfigCatClient.instances.removeValue(forKey: sdkKey)
+        ConfigCatClient.registry.withLock { instances in
+            if let weakClient = instances[sdkKey], weakClient.get() == self {
+                instances.removeValue(forKey: sdkKey)
             }
         }
         closeResources()

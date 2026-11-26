@@ -12,6 +12,129 @@ class EvaluationTests: XCTestCase {
     
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testUserSnapshotsUnsupportedAttributesWithoutChangingComparators() async {
+        final class MutableValue: CustomStringConvertible {
+            var description = "1"
+        }
+
+        let value = MutableValue()
+        let user = ConfigCatUser(identifier: "id", custom: ["Custom1": value])
+        value.description = "2"
+        let snapshot = await Task.detached {
+            user.attribute(for: "Custom1") as? String
+        }.value
+        XCTAssertEqual("1", snapshot)
+
+        let json = #"""
+        {"f":{
+          "text":{"t":0,"v":{"b":false},"r":[{"c":[{"u":{"a":"Custom1","c":28,"s":"1"}}],"s":{"v":{"b":true}}}]},
+          "number":{"t":0,"v":{"b":false},"r":[{"c":[{"u":{"a":"Custom1","c":10,"d":1}}],"s":{"v":{"b":true}}}]}
+        }}
+        """#
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: json, statusCode: 200))
+        let logger = RecordingLogger()
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: engine).ensureStarted()
+        await client.forceRefresh()
+
+        let textResult = await client.getValue(for: "text", defaultValue: false, user: user)
+        let numberResult = await client.getValue(for: "number", defaultValue: false, user: user)
+        XCTAssertTrue(textResult)
+        XCTAssertFalse(numberResult)
+        XCTAssertTrue(logger.entries.contains { $0.contains("'1' is not a valid decimal number") })
+    }
+
+    func testUserPreservesSupportedAttributeTypes() {
+        let mutableString = NSMutableString(string: "original")
+        let mutableArray = NSMutableArray(array: ["original"])
+        let user = ConfigCatUser(identifier: "id", custom: [
+            "integer": Int8(7),
+            "unsigned": UInt64.max,
+            "float": Float(1.25),
+            "date": Date(timeIntervalSince1970: 42),
+            "array": ["a", "b"],
+            "number": NSNumber(value: true),
+            "decimal": NSDecimalNumber(string: "123.456"),
+            "mutableString": mutableString,
+            "mutableArray": mutableArray
+        ])
+        mutableString.setString("changed")
+        mutableArray[0] = "changed"
+
+        XCTAssertEqual(user.attribute(for: "integer") as? Int8, 7)
+        XCTAssertEqual(user.attribute(for: "unsigned") as? UInt64, UInt64.max)
+        XCTAssertEqual(user.attribute(for: "float") as? Float, 1.25)
+        XCTAssertEqual(user.attribute(for: "date") as? Date, Date(timeIntervalSince1970: 42))
+        XCTAssertEqual(user.attribute(for: "array") as? [String], ["a", "b"])
+        XCTAssertEqual(user.attribute(for: "number") as? NSNumber, NSNumber(value: true))
+        XCTAssertEqual(user.attribute(for: "decimal") as? NSDecimalNumber, NSDecimalNumber(string: "123.456"))
+        XCTAssertEqual(user.attribute(for: "mutableString") as? String, "original")
+        XCTAssertEqual(user.attribute(for: "mutableArray") as? [String], ["original"])
+    }
+
+    func testUserAttributeConversions() {
+        let numbers: [(Any, String, Double)] = [
+            (Int(-42), "-42", -42),
+            (Int8(-8), "-8", -8),
+            (Int16(-16), "-16", -16),
+            (Int32(-32), "-32", -32),
+            (Int64.min, "\(Int64.min)", Double(Int64.min)),
+            (UInt(42), "42", 42),
+            (UInt8(8), "8", 8),
+            (UInt16(16), "16", 16),
+            (UInt32(32), "32", 32),
+            (UInt64.max, "\(UInt64.max)", Double(UInt64.max)),
+            (Float(1.25), "1.25", 1.25),
+            (Double(2.5), "2.5", 2.5),
+            (NSNumber(value: true), "1", 1),
+            (NSNumber(value: 0.1), "0.1", 0.1),
+        ]
+        for (value, text, number) in numbers {
+            let attribute = UserAttribute(value)
+            XCTAssertEqual(attribute.asString().0, text)
+            XCTAssertTrue(attribute.asString().1)
+            XCTAssertEqual(attribute.asDouble(), number)
+        }
+
+        XCTAssertEqual(UserAttribute(Float.infinity).asString().0, "Infinity")
+        XCTAssertEqual(UserAttribute(-Double.infinity).asString().0, "-Infinity")
+        XCTAssertEqual(UserAttribute(Double.nan).asString().0, "NaN")
+        XCTAssertTrue(UserAttribute("NaN").asDouble()?.isNaN == true)
+        XCTAssertEqual(UserAttribute(" 2,5 ").asDouble(), 2.5)
+        XCTAssertEqual(UserAttribute(Date(timeIntervalSince1970: 42)).asDateDouble(), 42)
+        XCTAssertNotNil(UserAttribute("1.2.3").asSemver())
+        XCTAssertEqual(UserAttribute(#"["a","b"]"#).asSlice(), ["a", "b"])
+        XCTAssertNil(UserAttribute(true).asDouble())
+    }
+
+    func testInvalidSettingValueSnapshotsDiagnostic() {
+        final class MutableValue: CustomStringConvertible {
+            var description = "original"
+        }
+        let value = MutableValue()
+        let setting = SettingValue.fromAnyValue(value: value)
+        value.description = "changed"
+
+        guard case .error(let error) = setting.toCheckedValue(settingType: .unknown) else {
+            return XCTFail("Expected an invalid setting error")
+        }
+        XCTAssertTrue(error.contains("Setting value 'original' is of an unsupported type (MutableValue"))
+    }
+
+    func testSegmentConditionsResolveDuringParsing() {
+        let json: [String: Any] = [
+            "s": [["n": "segment", "r": []]],
+            "f": ["key": ["t": 0, "v": ["b": false], "r": [
+                ["c": [["s": ["s": 0, "c": 0]]], "s": ["v": ["b": true]]],
+                ["c": [["s": ["s": -1, "c": 0]]], "s": ["v": ["b": true]]],
+            ]]]
+        ]
+        let rules = Config.fromJson(json: json).settings["key"]?.targetingRules
+        XCTAssertEqual(rules?[0].conditions[0].segmentCondition?.segment?.name, "segment")
+        XCTAssertNil(rules?[1].conditions[0].segmentCondition?.segment)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testPrerequisiteCircularDependencies() async {
         let tests = [
             ("key1", "'key1' -> 'key1'"),
