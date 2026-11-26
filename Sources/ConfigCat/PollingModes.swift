@@ -5,6 +5,8 @@ public final class PollingModes: NSObject {
     /**
     Creates a new `AutoPollingMode`.
 
+    Both intervals are clamped to 1...31,536,000 seconds (one year).
+
     - Parameter autoPollIntervalInSeconds: the poll interval in seconds.
     - Parameter maxInitWaitTimeInSeconds: maximum waiting time between initialization and the first config acquisition in seconds.
     - Returns: A new `AutoPollingMode`.
@@ -15,6 +17,8 @@ public final class PollingModes: NSObject {
 
     /**
     Creates a new `LazyLoadingMode`.
+
+    The cache refresh interval is clamped to 1...31,536,000 seconds (one year).
     
     - Parameter cacheRefreshIntervalInSeconds: sets how long the cache will store its value before fetching the latest from the network again.
     - Returns: A new `LazyLoadingMode`.

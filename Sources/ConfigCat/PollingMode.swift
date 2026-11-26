@@ -5,17 +5,15 @@ import Foundation
     var identifier: String { get }
 }
 
+private let maximumIntervalInSeconds = 365 * 24 * 60 * 60
+
 class AutoPollingMode: PollingMode {
     let autoPollIntervalInSeconds: Int
     let maxInitWaitTimeInSeconds: Int
 
     init(autoPollIntervalInSeconds: Int, maxInitWaitTimeInSeconds: Int) {
-        self.autoPollIntervalInSeconds = autoPollIntervalInSeconds < 1
-                ? 1
-                : autoPollIntervalInSeconds
-        self.maxInitWaitTimeInSeconds = maxInitWaitTimeInSeconds < 1
-                ? 1
-                : maxInitWaitTimeInSeconds
+        self.autoPollIntervalInSeconds = min(max(autoPollIntervalInSeconds, 1), maximumIntervalInSeconds)
+        self.maxInitWaitTimeInSeconds = min(max(maxInitWaitTimeInSeconds, 1), maximumIntervalInSeconds)
     }
 
     var identifier: String {
@@ -29,9 +27,7 @@ class LazyLoadingMode: PollingMode {
     let cacheRefreshIntervalInSeconds: Int
 
     init(cacheRefreshIntervalInSeconds: Int) {
-        self.cacheRefreshIntervalInSeconds = cacheRefreshIntervalInSeconds < 1
-                ? 1
-                : cacheRefreshIntervalInSeconds
+        self.cacheRefreshIntervalInSeconds = min(max(cacheRefreshIntervalInSeconds, 1), maximumIntervalInSeconds)
     }
 
     var identifier: String {

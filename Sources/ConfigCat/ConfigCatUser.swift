@@ -6,10 +6,10 @@ public final class ConfigCatUser: NSObject {
     @objc public static let emailKey: String = "Email"
     @objc public static let countryKey: String = "Country"
     
-    private var attributes: [String: Any]
+    private let attributes: [String: Any]
     
     /// The user object's identifier.
-    public private(set) var identifier: String
+    public let identifier: String
     
     /**
      Initializes a new `ConfigCatUser`.
@@ -52,7 +52,7 @@ public final class ConfigCatUser: NSObject {
                       country: String? = nil,
                       custom: [String: Any]? = nil) {
         
-        attributes = [:]
+        var attributes: [String: Any] = [:]
         self.identifier = identifier
         attributes[ConfigCatUser.idKey] = identifier
         
@@ -71,6 +71,7 @@ public final class ConfigCatUser: NSObject {
                 }
             }
         }
+        self.attributes = attributes
     }
     
     init(custom: [String: Any]) {

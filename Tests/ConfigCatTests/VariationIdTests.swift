@@ -146,6 +146,42 @@ class VariationIdTests: XCTestCase {
         wait(for: [expectation1, expectation2, expectation3], timeout: 5)
     }
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testGetKeyAndValueAcrossTasks() async throws {
+        let json = #"""
+        {"f":{
+            "boolKey":{"t":0,"v":{"b":true},"i":"boolId"},
+            "stringKey":{"t":1,"v":{"s":"text"},"i":"stringId"},
+            "intKey":{"t":2,"v":{"i":42},"i":"intId"},
+            "doubleKey":{"t":3,"v":{"d":1.5},"i":"doubleId"}
+        }}
+        """#
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: json, statusCode: 200))
+        let client = createClient(httpEngine: engine)
+        defer { client.close() }
+        let refresh = await client.forceRefresh()
+        XCTAssertTrue(refresh.success)
+
+        var results = [String: KeyValue]()
+        for id in ["boolId", "stringId", "intId", "doubleId"] {
+            let result = await client.getKeyAndValue(for: id)
+            let transferred = await Task.detached { result }.value
+            results[id] = try XCTUnwrap(transferred)
+        }
+
+        XCTAssertEqual("boolKey", results["boolId"]?.key)
+        XCTAssertEqual(true, results["boolId"]?.value as? Bool)
+        XCTAssertEqual("stringKey", results["stringId"]?.key)
+        XCTAssertEqual("text", results["stringId"]?.value as? String)
+        XCTAssertEqual("intKey", results["intId"]?.key)
+        XCTAssertEqual(42, results["intId"]?.value as? Int)
+        XCTAssertEqual("doubleKey", results["doubleId"]?.key)
+        XCTAssertEqual(1.5, results["doubleId"]?.value as? Double)
+    }
+    #endif
+
     func testGetKeyAndValueNotFound() {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: "{}", statusCode: 200))

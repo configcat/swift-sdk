@@ -78,7 +78,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
             if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
                 self.hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .hasLocalOverrideFlagDataOnly))
             } else if !Utils.validateSdkKey(sdkKey: sdkKey, isCustomUrl: !baseUrl.isEmpty) {
-                log.error(eventId: 0, message: "ConfigCat SDK Key is invalid.")
+                log.error(eventId: 0, message: "ConfigCat SDK Key '\(Utils.mask(sdkKey))' is invalid.")
                 self.hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: InMemoryResult(entry: .empty, cacheState: .noFlagData))
             } else {
                 configService?.start()
@@ -129,7 +129,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
                 client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
                     + "No new client instance will be created and the specified configuration action is ignored. "
                     + "Returning the existing client instance. SDK Key: '%@'.",
-                    sdkKey))
+                    Utils.mask(sdkKey)))
             }
         }
 
@@ -313,17 +313,17 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     
     func getValueForVariationId(variationId: String, setting: Setting) -> ValueResult? {
         if variationId == setting.variationId {
-            return setting.value.toAnyChecked(settingType: setting.settingType)
+            return setting.value.toCheckedValue(settingType: setting.settingType)
         }
         for rule in setting.targetingRules {
             if let servedValue = rule.servedValue {
                 if variationId == servedValue.variationId {
-                    return servedValue.value.toAnyChecked(settingType: setting.settingType)
+                    return servedValue.value.toCheckedValue(settingType: setting.settingType)
                 }
             } else if !rule.percentageOptions.isEmpty {
                 for opt in rule.percentageOptions {
                     if variationId == opt.variationId {
-                        return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+                        return opt.servedValue.toCheckedValue(settingType: setting.settingType)
                     }
                 }
             } else {
@@ -332,7 +332,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
         }
         for opt in setting.percentageOptions {
             if variationId == opt.variationId {
-                return opt.servedValue.toAnyChecked(settingType: setting.settingType)
+                return opt.servedValue.toCheckedValue(settingType: setting.settingType)
             }
         }
         return nil

@@ -184,10 +184,10 @@ class RolloutEvaluator {
     }
     
     private func evalResult(value: SettingValue, settingType: SettingType, variationId: String?, rule: TargetingRule?, opt: PercentageOption?) -> EvalResult {
-        let valResult = value.toAnyChecked(settingType: settingType)
+        let valResult = value.toCheckedValue(settingType: settingType)
         switch valResult {
         case .success(let val):
-            return .success(val, variationId, rule, opt)
+            return .success(val.anyValue, variationId, rule, opt)
         case .error(let err):
             return .error(err)
         }
@@ -331,13 +331,13 @@ class RolloutEvaluator {
             return .fatal("Comparison operator is invalid")
         }
         
-        let compValChecked = cond.flagValue.toAnyChecked(settingType: prereq.settingType)
+        let compValChecked = cond.flagValue.toCheckedValue(settingType: prereq.settingType)
         var compVal: Any? = nil
         if case .error(_) = compValChecked, prereq.settingType != .unknown {
             return .fatal("Type mismatch between comparison value '\(cond.flagValue.anyValue ?? "")' and prerequisite flag '\(flagKey)'.")
         }
         if case .success(let val) = compValChecked {
-            compVal = val
+            compVal = val.anyValue
         }
         cycleTracker.append(key)
         if cycleTracker.contains(flagKey) {

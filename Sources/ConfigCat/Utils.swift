@@ -61,6 +61,12 @@ class Utils {
         let keyToHash = sdkKey + "_" + Constants.configJsonName + "_" + Constants.configJsonCacheVersion
         return String(keyToHash.sha1hex)
     }
+
+    static func mask(_ value: String) -> String {
+        let suffixStart = value.index(value.endIndex, offsetBy: -min(6, value.count))
+        let maskedPrefix = value[..<suffixStart].map { $0 == "/" ? "/" : "*" }.joined()
+        return maskedPrefix + value[suffixStart...]
+    }
     
     static func validateSdkKey(sdkKey: String, isCustomUrl: Bool) -> Bool {
         if isCustomUrl && sdkKey.count > Constants.proxyPrefix.count && sdkKey.hasPrefix(Constants.proxyPrefix) {
@@ -86,7 +92,7 @@ class Utils {
         }
         return eq1.isEqual(eq2)
     }
-    
+
     static func toJson(obj: Any) -> String {
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: obj, options: [])

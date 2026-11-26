@@ -229,7 +229,7 @@ class ConfigEntry: Equatable {
     }
     
     func isExpired(seconds: Int) -> Bool {
-        return Date().subtract(seconds: seconds)! > fetchTime;
+        return Date().addingTimeInterval(-TimeInterval(seconds)) > fetchTime
     }
 
     static func fromConfigJson(json: String, eTag: String, fetchTime: Date) -> Result<ConfigEntry, Error>  {
@@ -316,10 +316,7 @@ public class Config: NSObject, JsonSerializable {
                 }
             }
         }
-        if let preferences = json[Config.preferencesKey] as? [String: Any] {
-            return Config(preferences: .fromJson(json: preferences), settings: settings, segments: segments)
-        }
-        return Config(preferences: .empty, settings: settings, segments: segments)
+        return Config(preferences: preferences, settings: settings, segments: segments)
     }
 
     func toJsonMap() -> [String: Any] {
@@ -766,8 +763,24 @@ public final class PrerequisiteFlagCondition: NSObject, JsonSerializable {
     }
 }
 
+enum ScalarValue: Sendable {
+    case bool(Bool)
+    case string(String)
+    case int(Int)
+    case double(Double)
+
+    var anyValue: Any {
+        switch self {
+        case .bool(let value): return value
+        case .string(let value): return value
+        case .int(let value): return value
+        case .double(let value): return value
+        }
+    }
+}
+
 enum ValueResult {
-    case success(Any)
+    case success(ScalarValue)
     case error(String)
 }
 
@@ -898,7 +911,7 @@ public final class SettingValue: NSObject, JsonSerializable {
         return !isValid && invalidValue == nil
     }
     
-    func toAnyChecked(settingType: SettingType) -> ValueResult {
+    func toCheckedValue(settingType: SettingType) -> ValueResult {
         if isEmpty {
             return .error(SettingValue.settingValueMissingMessage)
         }
@@ -910,22 +923,22 @@ public final class SettingValue: NSObject, JsonSerializable {
             guard let val = boolValue else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
-            return .success(val)
+            return .success(.bool(val))
         case .string:
             guard let val = stringValue else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
-            return .success(val)
+            return .success(.string(val))
         case .int:
             guard let val = intValue else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
-            return .success(val)
+            return .success(.int(val))
         case .double:
             guard let val = doubleValue else {
                 return .error(SettingValue.settingValueMissingMessage)
             }
-            return .success(val)
+            return .success(.double(val))
         default:
             return .error("Setting value is missing or invalid")
         }

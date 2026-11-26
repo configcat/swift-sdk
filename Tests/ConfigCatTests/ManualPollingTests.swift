@@ -44,10 +44,11 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 404))
 
         var called = false
+        let expectedError = "Your SDK Key seems to be wrong: ''. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Status code: 404"
         let hooks = Hooks()
         hooks.addOnError { error in
             called = true
-            XCTAssertTrue(error.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
+            XCTAssertEqual(expectedError, error)
         }
         let logger = InternalLogger(log: OSLogger(), level: .warning, hooks: hooks)
 
@@ -70,7 +71,7 @@ class ManualPollingTests: XCTestCase {
         let expectation2 = self.expectation(description: "wait for response")
         service.refresh { result in
             XCTAssertFalse(result.success)
-            XCTAssertTrue(result.error?.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey.") ?? false && result.error?.contains("404") ?? false)
+            XCTAssertEqual(expectedError, result.error)
             XCTAssertEqual(RefreshErrorCode.invalidSdkKey, result.errorCode)
             service.settings { settingsResult in
                 XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)

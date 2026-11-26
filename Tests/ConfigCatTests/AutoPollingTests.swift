@@ -4,6 +4,41 @@ import XCTest
 class AutoPollingTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 1, "v": { "s": "%@" } } } }"#
 
+    func testPollingIntervalBounds() throws {
+        let cases = [
+            (Int.min, 1), (0, 1), (1, 1), (60, 60),
+            (31_536_000, 31_536_000), (31_536_001, 31_536_000), (Int.max, 31_536_000)
+        ]
+        for (input, expected) in cases {
+            let auto = try XCTUnwrap(PollingModes.autoPoll(autoPollIntervalInSeconds: input, maxInitWaitTimeInSeconds: input) as? AutoPollingMode)
+            let lazy = try XCTUnwrap(PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: input) as? LazyLoadingMode)
+            XCTAssertEqual(expected, auto.autoPollIntervalInSeconds)
+            XCTAssertEqual(expected, auto.maxInitWaitTimeInSeconds)
+            XCTAssertEqual(expected, lazy.cacheRefreshIntervalInSeconds)
+        }
+    }
+
+    func testMaximumCacheIntervalSupportsSettingsAndReadyState() throws {
+        let entry = try ConfigEntry.fromConfigJson(
+            json: String(format: testJsonFormat, "cached"), eTag: "cached", fetchTime: Date()
+        ).get()
+        let cache = SingleValueCache(initValue: entry.cacheString)
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: Int.max)
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: true).ensureStarted()
+        defer { service.close() }
+
+        XCTAssertEqual(.hasUpToDateFlagData, service.inMemory.cacheState)
+        let settings = expectation(description: "cached settings returned")
+        service.settings { result in
+            XCTAssertEqual("cached", result.settings["fakeKey"]?.value.stringValue)
+            settings.fulfill()
+        }
+        wait(for: [settings], timeout: 5)
+        XCTAssertTrue(engine.requests.isEmpty)
+    }
+
     func testGet() throws {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))

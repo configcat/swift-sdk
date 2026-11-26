@@ -134,10 +134,10 @@ class ConfigFetcher: NSObject {
                     completion(.failure(message: message, errorCode: .httpRequestFailure, isTransient: true))
                     return
                 }
-                if response.statusCode == 200, let data = data {
+                if response.statusCode == 200 {
                     self.log.debug(message: "Fetch was successful: new config fetched")
                     let etag = response.allHeaderFields["Etag"] as? String ?? ""
-                    let jsonString = String(data: data, encoding: .utf8) ?? ""
+                    let jsonString = data.flatMap { String(data: $0, encoding: .utf8) } ?? ""
                     let result = ConfigEntry.fromConfigJson(json: jsonString, eTag: etag, fetchTime: Date())
                     switch result {
                     case .success(let entry):
@@ -152,8 +152,9 @@ class ConfigFetcher: NSObject {
                     self.log.debug(message: "Fetch was successful: not modified")
                     completion(.notModified)
                 } else if response.statusCode == 404 || response.statusCode == 403 {
-                    let message = String(format: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey. "
+                    let message = String(format: "Your SDK Key seems to be wrong: '%@'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. "
                         + "Status code: %@",
+                        Utils.mask(self.sdkKey),
                         String(response.statusCode))
                     self.log.error(eventId: 1100, message: message)
                     completion(.failure(message: message, errorCode: .invalidSdkKey, isTransient: false))

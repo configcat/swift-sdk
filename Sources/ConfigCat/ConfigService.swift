@@ -179,10 +179,10 @@ class ConfigService {
         var threshold = Date.distantPast
         var preferCache = isInitialized
         if let lazyMode = pollingMode as? LazyLoadingMode {
-            threshold = Date().subtract(seconds: lazyMode.cacheRefreshIntervalInSeconds)!
+            threshold = Date().addingTimeInterval(-TimeInterval(lazyMode.cacheRefreshIntervalInSeconds))
             preferCache = false
         } else if let autoPoll = pollingMode as? AutoPollingMode, !isInitialized {
-            threshold = Date().subtract(seconds: autoPoll.autoPollIntervalInSeconds)!
+            threshold = Date().addingTimeInterval(-TimeInterval(autoPoll.autoPollIntervalInSeconds))
         } else if pollingMode is ManualPollingMode {
             preferCache = true
         }
@@ -325,7 +325,8 @@ class ConfigService {
         }
 
         if shouldInitiateFetchOrSubscribeCompletion(completion: completion) {
-            fetcher.fetch(eTag: currentEntry.eTag) { response in
+            let etag = currentEntry.isEmpty ? "" : currentEntry.eTag
+            fetcher.fetch(eTag: etag) { response in
                 self.processResponse(response: response)
             }
         }
@@ -452,7 +453,7 @@ class ConfigService {
                 return
             }
             this.log.debug(message: "Polling for config.json changes.")
-            this.fetchIfOlder(threshold: Date().subtract(seconds: ageThreshold)!) { _ in
+            this.fetchIfOlder(threshold: Date().addingTimeInterval(-TimeInterval(ageThreshold))) { _ in
                 // we don't have to do anything with the result in the timer ticks.
             }
         })

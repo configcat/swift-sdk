@@ -505,7 +505,8 @@ class ConfigCatClientTests: XCTestCase {
         let changed = expectation(description: "config changed hook called")
         let ready = expectation(description: "ready hook called")
         hooks.addOnError { e in
-            XCTAssertTrue(e.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
+            XCTAssertTrue(e.starts(with: "Your SDK Key seems to be wrong: '"))
+            XCTAssertTrue(e.contains("You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
             XCTAssertTrue(e.contains("404"))
             error.fulfill()
         }
@@ -548,7 +549,8 @@ class ConfigCatClientTests: XCTestCase {
         let changed = expectation(description: "config changed hook called")
         let ready = expectation(description: "ready hook called")
         client.hooks.addOnError { e in
-            XCTAssertTrue(e.starts(with: "Your SDK Key seems to be wrong. You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
+            XCTAssertTrue(e.starts(with: "Your SDK Key seems to be wrong: '"))
+            XCTAssertTrue(e.contains("You can find the valid SDK Key at https://app.configcat.com/sdkkey."))
             XCTAssertTrue(e.contains("404"))
             error.fulfill()
         }
@@ -692,6 +694,38 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertEqual(client2, client3)
     }
 
+    func testMask() {
+        let cases = [
+            ("", ""),
+            ("abc123", "abc123"),
+            ("/abc123", "/abc123"),
+            ("abc/123", "*bc/123"),
+            ("abc123/", "*bc123/"),
+            ("configcat-sdk-1/TEST_KEY-0123456789012/1234567890123456789012", "***************/**********************/****************789012"),
+        ]
+        for (input, expected) in cases {
+            XCTAssertEqual(expected, Utils.mask(input))
+        }
+    }
+
+    func testExistingClientWarningMasksSdkKey() {
+        let sdkKey = "sdk-key-90123456789012/1234567890123456789012"
+        let logger = RecordingLogger()
+        let options = ConfigCatOptions()
+        options.pollingMode = PollingModes.manualPoll()
+        options.configCache = nil
+        options.logger = logger
+        let client = ConfigCatClient.get(sdkKey: sdkKey, options: options)
+        defer { client.close() }
+
+        let existing = ConfigCatClient.get(sdkKey: sdkKey, options: options)
+        XCTAssertTrue(client === existing)
+        XCTAssertEqual(
+            "WARNING [3000] There is an existing client instance for the specified SDK Key. No new client instance will be created and the specified configuration action is ignored. Returning the existing client instance. SDK Key: '\(String(repeating: "*", count: 22))/\(String(repeating: "*", count: 16))789012'.",
+            logger.entries.last
+        )
+    }
+
     func testReadyHookCanGetRegisteredClient() {
         for (mode, localOnly) in [(PollingModes.manualPoll(), false), (PollingModes.lazyLoad(), false), (PollingModes.manualPoll(), true)] {
             let completed = expectation(description: "ready callback can get client")
@@ -781,12 +815,17 @@ class ConfigCatClientTests: XCTestCase {
         
         for test in tests {
             let logger = RecordingLogger()
+            let hooks = Hooks()
+            var errors = [String]()
+            hooks.addOnError { errors.append($0) }
             let customUrl = test.1 ? "https://my-configcat-proxy" : ""
-            let client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, baseUrl: customUrl).ensureStarted()
+            let client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, hooks: hooks, baseUrl: customUrl).ensureStarted()
             
             XCTAssertEqual(test.2, !client.isOffline)
             if !test.2 {
-                XCTAssertEqual("ERROR [0] ConfigCat SDK Key is invalid.", logger.entries.last)
+                let expected = "ConfigCat SDK Key '\(Utils.mask(test.0))' is invalid."
+                XCTAssertEqual("ERROR [0] \(expected)", logger.entries.last)
+                XCTAssertEqual([expected], errors)
             }
         }
     }
