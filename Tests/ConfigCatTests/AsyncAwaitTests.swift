@@ -125,6 +125,97 @@ class AsyncAwaitTests: XCTestCase {
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testScalarBulkResultsAcrossTasks() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+        let user = self.user
+
+        let values = await Task.detached { await client.getAllValues(user: user) }.value
+        XCTAssertEqual(["key1": .bool(true), "key2": .bool(true)], values)
+
+        let details = await Task.detached { await client.getAllValueDetails(user: user) }.value
+        let byKey = Dictionary(uniqueKeysWithValues: details.map { ($0.key, $0) })
+        XCTAssertEqual(.bool(true), byKey["key2"]?.value)
+        XCTAssertEqual("9f21c24c", byKey["key2"]?.variationId)
+        XCTAssertEqual("test@example.com", byKey["key2"]?.user?.attribute(for: ConfigCatUser.emailKey) as? String)
+        XCTAssertEqual("Email", byKey["key2"]?.matchedTargetingRule?.conditions.first?.userCondition?.comparisonAttribute)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testScalarBulkValuesHandleTypesAndInvalidSettings() async {
+        let source = TestDictionaryDataSource(
+            source: ["bool": true, "string": "text", "int": 42, "double": 1.5, "invalid": NSObject()],
+            behaviour: .localOnly
+        )
+        let logger = RecordingLogger()
+        let hooks = Hooks()
+        var evaluatedKeys = [String]()
+        hooks.addOnFlagEvaluated { evaluatedKeys.append($0.key) }
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, hooks: hooks, flagOverrides: source).ensureStarted()
+        defer { client.close() }
+
+        let values = await client.getAllValues()
+        XCTAssertEqual(["bool": .bool(true), "string": .string("text"), "int": .int(42), "double": .double(1.5)], values)
+        XCTAssertEqual(Set(values.keys), Set(evaluatedKeys))
+        XCTAssertTrue(logger.entries.contains { $0.contains("[1002]") && $0.contains("invalid") })
+
+        let details = await client.getAllValueDetails()
+        XCTAssertEqual(Set(values.keys), Set(details.map { $0.key }))
+        XCTAssertEqual(8, evaluatedKeys.count)
+
+        let completed = expectation(description: "values returned")
+        client.getAllValues { completionValues in
+            XCTAssertEqual(values, completionValues)
+            completed.fulfill()
+        }
+        await fulfillment(of: [completed], timeout: 5)
+        XCTAssertEqual(12, evaluatedKeys.count)
+
+        let detailsCompleted = expectation(description: "Objective-C details returned")
+        client.getAllValueDetailsObjC { legacyDetails in
+            XCTAssertEqual(Set(values.keys), Set(legacyDetails.map { $0.key }))
+            XCTAssertEqual(true, legacyDetails.first { $0.key == "bool" }?.value as? Bool)
+            detailsCompleted.fulfill()
+        }
+        await fulfillment(of: [detailsCompleted], timeout: 5)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testScalarBulkResultsWithoutConfiguration() async {
+        let logger = RecordingLogger()
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: MockEngine()).ensureStarted()
+        defer { client.close() }
+
+        let values = await client.getAllValues()
+        let details = await client.getAllValueDetails()
+        XCTAssertTrue(values.isEmpty)
+        XCTAssertTrue(details.isEmpty)
+        XCTAssertEqual(2, logger.entries.filter { $0.contains("[1000]") }.count)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testTypedBulkResultsThroughClientProtocol() async {
+        let source = TestDictionaryDataSource(source: ["flag": true], behaviour: .localOnly)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: nil, flagOverrides: source).ensureStarted()
+        defer { client.close() }
+        let protocolClient: ConfigCatClientProtocol = client
+
+        let values = await protocolClient.getAllValues(user: nil)
+        let details = await protocolClient.getAllValueDetails(user: nil)
+        XCTAssertEqual(.bool(true), values["flag"])
+        XCTAssertEqual(.bool(true), details.first?.value)
+
+        let completed = expectation(description: "typed completion results")
+        protocolClient.getAllValues(user: nil) { values in
+            XCTAssertEqual(.bool(true), values["flag"])
+            completed.fulfill()
+        }
+        await fulfillment(of: [completed], timeout: 5)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testRefresh() async {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))

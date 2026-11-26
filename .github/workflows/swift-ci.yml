@@ -68,6 +68,17 @@ jobs:
           name: test-results
           path: tests
 
+  test-swift-6:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v7
+      - name: Type-check Swift 6 client
+        run: |
+          swift build
+          bin_path="$(swift build --show-bin-path)"
+          swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
+            -typecheck -I "$bin_path" -I "$bin_path/Modules" Tests/Swift6Concurrency/Client.swift
+
   test-thread-sanitizer:
     runs-on: macos-15
     steps:
@@ -89,7 +100,7 @@ jobs:
           path: ThreadSanitizer.xcresult
 
   coverage:
-    needs: [test-ios, test-osx, test-thread-sanitizer]
+    needs: [test-ios, test-osx, test-swift-6, test-thread-sanitizer]
     runs-on: macos-15
     strategy:
       matrix:

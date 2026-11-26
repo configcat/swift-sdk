@@ -1,6 +1,7 @@
 import Foundation
 
 /// A cache API used to make custom cache implementations for `ConfigCatClient`.
+/// Methods may be called concurrently; custom implementations must synchronize their state.
 @objc public protocol ConfigCache {
     /**
      Child classes has to implement this method, the `ConfigCatClient`

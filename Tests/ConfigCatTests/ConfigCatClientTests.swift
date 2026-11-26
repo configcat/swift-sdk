@@ -303,8 +303,8 @@ class ConfigCatClientTests: XCTestCase {
         client.forceRefresh { _ in
             client.getAllValues { allValues in
                 XCTAssertEqual(2, allValues.count)
-                XCTAssertEqual(true, allValues["key1"] as! Bool)
-                XCTAssertEqual(false, allValues["key2"] as! Bool)
+                XCTAssertEqual(.bool(true), allValues["key1"])
+                XCTAssertEqual(.bool(false), allValues["key2"])
                 expectation1.fulfill()
             }
         }

@@ -10,6 +10,7 @@ import Foundation
     case nolog
 }
 
+/// Custom logger methods may be called concurrently and must synchronize shared state.
 @objc public protocol ConfigCatLogger {
     func debug(message: String)
     func warning(message: String)

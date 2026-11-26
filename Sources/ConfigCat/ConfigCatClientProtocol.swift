@@ -28,7 +28,10 @@ public protocol ConfigCatClientProtocol: Sendable {
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping ([EvaluationDetails]) -> ())
+    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping ([TypedEvaluationDetails<ScalarValue>]) -> ())
+
+    /// Gets the values and evaluation details in the Objective-C representation.
+    func getAllValueDetailsObjC(user: ConfigCatUser?, completion: @escaping ([EvaluationDetails]) -> ())
 
     /// Gets all the setting keys asynchronously.
     func getAllKeys(completion: @escaping ([String]) -> ())
@@ -37,7 +40,10 @@ public protocol ConfigCatClientProtocol: Sendable {
     func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ())
 
     /// Gets the values of all feature flags or settings asynchronously.
-    func getAllValues(user: ConfigCatUser?, completion: @escaping ([String: Any]) -> ())
+    func getAllValues(user: ConfigCatUser?, completion: @escaping ([String: ScalarValue]) -> ())
+
+    /// Gets the values in the Objective-C representation.
+    func getAllValuesObjC(user: ConfigCatUser?, completion: @escaping ([String: Any]) -> ())
 
     /// Sets the default user.
     func setDefaultUser(user: ConfigCatUser)
@@ -105,7 +111,7 @@ public protocol ConfigCatClientProtocol: Sendable {
      - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getAllValueDetails(user: ConfigCatUser?) async -> [EvaluationDetails]
+    func getAllValueDetails(user: ConfigCatUser?) async -> [TypedEvaluationDetails<ScalarValue>]
 
     /// Gets all the setting keys asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -117,7 +123,7 @@ public protocol ConfigCatClientProtocol: Sendable {
 
     /// Gets the values of all feature flags or settings asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getAllValues(user: ConfigCatUser?) async -> [String: Any]
+    func getAllValues(user: ConfigCatUser?) async -> [String: ScalarValue]
 
     /**
      Updates the internally cached config by synchronizing with the external cache (if any),

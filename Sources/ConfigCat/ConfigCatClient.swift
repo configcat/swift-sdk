@@ -255,23 +255,32 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    @objc public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
+    @objc public func getAllValueDetailsObjC(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
+        getAllEvaluations(user: user) { evaluations in
+            completion(evaluations.map { $0.details })
+        }
+    }
+
+    private func getAllEvaluations(
+        user: ConfigCatUser?,
+        completion: @escaping ([(value: ScalarValue, details: EvaluationDetails)]) -> Void
+    ) {
         getSettings { result in
             if result.isEmpty {
                 self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
                 completion([])
                 return
             }
-            var detailsResult = [EvaluationDetails]()
+            var evaluations = [(value: ScalarValue, details: EvaluationDetails)]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
                     continue
                 }
-                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.snapshotBuilder.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
-                    detailsResult.append(details)
+                if let evaluation = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.snapshotBuilder.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
+                    evaluations.append(evaluation)
                 }
             }
-            completion(detailsResult)
+            completion(evaluations)
         }
     }
 
@@ -347,23 +356,31 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets the values of all feature flags or settings asynchronously.
-    @objc public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
-        getSettings { result in
-            if result.isEmpty {
-                self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
-                completion([:])
-                return
-            }        
+    @objc public func getAllValuesObjC(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
+        getAllEvaluations(user: user) { evaluations in
             var allValues = [String: Any]()
-            for key in result.settings.keys {
-                guard let setting = result.settings[key] else {
-                    continue
-                }
-                if let details = self.flagEvaluator.evaluateFlag(for: setting, key: key, user: user ?? self.snapshotBuilder.defaultUser, fetchTime: result.fetchTime, settings: result.settings) {
-                    allValues[key] = details.value
-                }
+            for evaluation in evaluations {
+                allValues[evaluation.details.key] = evaluation.details.value
             }
             completion(allValues)
+        }
+    }
+
+    /// Gets the values of all feature flags and settings as transferable scalar values.
+    public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: ScalarValue]) -> Void) {
+        getAllEvaluations(user: user) { evaluations in
+            var values = [String: ScalarValue]()
+            for evaluation in evaluations {
+                values[evaluation.details.key] = evaluation.value
+            }
+            completion(values)
+        }
+    }
+
+    /// Gets transferable values and evaluation details of all feature flags and settings.
+    public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([TypedEvaluationDetails<ScalarValue>]) -> Void) {
+        getAllEvaluations(user: user) { evaluations in
+            completion(evaluations.map { TypedEvaluationDetails(value: $0.value, details: $0.details) })
         }
     }
 

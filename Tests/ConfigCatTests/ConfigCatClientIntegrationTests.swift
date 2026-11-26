@@ -26,7 +26,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         let expectation = expectation(description: "wait for all values")
         client.getAllValues { allValues in
             XCTAssertEqual(16, allValues.count)
-            XCTAssertEqual("Cat", allValues["stringDefaultCat"] as! String)
+            XCTAssertEqual(.string("Cat"), allValues["stringDefaultCat"])
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 20)
@@ -39,7 +39,7 @@ class ConfigCatClientIntegrationTests: XCTestCase {
         }
         defer { client.close() }
         let expectation = expectation(description: "wait for all values")
-        client.getAllValueDetails { details in
+        client.getAllValueDetailsObjC { details in
             XCTAssertEqual(16, details.count)
             expectation.fulfill()
         }

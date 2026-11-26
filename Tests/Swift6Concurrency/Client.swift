@@ -1,0 +1,24 @@
+import ConfigCat
+
+func checkSendable<T: Sendable>(_: T.Type) {}
+
+@MainActor
+func checkAsyncResults(client: ConfigCatClient, user: ConfigCatUser) async {
+    checkSendable(ScalarValue.self)
+    checkSendable(TypedEvaluationDetails<ScalarValue>.self)
+    checkSendable(RefreshResult.self)
+    checkSendable(ClientCacheState.self)
+
+    let values = await Task.detached { await client.getAllValues(user: user) }.value
+    let details = await Task.detached { await client.getAllValueDetails(user: user) }.value
+    let refresh = await Task.detached { await client.forceRefresh() }.value
+    let state = await Task.detached { await client.waitForReady() }.value
+    _ = (values, details, refresh, state)
+}
+
+@MainActor
+func checkProtocolResults(client: any ConfigCatClientProtocol, user: ConfigCatUser) async {
+    let values = await Task.detached { await client.getAllValues(user: user) }.value
+    let details = await Task.detached { await client.getAllValueDetails(user: user) }.value
+    _ = (values, details)
+}

@@ -17,11 +17,11 @@ class LocalTests: XCTestCase {
         let client = ConfigCatClient.get(sdkKey: "testKey", options: options)
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
-            XCTAssertTrue(values["enabledFeature"] as? Bool ?? false)
-            XCTAssertFalse(values["disabledFeature"] as? Bool ?? true)
-            XCTAssertEqual(5, values["intSetting"] as? Int ?? 0)
-            XCTAssertEqual(3.14, values["doubleSetting"] as? Double ?? 0.0)
-            XCTAssertEqual("test", values["stringSetting"] as? String ?? "")
+            XCTAssertEqual(.bool(true), values["enabledFeature"])
+            XCTAssertEqual(.bool(false), values["disabledFeature"])
+            XCTAssertEqual(.int(5), values["intSetting"])
+            XCTAssertEqual(.double(3.14), values["doubleSetting"])
+            XCTAssertEqual(.string("test"), values["stringSetting"])
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -38,8 +38,8 @@ class LocalTests: XCTestCase {
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .localOverRemote)).ensureStarted()
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
-            XCTAssertTrue(values["fakeKey"] as? Bool ?? false)
-            XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
+            XCTAssertEqual(.bool(true), values["fakeKey"])
+            XCTAssertEqual(.bool(true), values["nonexisting"])
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)
@@ -56,8 +56,8 @@ class LocalTests: XCTestCase {
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine, hooks: Hooks(), flagOverrides: LocalDictionaryDataSource(source: dictionary, behaviour: .remoteOverLocal)).ensureStarted()
         let expectation = self.expectation(description: "wait for response")
         client.getAllValues { values in
-            XCTAssertFalse(values["fakeKey"] as? Bool ?? true)
-            XCTAssertTrue(values["nonexisting"] as? Bool ?? false)
+            XCTAssertEqual(.bool(false), values["fakeKey"])
+            XCTAssertEqual(.bool(true), values["nonexisting"])
             expectation.fulfill()
         }
         wait(for: [expectation], timeout: 5)

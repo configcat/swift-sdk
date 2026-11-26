@@ -60,6 +60,7 @@ public final class ConfigCatOptions: NSObject {
 }
 
 /// Hooks for events sent by `ConfigCatClient`.
+/// Handlers can run on different threads and may be invoked concurrently.
 public final class Hooks: NSObject {
     private let mutex: Mutex = Mutex(recursive: true);
     private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []

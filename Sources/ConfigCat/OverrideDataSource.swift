@@ -1,5 +1,6 @@
 import Foundation
 
+/// Custom data sources must support concurrent calls to `getOverrides()`.
 open class OverrideDataSource: NSObject {
     let behaviour: OverrideBehaviour
 

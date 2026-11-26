@@ -169,7 +169,7 @@ class FlagEvaluator {
         user: ConfigCatUser?,
         fetchTime: Date,
         settings: [String: Setting]
-    ) -> EvaluationDetails? {
+    ) -> (value: ScalarValue, details: EvaluationDetails)? {
         let evaluationResult = evaluator.evaluate(
             setting: setting,
             key: key,
@@ -190,7 +190,7 @@ class FlagEvaluator {
                 matchedPercentageOption: option
             )
             hooks.invokeOnFlagEvaluated(details: details)
-            return details
+            return (value, details)
         case .error(let err):
             let message = "Failed to evaluate setting '\(key)' (\(err))"
             self.log.error(eventId: 1002, message: message)

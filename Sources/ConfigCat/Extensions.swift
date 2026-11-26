@@ -207,10 +207,19 @@ extension ConfigCatClient {
             }
         }
 
+        /// Gets the values of all feature flags and settings as transferable scalar values.
         @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getAllValueDetails(user: ConfigCatUser? = nil) async
-            -> [EvaluationDetails]
-        {
+        public func getAllValues(user: ConfigCatUser? = nil) async -> [String: ScalarValue] {
+            await withUnsafeContinuation { continuation in
+                getAllValues(user: user) { values in
+                    continuation.resume(returning: values)
+                }
+            }
+        }
+
+        /// Gets transferable values and evaluation details of all feature flags and settings.
+        @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+        public func getAllValueDetails(user: ConfigCatUser? = nil) async -> [TypedEvaluationDetails<ScalarValue>] {
             await withUnsafeContinuation { continuation in
                 getAllValueDetails(user: user) { details in
                     continuation.resume(returning: details)
@@ -232,17 +241,6 @@ extension ConfigCatClient {
             await withUnsafeContinuation { continuation in
                 getKeyAndValue(for: variationId) { value in
                     continuation.resume(returning: value)
-                }
-            }
-        }
-
-        @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-        public func getAllValues(user: ConfigCatUser? = nil) async -> [String:
-            Any]
-        {
-            await withUnsafeContinuation { continuation in
-                getAllValues(user: user) { values in
-                    continuation.resume(returning: values)
                 }
             }
         }
