@@ -62,8 +62,6 @@ public final class ConfigCatOptions: NSObject {
 /// Hooks for events sent by `ConfigCatClient`.
 public final class Hooks: NSObject {
     private let mutex: Mutex = Mutex(recursive: true);
-    private var readyState: ClientCacheState?
-    private var onReady: [(ClientCacheState) -> ()] = []
     private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
     private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
     private var onConfigChanged: [(Config) -> ()] = []
@@ -71,32 +69,18 @@ public final class Hooks: NSObject {
     private var onError: [(String) -> ()] = []
 
     /**
-     Subscribes a handler to the `onReady` hook with a `ClientCacheState` parameter.
-     - Parameter handler: The handler to subscribe.
-     */
-    @objc public func addOnReady(handler: @escaping (ClientCacheState) -> ()) {
-        let state: ClientCacheState? = mutex.withLock {
-            guard let state = readyState else {
-                onReady.append(handler)
-                return nil
-            }
-            return state
-        }
-        if let state = state {
-            handler(state)
-        }
-    }
-    
-    /**
      Subscribes a handler to the `onReady` hook with a `ConfigCatClientSnapshot` parameter.
+
+     Use the snapshot's `cacheState` property to access the ready state.
      
-     Late subscriptions (through the `client.hooks` property) might not get notified if the client reached the ready state before the subscription.
+     Register through `ConfigCatOptions.hooks` before creating the client. Handlers added after
+     the client reaches the ready state are not notified.
      
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnReady(snapshotHandler: @escaping (ConfigCatClientSnapshot) -> ()) {
+    @objc public func addOnReady(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
         mutex.withLock {
-            onReadyWithSnapshot.append(snapshotHandler)
+            onReadyWithSnapshot.append(handler)
         }
     }
 
@@ -142,16 +126,18 @@ public final class Hooks: NSObject {
     }
 
     func invokeOnReady(snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
-        let (readyCallbacks, snapshotCallbacks) = mutex.withLock {
-            readyState = inMemoryResult.cacheState
-            return (onReady, onReadyWithSnapshot)
-        }
-        for item in readyCallbacks {
-            item(inMemoryResult.cacheState);
-        }
-        if !snapshotCallbacks.isEmpty {
+        let callbacks = snapshotReadyCallbacks()
+        invokeReadyCallbacks(callbacks: callbacks, snapshotBuilder: snapshotBuilder, inMemoryResult: inMemoryResult)
+    }
+
+    func snapshotReadyCallbacks() -> [(ConfigCatClientSnapshot) -> Void] {
+        return mutex.withLock { onReadyWithSnapshot }
+    }
+
+    func invokeReadyCallbacks(callbacks: [(ConfigCatClientSnapshot) -> Void], snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
+        if !callbacks.isEmpty {
             let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
-            for item in snapshotCallbacks {
+            for item in callbacks {
                 item(snapshot);
             }
         }
@@ -188,12 +174,11 @@ public final class Hooks: NSObject {
 
     func clear() {
         mutex.withLock {
-            onError.removeAll()
-            onFlagEvaluated.removeAll()
-            onConfigChanged.removeAll()
-            onReady.removeAll()
-            onConfigChangedWithSnapshot.removeAll()
-            onReadyWithSnapshot.removeAll()
+            onError = []
+            onFlagEvaluated = []
+            onConfigChanged = []
+            onConfigChangedWithSnapshot = []
+            onReadyWithSnapshot = []
         }
     }
 }

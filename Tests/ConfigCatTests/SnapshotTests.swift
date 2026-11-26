@@ -10,11 +10,12 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
         
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
         })
+        client.start()
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()
@@ -28,11 +29,12 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
        
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
         })
+        client.start()
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()
@@ -45,11 +47,12 @@ class SnapshotTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
 
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine)
         let expectation = self.expectation(description: "wait for ready")
         client.hooks.addOnReady(handler: { _ in
             expectation.fulfill()
         })
+        client.start()
         wait(for: [expectation], timeout: 5)
         
         let snapshot = client.snapshot()

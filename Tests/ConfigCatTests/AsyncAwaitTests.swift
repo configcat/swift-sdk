@@ -224,6 +224,51 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertEqual(ClientCacheState.hasCachedFlagDataOnly, state)
         XCTAssertEqual(0, engine.requests.count)
     }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testWaitForReadyWhenClosedBeforeInitialization() async {
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.autoPoll(maxInitWaitTimeInSeconds: 60)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: mode, logger: NoLogger(), httpEngine: engine).ensureStarted()
+        let started = expectation(description: "ready waiter started")
+        let completed = expectation(description: "ready waiter completes")
+        completed.assertForOverFulfill = true
+        Task {
+            started.fulfill()
+            let state = await client.waitForReady()
+            XCTAssertEqual(.noFlagData, state)
+            completed.fulfill()
+        }
+
+        await fulfillment(of: [started], timeout: 5)
+        client.close()
+        await fulfillment(of: [completed], timeout: 5)
+        let lateCompleted = expectation(description: "ready waiter after close completes")
+        Task {
+            let state = await client.waitForReady()
+            XCTAssertEqual(.noFlagData, state)
+            lateCompleted.fulfill()
+        }
+        await fulfillment(of: [lateCompleted], timeout: 5)
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testWaitForReadyPreservesStateAfterRefreshAndClose() async {
+        let engine = MockEngine()
+        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
+        defer { client.close() }
+
+        let initialState = await client.waitForReady()
+        XCTAssertEqual(.noFlagData, initialState)
+        let refresh: RefreshResult = await client.forceRefresh()
+        XCTAssertTrue(refresh.success)
+        XCTAssertEqual(.hasCachedFlagDataOnly, client.snapshot().cacheState)
+
+        client.close()
+        let stateAfterClose = await client.waitForReady()
+        XCTAssertEqual(initialState, stateAfterClose)
+    }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testOfflineRefreshFromCache() async {

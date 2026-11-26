@@ -410,9 +410,17 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     public func waitForReady() async -> ClientCacheState {
         // withCheckedContinuation sometimes crashes on iOS 18.0. See https://github.com/RevenueCat/purchases-ios/pull/4286
         await withUnsafeContinuation { continuation in
-            hooks.addOnReady { state in
-                continuation.resume(returning: state)
+            if let configService = configService {
+                configService.waitForReady { state in
+                    continuation.resume(returning: state)
+                }
+                return
             }
+            if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
+                continuation.resume(returning: .hasLocalOverrideFlagDataOnly)
+                return
+            }
+            continuation.resume(returning: .noFlagData)
         }
     }
     #endif

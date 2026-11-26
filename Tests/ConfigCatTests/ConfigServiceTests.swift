@@ -213,6 +213,59 @@ class ConfigServiceTests: XCTestCase {
         XCTAssertTrue(engine.requests.isEmpty)
     }
 
+    func testReadyHooksAreCapturedBeforeWaitersCloseService() {
+        for mode in [PollingModes.manualPoll(), PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)] {
+            let engine = MockEngine(autoRespond: false)
+            let hooks = Hooks()
+            let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+            let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+            let ready = expectation(description: "captured ready hook runs")
+            let snapshotReady = expectation(description: "captured snapshot hook runs")
+            let waiter = expectation(description: "ready waiter runs once")
+            waiter.assertForOverFulfill = true
+            hooks.addOnReady(handler: { snapshot in
+                XCTAssertEqual(.noFlagData, snapshot.cacheState)
+                ready.fulfill()
+            })
+            hooks.addOnReady(handler: { _ in snapshotReady.fulfill() })
+            service.waitForReady { state in
+                XCTAssertEqual(.noFlagData, state)
+                service.close()
+                hooks.clear()
+                waiter.fulfill()
+            }
+            service.start()
+            wait(for: [waiter, ready, snapshotReady], timeout: 5)
+        }
+    }
+
+    func testCloseBeforeReadyUnblocksWaiterAndSuppressesLateResponseReady() {
+        let engine = MockEngine(autoRespond: false)
+        let mode = PollingModes.manualPoll()
+        let hooks = Hooks()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let waiter = expectation(description: "ready waiter completes on close")
+        waiter.assertForOverFulfill = true
+        let ready = expectation(description: "ready is not reported after close")
+        ready.isInverted = true
+        hooks.addOnReady(handler: { _ in ready.fulfill() })
+        service.waitForReady { state in
+            XCTAssertEqual(.noFlagData, state)
+            waiter.fulfill()
+        }
+        service.refresh { _ in }
+        XCTAssertEqual(1, engine.requests.count)
+        service.close()
+        let lateWaiter = expectation(description: "late waiter completes")
+        service.waitForReady { state in
+            XCTAssertEqual(.noFlagData, state)
+            lateWaiter.fulfill()
+        }
+        engine.respond(Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        wait(for: [waiter, lateWaiter, ready], timeout: 0.1)
+    }
+
     func testOnlineBeforeStartDoesNotPollUntilStarted() {
         let cache = ObservingCache()
         let engine = MockEngine(autoRespond: false)

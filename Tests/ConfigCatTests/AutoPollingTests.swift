@@ -305,9 +305,9 @@ class AutoPollingTests: XCTestCase {
 
         let readyExpectation = expectation(description: "wait for ready")
         let hooks = Hooks()
-        hooks.addOnReady { state in
+        hooks.addOnReady { snapshot in
             readyExpectation.fulfill()
-            XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, state)
+            XCTAssertEqual(ClientCacheState.hasUpToDateFlagData, snapshot.cacheState)
         }
         let initValue = String(format: testJsonFormat, "test").asEntryString()
         let cache = SingleValueCache(initValue: initValue)

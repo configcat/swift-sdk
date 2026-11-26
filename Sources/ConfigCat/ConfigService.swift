@@ -83,6 +83,8 @@ class ConfigService {
     private var closed: Bool = false
     private var cachedEntry: ConfigEntry = .empty
     private var completions: MutableQueue<(FetchResult) -> Void>?
+    private var readyWaiters: [(ClientCacheState) -> ()] = []
+    private var readyState: ClientCacheState?
     private var fetchInProgress = false
     private var pollTimer: DispatchSourceTimer? = nil
     private var initTimer: DispatchSourceTimer? = nil
@@ -119,20 +121,24 @@ class ConfigService {
                         return
                     }
                     // Max wait time expired without result, notify subscribers with the cached config.
-                    let entryAndCompletions = this.mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
+                    let ready = this.mutex.withLock { () -> (InMemoryResult, [(ConfigCatClientSnapshot) -> Void], MutableQueue<(FetchResult) -> Void>?, [(ClientCacheState) -> ()])? in
                         guard !this.initialized && !this.closed else { return nil }
                         this.initialized = true
-                        return (this.cachedEntry, this.takeAndClearCompletions())
+                        let result = this.produceInMemoryResult(entry: this.cachedEntry)
+                        this.readyState = result.cacheState
+                        let readyCallbacks = this.hooks.snapshotReadyCallbacks()
+                        return (result, readyCallbacks, this.takeAndClearCompletions(), this.takeAndClearReadyWaiters())
                     }
-                    if let (entry, pendingCompletions) = entryAndCompletions {
+                    if let (result, readyCallbacks, pendingCompletions, readyWaiters) = ready {
+                        this.unblockReadyWaiters(waiters: readyWaiters, cacheState: result.cacheState)
                         this.log.warning(
                             eventId: 4200,
                             message: String(
                                 format:
                                     "`maxInitWaitTimeInSeconds` for the very first fetch reached (%ds). Returning cached config.",
                                 autoPoll.maxInitWaitTimeInSeconds))
-                        this.hooks.invokeOnReady(snapshotBuilder: this.snapshotBuilder, inMemoryResult: this.produceInMemoryResult(entry: entry))
-                        this.callCompletions(pendingCompletions, result: .success(entry))
+                        this.hooks.invokeReadyCallbacks(callbacks: readyCallbacks, snapshotBuilder: this.snapshotBuilder, inMemoryResult: result)
+                        this.callCompletions(pendingCompletions, result: .success(result.entry))
                     }
                 })
                 initTimer?.resume()
@@ -150,16 +156,21 @@ class ConfigService {
     }
 
     func close() {
-        let entryAndCompletions = mutex.withLock { () -> (ConfigEntry, MutableQueue<(FetchResult) -> Void>?)? in
+        let entryAndCompletions = mutex.withLock { () -> (ConfigEntry, ClientCacheState, MutableQueue<(FetchResult) -> Void>?, [((ClientCacheState) -> ())])? in
             guard !closed else {
                 return nil
             }
             closed = true
+            let state = readyState ?? determineReadyState(entry: cachedEntry)
+            if readyState == nil {
+                readyState = state
+            }
             pollTimer?.cancel()
             initTimer?.cancel()
-            return (cachedEntry, takeAndClearCompletions())
+            return (cachedEntry, state, takeAndClearCompletions(), takeAndClearReadyWaiters())
         }
-        if let (entry, pendingCompletions) = entryAndCompletions {
+        if let (entry, readyState, pendingCompletions, readyWaiters) = entryAndCompletions {
+            unblockReadyWaiters(waiters: readyWaiters, cacheState: readyState)
             callCompletions(pendingCompletions, result: .success(entry))
         }
     }
@@ -243,6 +254,19 @@ class ConfigService {
         }
         if stateChanged {
             log.info(eventId: 5200, message: "Switched to OFFLINE mode.")
+        }
+    }
+
+    func waitForReady(handler: @escaping (ClientCacheState) -> ()) {
+        let state: ClientCacheState? = mutex.withLock {
+            if initialized || closed {
+                return readyState
+            }
+            readyWaiters.append(handler)
+            return nil
+        }
+        if let state = state {
+            handler(state)
         }
     }
 
@@ -368,15 +392,17 @@ class ConfigService {
     }
 
     private func setInitializedAndReportReady(entry: ConfigEntry) {
-        let reported = mutex.withLock {
-            guard !initialized else {
-                return true
-            }
+        let ready = mutex.withLock { () -> (InMemoryResult, [(ConfigCatClientSnapshot) -> ()], [(ClientCacheState) -> ()])? in
+            guard !initialized && !closed else { return nil }
             initialized = true
-            return false
+            let result = produceInMemoryResult(entry: entry)
+            readyState = result.cacheState
+            let readyCallbacks = hooks.snapshotReadyCallbacks()
+            return (result, readyCallbacks, takeAndClearReadyWaiters())
         }
-        if !reported {
-            hooks.invokeOnReady(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
+        if let (result, readyCallbacks, readyWaiters) = ready {
+            unblockReadyWaiters(waiters: readyWaiters, cacheState: result.cacheState)
+            hooks.invokeReadyCallbacks(callbacks: readyCallbacks, snapshotBuilder: snapshotBuilder, inMemoryResult: result)
         }
     }
 
@@ -390,6 +416,12 @@ class ConfigService {
         return pending
     }
 
+    private func takeAndClearReadyWaiters() -> [(ClientCacheState) -> ()] {
+        let waiters = readyWaiters
+        readyWaiters = []
+        return waiters
+    }
+
     private func callCompletions(_ pending: MutableQueue<(FetchResult) -> Void>?, result: FetchResult) {
         if let completions = pending {
             while !completions.isEmpty {
@@ -398,6 +430,12 @@ class ConfigService {
                 }
                 current(result)
             }
+        }
+    }
+
+    private func unblockReadyWaiters(waiters: [(ClientCacheState) -> ()], cacheState: ClientCacheState) {
+        for waiter in waiters {
+            waiter(cacheState)
         }
     }
 

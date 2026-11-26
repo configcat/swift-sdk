@@ -212,7 +212,7 @@ class BlockingCache: ConfigCache {
 
 class EmptySnapshotBuilder: SnapshotBuilderProtocol {
     func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {
-        ConfigCatClientSnapshot(flagEvaluator: FlagEvaluator(log: InternalLogger.noLogger, evaluator: RolloutEvaluator(logger: InternalLogger.noLogger), hooks: Hooks()), settingsSnapshot: SettingsResult.empty, cacheState: .noFlagData, defaultUser: nil, log: InternalLogger.noLogger)
+        ConfigCatClientSnapshot(flagEvaluator: FlagEvaluator(log: InternalLogger.noLogger, evaluator: RolloutEvaluator(logger: InternalLogger.noLogger), hooks: Hooks()), settingsSnapshot: SettingsResult.empty, cacheState: inMemoryResult?.cacheState ?? .noFlagData, defaultUser: nil, log: InternalLogger.noLogger)
     }
     
     var defaultUser: ConfigCatUser?
