@@ -181,6 +181,38 @@ class ConfigServiceTests: XCTestCase {
         engine.respond(Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
     }
 
+    func testResponsesAfterCloseDoNotChangeCacheOrNotify() throws {
+        let initialEntry = try ConfigEntry.fromConfigJson(
+            json: String(format: testJsonFormat, "initial"), eTag: "initial", fetchTime: Date().addingTimeInterval(-60)
+        ).get()
+
+        for statusCode in [200, 304, 403] {
+            let cache = SingleValueCache(initValue: initialEntry.cacheString)
+            let engine = MockEngine(autoRespond: false)
+            let mode = PollingModes.manualPoll()
+            let hooks = Hooks()
+            let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+            let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false).ensureStarted()
+            let initialMemory = service.inMemory.entry.cacheString
+            let initialCache = try cache.read(for: "")
+            XCTAssertEqual("initial", service.inMemory.entry.config.settings["fakeKey"]?.value.stringValue)
+            var completionCount = 0
+            service.refresh { _ in completionCount += 1 }
+            XCTAssertEqual(1, engine.requests.count, "HTTP \(statusCode)")
+
+            service.close()
+            XCTAssertEqual(1, completionCount, "HTTP \(statusCode)")
+            hooks.addOnConfigChanged(snapshotHandler: { _, _ in
+                XCTFail("HTTP \(statusCode) notified config changed after close")
+            })
+            engine.respond(Response(body: String(format: testJsonFormat, "new"), statusCode: statusCode))
+
+            XCTAssertEqual(initialMemory, service.inMemory.entry.cacheString, "HTTP \(statusCode)")
+            XCTAssertEqual(initialCache, try cache.read(for: ""), "HTTP \(statusCode)")
+            XCTAssertEqual(1, completionCount, "HTTP \(statusCode)")
+        }
+    }
+
     func testCloseDuringStartupCacheReadDoesNotApplyEntryOrNotify() throws {
         let entry = try ConfigEntry.fromConfigJson(
             json: String(format: testJsonFormat, "cached"), eTag: "", fetchTime: Date()

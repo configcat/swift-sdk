@@ -357,7 +357,9 @@ class ConfigService {
         var pendingCompletions: MutableQueue<(FetchResult) -> Void>?
         var configChanged = false
         var writeEntryToCache = true
-        let currentEntry: ConfigEntry = mutex.withLock {
+        let currentEntry: ConfigEntry? = mutex.withLock {
+            guard !closed else { return nil }
+
             switch response {
             case .fetched(let entry):
                 cachedEntry = entry
@@ -379,15 +381,17 @@ class ConfigService {
             pendingCompletions = takeAndClearCompletions()
             return cachedEntry
         }
-        if writeEntryToCache {
-            writeCache(entry: currentEntry)
-        }
-        setInitializedAndReportReady(entry: currentEntry)
-        if configChanged {
-            reportConfigChanged(entry: currentEntry)
-        }
-        if let result = completionResult {
-            callCompletions(pendingCompletions, result: result)
+        if let entry = currentEntry {
+            if writeEntryToCache {
+                writeCache(entry: entry)
+            }
+            setInitializedAndReportReady(entry: entry)
+            if configChanged {
+                reportConfigChanged(entry: entry)
+            }
+            if let result = completionResult {
+                callCompletions(pendingCompletions, result: result)
+            }
         }
     }
 
