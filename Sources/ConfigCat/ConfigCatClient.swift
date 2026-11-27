@@ -12,7 +12,7 @@ import os.log
 /// ConfigCat SDK client.
 /// Completion handlers may run synchronously or on other threads. Swift callers must
 /// explicitly hop to the appropriate actor before accessing actor-isolated state.
-public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable {
+public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
