@@ -188,7 +188,7 @@ public final class DoubleEvaluationDetails: NSObject, HasEvaluationMetadata, Sen
     }
 }
 
-public struct TypedEvaluationDetails<Value>: HasEvaluationMetadata {
+public final class TypedEvaluationDetails<Value>: HasEvaluationMetadata {
     /// Metadata associated with the evaluation of the feature flag or setting.
     public let metadata: EvaluationMetadata
     /// Evaluated value of the feature flag or setting.
