@@ -207,7 +207,7 @@ final class BlockingCache: ConfigCache, @unchecked Sendable {
 
 final class EmptySnapshotBuilder: SnapshotBuilderProtocol {
     private let storedDefaultUser: Locked<ConfigCatUser?> = Locked(nil)
-    
+
     func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {
         ConfigCatClientSnapshot(flagEvaluator: FlagEvaluator(log: InternalLogger.noLogger, evaluator: RolloutEvaluator(logger: InternalLogger.noLogger), hooks: Hooks()), settingsSnapshot: SettingsResult.empty, cacheState: inMemoryResult?.cacheState ?? .noFlagData, defaultUser: nil, log: InternalLogger.noLogger)
     }

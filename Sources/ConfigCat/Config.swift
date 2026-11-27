@@ -793,7 +793,7 @@ public enum FlagValue: Equatable, Sendable {
         }
         return nil
     }
-    
+
     /// Returns the string value, or `nil` otherwise.
     public func asString() -> String? {
         if case let .string(value) = self {
