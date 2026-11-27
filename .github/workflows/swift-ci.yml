@@ -83,18 +83,24 @@ jobs:
           diagnostics="$(mktemp)"
           trap 'rm -f "$diagnostics"' EXIT
           for flag in NEGATIVE_HOOK_CALLBACK NEGATIVE_COMPLETION_CALLBACK NEGATIVE_PROTOCOL_CALLBACK; do
-            if ! swiftc -swift-version 6 -strict-concurrency=complete \
+            if swiftc -swift-version 6 -strict-concurrency=complete \
               -typecheck -I "$bin_path" -I "$bin_path/Modules" -D "$flag" \
               Tests/Swift6Concurrency/Client.swift >"$diagnostics" 2>&1; then
-              echo "Expected $flag to compile with a Swift 6 actor-isolation warning"
+              severity=warning
+            else
+              severity=error
+            fi
+            if ! grep -qi "$severity:.*actor-isolated property 'count'" "$diagnostics"; then
+              echo "Expected $flag to emit a Swift 6 actor-isolation $severity"
               cat "$diagnostics"
               exit 1
             fi
-            if ! grep -qi "warning:.*actor-isolated property 'count'" "$diagnostics"; then
-              echo "Expected $flag to emit a Swift 6 actor-isolation warning"
+            if grep -i "error:" "$diagnostics" | grep -vi "error:.*actor-isolated property 'count'"; then
+              echo "Unexpected errors while checking $flag"
               cat "$diagnostics"
               exit 1
             fi
+            echo "$flag: verified actor-isolation $severity"
           done
 
   test-thread-sanitizer:
