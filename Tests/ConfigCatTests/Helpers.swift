@@ -126,50 +126,68 @@ extension Array {
     }
 }
 
-class RecordingLogger: ConfigCatLogger {
-    var entries: [String] = []
+final class RecordingLogger: ConfigCatLogger {
+    let entries: Locked<[String]> = Locked([])
     
+    var logs: [String] {
+        entries.withLock { $0 }
+    }
+
     func debug(message: String) {
-        entries.append("DEBUG \(message)")
+        entries.withLock { e in
+            e.append("DEBUG \(message)")
+        }
     }
     
     func warning(message: String) {
-        entries.append("WARNING \(message)")
+        entries.withLock { e in
+            e.append("WARNING \(message)")
+        }
     }
     
     func info(message: String) {
-        entries.append("INFO \(message)")
+        entries.withLock { e in
+            e.append("INFO \(message)")
+        }
     }
     
     func error(message: String) {
-        entries.append("ERROR \(message)")
+        entries.withLock { e in
+            e.append("ERROR \(message)")
+        }
     }
     
     func reset() {
-        entries = []
+        entries.withLock { e in
+            e.removeAll()
+        }
     }
 }
 
-class TestDictionaryDataSource: OverrideDataSource {
-    private var settings: [String: Setting] = [:]
+final class TestDictionaryDataSource: OverrideDataSource {
+    public let behaviour: OverrideBehaviour
+    private let settings: [String: Setting]
 
     public init(source: [String: Any?], behaviour: OverrideBehaviour) {
-        super.init(behaviour: behaviour)
+        self.behaviour = behaviour
+        var settings: [String: Setting] = [:]
         for (key, value) in source {
             settings[key] = Setting.fromAnyValue(value: value)
         }
+        self.settings = settings
     }
 
-    public override func getOverrides() -> [String: Setting] {
+    public func getOverrides() -> [String: Setting] {
         settings
     }
 }
 
-class BundleResourceDataSource: OverrideDataSource {
-    private var settings: [String: Setting] = [:]
+final class BundleResourceDataSource: OverrideDataSource {
+    public let behaviour: OverrideBehaviour
+    private let settings: [String: Setting]
 
     public init(json: String, behaviour: OverrideBehaviour) throws {
-        super.init(behaviour: behaviour)
+        self.behaviour = behaviour
         let result = ConfigEntry.fromConfigJson(json: json, eTag: "", fetchTime: Date())
         switch result {
         case .success(let entry):
@@ -179,7 +197,7 @@ class BundleResourceDataSource: OverrideDataSource {
         }
     }
 
-    public override func getOverrides() -> [String: Setting] {
+    public func getOverrides() -> [String: Setting] {
         settings
     }
 }

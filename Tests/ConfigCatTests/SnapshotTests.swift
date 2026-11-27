@@ -42,6 +42,19 @@ class SnapshotTests: XCTestCase {
         XCTAssertEqual(2, keys.count)
     }
 
+    func testUntypedSnapshotValueUsesAnyRatherThanFallbackType() {
+        let overrides = LocalDictionaryDataSource(source: ["flag": true], behaviour: .localOnly)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine(), flagOverrides: overrides).ensureStarted()
+        defer { client.close() }
+        let snapshot = client.snapshot()
+        let fallback = NSMutableArray(array: ["fallback"])
+
+        XCTAssertEqual(snapshot.getAnyValue(for: "flag", defaultValue: fallback, user: nil) as? Bool, true)
+        XCTAssertEqual(snapshot.getAnyValue(for: "flag", defaultValue: "fallback", user: nil) as? Bool, true)
+        XCTAssertTrue(snapshot.getAnyValue(for: "missing", defaultValue: fallback, user: nil) as? NSMutableArray === fallback)
+        XCTAssertEqual(snapshot.getAnyValueDetails(for: "flag", defaultValue: fallback, user: nil).value as? Bool, true)
+    }
+
 
     func testDetails() {
         let engine = MockEngine()

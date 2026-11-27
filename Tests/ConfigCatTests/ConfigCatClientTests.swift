@@ -722,7 +722,7 @@ class ConfigCatClientTests: XCTestCase {
         XCTAssertTrue(client === existing)
         XCTAssertEqual(
             "WARNING [3000] There is an existing client instance for the specified SDK Key. No new client instance will be created and the specified configuration action is ignored. Returning the existing client instance. SDK Key: '\(String(repeating: "*", count: 22))/\(String(repeating: "*", count: 16))789012'.",
-            logger.entries.last
+            logger.logs.last
         )
     }
 
@@ -738,12 +738,12 @@ class ConfigCatClientTests: XCTestCase {
                 if localOnly {
                     options.flagOverrides = LocalDictionaryDataSource(source: [:], behaviour: .localOnly)
                 }
-                var registered: ConfigCatClient?
+                let registered = Locked<ConfigCatClient?>(nil)
                 options.hooks.addOnReady(handler: { _ in
-                    registered = ConfigCatClient.get(sdkKey: sdkKey)
+                    registered.withLock { $0 = ConfigCatClient.get(sdkKey: sdkKey) }
                 })
                 let client = ConfigCatClient.get(sdkKey: sdkKey, options: options)
-                XCTAssertTrue(client === registered)
+                XCTAssertTrue(client === registered.withLock { $0 })
                 client.close()
                 completed.fulfill()
             }
@@ -816,16 +816,22 @@ class ConfigCatClientTests: XCTestCase {
         for test in tests {
             let logger = RecordingLogger()
             let hooks = Hooks()
-            var errors = [String]()
-            hooks.addOnError { errors.append($0) }
+            let expected = "ConfigCat SDK Key '\(Utils.mask(test.0))' is invalid."
+            let errorReported = test.2 ? nil : expectation(description: "invalid SDK key reported")
+            errorReported?.assertForOverFulfill = true
+            hooks.addOnError { error in
+                if let errorReported = errorReported {
+                    XCTAssertEqual(expected, error)
+                    errorReported.fulfill()
+                }
+            }
             let customUrl = test.1 ? "https://my-configcat-proxy" : ""
             let client = ConfigCatClient(sdkKey: test.0, pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, hooks: hooks, baseUrl: customUrl).ensureStarted()
             
             XCTAssertEqual(test.2, !client.isOffline)
-            if !test.2 {
-                let expected = "ConfigCat SDK Key '\(Utils.mask(test.0))' is invalid."
-                XCTAssertEqual("ERROR [0] \(expected)", logger.entries.last)
-                XCTAssertEqual([expected], errors)
+            if let errorReported = errorReported {
+                XCTAssertEqual("ERROR [0] \(expected)", logger.logs.last)
+                wait(for: [errorReported], timeout: 5)
             }
         }
     }

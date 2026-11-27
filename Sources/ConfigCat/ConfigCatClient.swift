@@ -10,18 +10,25 @@ import os.log
 }
 
 /// ConfigCat SDK client.
-public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecked Sendable {
+/// Completion handlers may run synchronously or on other threads. Swift callers must
+/// explicitly hop to the appropriate actor before accessing actor-isolated state.
+public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable {
     private let log: InternalLogger
     private let flagEvaluator: FlagEvaluator
     private let configService: ConfigService?
     private let sdkKey: String
     private let overrideDataSource: OverrideDataSource?
     private let baseUrl: String
-    private var snapshotBuilder: SnapshotBuilderProtocol
-    private var closed: Bool = false
-    private var initialized: Bool = false
-    private var lifecycleMutex = Mutex()
+    private let snapshotBuilder: SnapshotBuilderProtocol
+    private let clientState = Locked(ClientState())
 
+    /// This class is only used in Locked context, ensuring thread safety.
+    private final class ClientState: @unchecked Sendable {
+        var initialized: Bool = false
+        var closed: Bool = false
+    }
+
+    /// This class owns its own mutex to protect access to its internal state.
     private final class ClientRegistry: @unchecked Sendable {
         private let mutex = Mutex()
         private var instances: [String: Weak<ConfigCatClient>] = [:]
@@ -76,9 +83,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     func start() {
-        let shouldInit = lifecycleMutex.withLock {
-            guard !initialized && !closed else { return false }
-            initialized = true
+        let shouldInit = clientState.withLock { state in
+            guard !state.initialized && !state.closed else { return false }
+            state.initialized = true
             return true
         }
 
@@ -185,9 +192,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     func closeResources() {
-        let isClosed = lifecycleMutex.withLock {
-            guard !closed else { return true }
-            closed = true
+        let isClosed = clientState.withLock { state in
+            guard !state.closed else { return true }
+            state.closed = true
             return false
         }
 
@@ -211,7 +218,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    public func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (Value) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    public func getValue<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping @Sendable (Value) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
         let evalUser = user ?? snapshotBuilder.defaultUser
         
@@ -234,7 +244,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    public func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping (TypedEvaluationDetails<Value>) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    public func getValueDetails<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser? = nil, completion: @escaping @Sendable (TypedEvaluationDetails<Value>) -> ()) {
         assert(!key.isEmpty, "key cannot be empty")
         let evalUser = user ?? snapshotBuilder.defaultUser
         
@@ -255,7 +268,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    @objc public func getAllValueDetailsObjC(user: ConfigCatUser? = nil, completion: @escaping ([EvaluationDetails]) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func getAllValueDetailsObjC(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([EvaluationDetails]) -> ()) {
         getAllEvaluations(user: user) { evaluations in
             completion(evaluations.map { $0.details })
         }
@@ -263,7 +279,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
     private func getAllEvaluations(
         user: ConfigCatUser?,
-        completion: @escaping ([(value: ScalarValue, details: EvaluationDetails)]) -> Void
+        completion: @escaping @Sendable ([(value: ScalarValue, details: EvaluationDetails)]) -> Void
     ) {
         getSettings { result in
             if result.isEmpty {
@@ -285,7 +301,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets all the setting keys asynchronously.
-    @objc public func getAllKeys(completion: @escaping ([String]) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func getAllKeys(completion: @escaping @Sendable ([String]) -> ()) {
         getSettings { result in
             if result.isEmpty {
                 self.log.error(eventId: 1000, message: "Config JSON is not present. Returning empty array.")
@@ -297,7 +316,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
-    @objc public func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func getKeyAndValue(for variationId: String, completion: @escaping @Sendable (KeyValue?) -> ()) {
         getSettings { result in
             if result.isEmpty {
                 self.log.error(eventId: 1000, message: "Config JSON is not present. Returning nil.")
@@ -356,7 +378,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets the values of all feature flags or settings asynchronously.
-    @objc public func getAllValuesObjC(user: ConfigCatUser? = nil, completion: @escaping ([String: Any]) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func getAllValuesObjC(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([String: Any]) -> ()) {
         getAllEvaluations(user: user) { evaluations in
             var allValues = [String: Any]()
             for evaluation in evaluations {
@@ -367,7 +392,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets the values of all feature flags and settings as transferable scalar values.
-    public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping ([String: ScalarValue]) -> Void) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([String: ScalarValue]) -> Void) {
         getAllEvaluations(user: user) { evaluations in
             var values = [String: ScalarValue]()
             for evaluation in evaluations {
@@ -378,7 +406,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
 
     /// Gets transferable values and evaluation details of all feature flags and settings.
-    public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping ([TypedEvaluationDetails<ScalarValue>]) -> Void) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([TypedEvaluationDetails<ScalarValue>]) -> Void) {
         getAllEvaluations(user: user) { evaluations in
             completion(evaluations.map { TypedEvaluationDetails(value: $0.value, details: $0.details) })
         }
@@ -390,7 +421,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
 
      - Parameter completion: The function which will be called when refresh completed successfully.
      */
-    @objc public func forceRefresh(completion: @escaping (RefreshResult) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func forceRefresh(completion: @escaping @Sendable (RefreshResult) -> ()) {
         if let configService = configService {
             configService.refresh(completion: completion)
         } else {
@@ -450,7 +484,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     }
     #endif
 
-    func getSettings(completion: @escaping (SettingsResult) -> Void) {
+    func getSettings(completion: @escaping @Sendable (SettingsResult) -> Void) {
         if let overrideDataSource = overrideDataSource, overrideDataSource.behaviour == .localOnly {
             completion(SettingsResult(settings: overrideDataSource.getOverrides(), fetchTime: .distantPast))
             return
@@ -484,12 +518,12 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, @unchecke
     
     /// Sets the default user.
     @objc public func setDefaultUser(user: ConfigCatUser) {
-        snapshotBuilder.defaultUser = user
+        snapshotBuilder.setDefaultUser(user: user)
     }
 
     /// Sets the default user to null.
     @objc public func clearDefaultUser() {
-        snapshotBuilder.defaultUser = nil
+        snapshotBuilder.setDefaultUser(user: nil)
     }
 
     /// Configures the client to allow HTTP requests.

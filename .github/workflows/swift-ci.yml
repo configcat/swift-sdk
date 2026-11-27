@@ -80,6 +80,22 @@ jobs:
           bin_path="$(swift build --show-bin-path)"
           swiftc -swift-version 6 -strict-concurrency=complete -warnings-as-errors \
             -typecheck -I "$bin_path" -I "$bin_path/Modules" Tests/Swift6Concurrency/Client.swift
+          diagnostics="$(mktemp)"
+          trap 'rm -f "$diagnostics"' EXIT
+          for flag in NEGATIVE_HOOK_CALLBACK NEGATIVE_COMPLETION_CALLBACK NEGATIVE_PROTOCOL_CALLBACK; do
+            if ! swiftc -swift-version 6 -strict-concurrency=complete \
+              -typecheck -I "$bin_path" -I "$bin_path/Modules" -D "$flag" \
+              Tests/Swift6Concurrency/Client.swift >"$diagnostics" 2>&1; then
+              echo "Expected $flag to compile with a Swift 6 actor-isolation warning"
+              cat "$diagnostics"
+              exit 1
+            fi
+            if ! grep -qi "warning:.*actor-isolated property 'count'" "$diagnostics"; then
+              echo "Expected $flag to emit a Swift 6 actor-isolation warning"
+              cat "$diagnostics"
+              exit 1
+            fi
+          done
 
   test-thread-sanitizer:
     runs-on: macos-15

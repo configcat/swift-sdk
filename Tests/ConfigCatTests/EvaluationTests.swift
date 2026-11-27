@@ -9,6 +9,20 @@ class EvaluationTests: XCTestCase {
         return Bundle(for: type(of: self))
         #endif
     }()
+
+    func testScalarValueFromAnyPreservesNumericTypes() throws {
+        let json = #"[true, false, 0, 1, -1, 0.0, 1.0, 1.5, "text", null]"#
+        let values = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [Any])
+        let expected: [ScalarValue?] = [
+            .bool(true), .bool(false), .int(0), .int(1), .int(-1),
+            .double(0), .double(1), .double(1.5), .string("text"), nil
+        ]
+        XCTAssertEqual(values.map { ScalarValue.fromAny(value: $0) }, expected)
+        XCTAssertEqual(ScalarValue.fromAny(value: true), .bool(true))
+        XCTAssertEqual(ScalarValue.fromAny(value: 1), .int(1))
+        XCTAssertEqual(ScalarValue.fromAny(value: 1.0), .double(1))
+        XCTAssertNil(ScalarValue.fromAny(value: NSNumber(value: UInt64.max)))
+    }
     
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -41,7 +55,7 @@ class EvaluationTests: XCTestCase {
         let numberResult = await client.getValue(for: "number", defaultValue: false, user: user)
         XCTAssertTrue(textResult)
         XCTAssertFalse(numberResult)
-        XCTAssertTrue(logger.entries.contains { $0.contains("'1' is not a valid decimal number") })
+        XCTAssertTrue(logger.logs.contains { $0.contains("'1' is not a valid decimal number") })
     }
 
     func testUserPreservesSupportedAttributeTypes() {
@@ -155,7 +169,7 @@ class EvaluationTests: XCTestCase {
             let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: logger, httpEngine: engine).ensureStarted()
             let _ = await client.getValue(for: test.0, defaultValue: "")
             
-            XCTAssertTrue(logger.entries.last?.contains(test.1) ?? false)
+            XCTAssertTrue(logger.logs.last?.contains(test.1) ?? false)
         }
     }
     
@@ -203,11 +217,11 @@ class EvaluationTests: XCTestCase {
             if test.3 == nil {
                 let type = SettingValue.fromAnyValue(value: test.2).settingType
                 if test.2 == nil {
-                    XCTAssertTrue(logger.entries.last?.contains("Setting value is missing") ?? false, logger.entries.last ?? "")
+                    XCTAssertTrue(logger.logs.last?.contains("Setting value is missing") ?? false, logger.logs.last ?? "")
                 } else if type == .unknown {
-                    XCTAssertTrue(logger.entries.last?.range(of: "Setting value '[^']+' is of an unsupported type", options: .regularExpression) != nil, logger.entries.last ?? "")
+                    XCTAssertTrue(logger.logs.last?.range(of: "Setting value '[^']+' is of an unsupported type", options: .regularExpression) != nil, logger.logs.last ?? "")
                 } else {
-                    XCTAssertTrue(logger.entries.last?.range(of: "Type mismatch between comparison value '[^']+' and prerequisite flag '[^']+'", options: .regularExpression) != nil)
+                    XCTAssertTrue(logger.logs.last?.range(of: "Type mismatch between comparison value '[^']+' and prerequisite flag '[^']+'", options: .regularExpression) != nil)
                 }
             }
         }
@@ -292,7 +306,7 @@ class EvaluationTests: XCTestCase {
         let user = ConfigCatUser(identifier: "12345", custom: ["Custom1": 42])
         let _ = await client.getValueDetails(for: "boolTextEqualsNumber", defaultValue: Optional<Bool>.none, user: user)
         
-        XCTAssertTrue(logger.entries.last?.contains("Evaluation of condition (User.Custom1 EQUALS '42') for setting 'boolTextEqualsNumber' may not produce the expected result (the User.Custom1 attribute is not a string value, thus it was automatically converted to the string value '42'). Please make sure that using a non-string value was intended.") ?? false)
+        XCTAssertTrue(logger.logs.last?.contains("Evaluation of condition (User.Custom1 EQUALS '42') for setting 'boolTextEqualsNumber' may not produce the expected result (the User.Custom1 attribute is not a string value, thus it was automatically converted to the string value '42'). Please make sure that using a non-string value was intended.") ?? false)
     }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

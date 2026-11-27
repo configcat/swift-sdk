@@ -1,14 +1,8 @@
 import Foundation
 
 /// Custom data sources must support concurrent calls to `getOverrides()`.
-open class OverrideDataSource: NSObject {
-    let behaviour: OverrideBehaviour
+@objc public protocol OverrideDataSource: Sendable {
+    var behaviour: OverrideBehaviour { get }
 
-    public init(behaviour: OverrideBehaviour) {
-        self.behaviour = behaviour
-    }
-
-    @objc open func getOverrides() -> [String: Setting] {
-        [:]
-    }
+    @objc func getOverrides() -> [String: Setting]
 }

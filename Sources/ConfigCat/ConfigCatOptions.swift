@@ -61,14 +61,15 @@ public final class ConfigCatOptions: NSObject {
 
 /// Hooks for events sent by `ConfigCatClient`.
 /// Handlers can run on different threads and may be invoked concurrently.
-// Callback registration is locked; handlers must follow the concurrency contract above.
+/// Swift callers must explicitly hop to the appropriate actor before accessing actor-isolated state.
+// Callback registration is locked; handlers are invoked outside the lock.
 public final class Hooks: NSObject, @unchecked Sendable {
-    private let mutex: Mutex = Mutex(recursive: true);
-    private var onReadyWithSnapshot: [(ConfigCatClientSnapshot) -> ()] = []
-    private var onFlagEvaluated: [(EvaluationDetails) -> ()] = []
-    private var onConfigChanged: [(Config) -> ()] = []
-    private var onConfigChangedWithSnapshot: [(Config, ConfigCatClientSnapshot) -> ()] = []
-    private var onError: [(String) -> ()] = []
+    private let mutex: Mutex = Mutex();
+    private var onReadyWithSnapshot: [@Sendable (ConfigCatClientSnapshot) -> ()] = []
+    private var onFlagEvaluated: [@Sendable (EvaluationDetails) -> ()] = []
+    private var onConfigChanged: [@Sendable (Config) -> ()] = []
+    private var onConfigChangedWithSnapshot: [@Sendable (Config, ConfigCatClientSnapshot) -> ()] = []
+    private var onError: [@Sendable (String) -> ()] = []
 
     /**
      Subscribes a handler to the `onReady` hook with a `ConfigCatClientSnapshot` parameter.
@@ -80,7 +81,10 @@ public final class Hooks: NSObject, @unchecked Sendable {
      
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnReady(handler: @escaping (ConfigCatClientSnapshot) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func addOnReady(handler: @escaping @Sendable (ConfigCatClientSnapshot) -> ()) {
         mutex.withLock {
             onReadyWithSnapshot.append(handler)
         }
@@ -90,7 +94,10 @@ public final class Hooks: NSObject, @unchecked Sendable {
      Subscribes a handler to the `onFlagEvaluated` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnFlagEvaluated(handler: @escaping (EvaluationDetails) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func addOnFlagEvaluated(handler: @escaping @Sendable (EvaluationDetails) -> ()) {
         mutex.withLock {
             onFlagEvaluated.append(handler)
         }
@@ -100,7 +107,10 @@ public final class Hooks: NSObject, @unchecked Sendable {
      Subscribes a handler to the `onConfigChangedWithSnapshot` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnConfigChanged(snapshotHandler: @escaping (Config, ConfigCatClientSnapshot) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func addOnConfigChanged(snapshotHandler: @escaping @Sendable (Config, ConfigCatClientSnapshot) -> ()) {
         mutex.withLock {
             onConfigChangedWithSnapshot.append(snapshotHandler)
         }
@@ -110,7 +120,10 @@ public final class Hooks: NSObject, @unchecked Sendable {
      Subscribes a handler to the `onError` hook.
      - Parameter handler: The handler to subscribe.
      */
-    @objc public func addOnError(handler: @escaping (String) -> ()) {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    @objc public func addOnError(handler: @escaping @Sendable (String) -> ()) {
         mutex.withLock {
             onError.append(handler)
         }
@@ -121,11 +134,11 @@ public final class Hooks: NSObject, @unchecked Sendable {
         invokeReadyCallbacks(callbacks: callbacks, snapshotBuilder: snapshotBuilder, inMemoryResult: inMemoryResult)
     }
 
-    func snapshotReadyCallbacks() -> [(ConfigCatClientSnapshot) -> Void] {
+    func snapshotReadyCallbacks() -> [@Sendable (ConfigCatClientSnapshot) -> Void] {
         return mutex.withLock { onReadyWithSnapshot }
     }
 
-    func invokeReadyCallbacks(callbacks: [(ConfigCatClientSnapshot) -> Void], snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
+    func invokeReadyCallbacks(callbacks: [@Sendable (ConfigCatClientSnapshot) -> Void], snapshotBuilder: SnapshotBuilderProtocol, inMemoryResult: InMemoryResult) {
         if !callbacks.isEmpty {
             let snapshot = snapshotBuilder.buildSnapshot(inMemoryResult: inMemoryResult)
             for item in callbacks {

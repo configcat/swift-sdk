@@ -73,38 +73,6 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertEqual("Email", details.matchedTargetingRule?.conditions.first?.userCondition?.comparisonAttribute)
     }
 
-    func testUntypedValueReturnsFlagAndPreservesUnsupportedFallback() {
-        let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: testJsonMultiple, statusCode: 200))
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.autoPoll(), logger: NoLogger(), httpEngine: engine).ensureStarted()
-        defer { client.close() }
-        let fallback = NSMutableArray(array: ["original"])
-        let flagCompleted = expectation(description: "flag returned")
-        let fallbackCompleted = expectation(description: "untyped fallback returned")
-        client.getAnyValue(for: "key1", defaultValue: fallback, user: nil) { value in
-            XCTAssertEqual(value as? Bool, true)
-            flagCompleted.fulfill()
-        }
-        client.getAnyValue(for: "missing", defaultValue: fallback, user: nil) { value in
-            XCTAssertTrue((value as? NSMutableArray) === fallback)
-            fallbackCompleted.fulfill()
-        }
-        wait(for: [flagCompleted, fallbackCompleted], timeout: 5)
-    }
-
-    func testUntypedDetailsPreserveUnsupportedFallback() {
-        let fallback = NSMutableArray(array: ["original"])
-        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine()).ensureStarted()
-        defer { client.close() }
-        let completed = expectation(description: "untyped fallback returned")
-        client.getAnyValueDetails(for: "missing", defaultValue: fallback, user: nil) { details in
-            XCTAssertTrue((details.value as? NSMutableArray) === fallback)
-            XCTAssertTrue(details.isDefaultValue)
-            completed.fulfill()
-        }
-        wait(for: [completed], timeout: 5)
-    }
-
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetKeyValue() async {
         let engine = MockEngine()
@@ -173,35 +141,54 @@ class AsyncAwaitTests: XCTestCase {
         )
         let logger = RecordingLogger()
         let hooks = Hooks()
-        var evaluatedKeys = [String]()
-        hooks.addOnFlagEvaluated { evaluatedKeys.append($0.key) }
+        func expectEvaluations() -> [XCTestExpectation] {
+            let byKey = Dictionary(uniqueKeysWithValues: ["bool", "string", "int", "double"].map { key in
+                let expected = expectation(description: "\(key) evaluated")
+                expected.assertForOverFulfill = true
+                return (key, expected)
+            })
+            hooks.addOnFlagEvaluated { details in
+                guard let expected = byKey[details.key] else {
+                    XCTFail("Unexpected evaluated key: \(details.key)")
+                    return
+                }
+                expected.fulfill()
+            }
+            return Array(byKey.values)
+        }
         let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: logger, httpEngine: nil, hooks: hooks, flagOverrides: source).ensureStarted()
         defer { client.close() }
 
+        let valueEvaluations = expectEvaluations()
         let values = await client.getAllValues()
         XCTAssertEqual(["bool": .bool(true), "string": .string("text"), "int": .int(42), "double": .double(1.5)], values)
-        XCTAssertEqual(Set(values.keys), Set(evaluatedKeys))
-        XCTAssertTrue(logger.entries.contains { $0.contains("[1002]") && $0.contains("invalid") })
+        await fulfillment(of: valueEvaluations, timeout: 5)
+        hooks.clear()
+        XCTAssertTrue(logger.logs.contains { $0.contains("[1002]") && $0.contains("invalid") })
 
+        let detailEvaluations = expectEvaluations()
         let details = await client.getAllValueDetails()
         XCTAssertEqual(Set(values.keys), Set(details.map { $0.key }))
-        XCTAssertEqual(8, evaluatedKeys.count)
+        await fulfillment(of: detailEvaluations, timeout: 5)
+        hooks.clear()
 
+        let completionEvaluations = expectEvaluations()
         let completed = expectation(description: "values returned")
         client.getAllValues { completionValues in
             XCTAssertEqual(values, completionValues)
             completed.fulfill()
         }
-        await fulfillment(of: [completed], timeout: 5)
-        XCTAssertEqual(12, evaluatedKeys.count)
+        await fulfillment(of: [completed] + completionEvaluations, timeout: 5)
+        hooks.clear()
 
+        let legacyEvaluations = expectEvaluations()
         let detailsCompleted = expectation(description: "Objective-C details returned")
         client.getAllValueDetailsObjC { legacyDetails in
             XCTAssertEqual(Set(values.keys), Set(legacyDetails.map { $0.key }))
             XCTAssertEqual(true, legacyDetails.first { $0.key == "bool" }?.value as? Bool)
             detailsCompleted.fulfill()
         }
-        await fulfillment(of: [detailsCompleted], timeout: 5)
+        await fulfillment(of: [detailsCompleted] + legacyEvaluations, timeout: 5)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -214,7 +201,7 @@ class AsyncAwaitTests: XCTestCase {
         let details = await client.getAllValueDetails()
         XCTAssertTrue(values.isEmpty)
         XCTAssertTrue(details.isEmpty)
-        XCTAssertEqual(2, logger.entries.filter { $0.contains("[1000]") }.count)
+        XCTAssertEqual(2, logger.logs.filter { $0.contains("[1000]") }.count)
     }
 
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)

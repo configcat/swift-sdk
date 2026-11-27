@@ -1,12 +1,13 @@
-protocol SnapshotBuilderProtocol {
+protocol SnapshotBuilderProtocol: Sendable {
     func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot
-    var defaultUser: ConfigCatUser? { get set }
+    func setDefaultUser(user: ConfigCatUser?)
+    var defaultUser: ConfigCatUser? { get }
 }
 
-class SnapshotBuilder: SnapshotBuilderProtocol {
+/// Mutable fields are protected by a mutex to ensure thread safety.
+final class SnapshotBuilder: SnapshotBuilderProtocol, Sendable {
     private let flagEvaluator: FlagEvaluator
-    private let mutex: Mutex = Mutex()
-    private var storedDefaultUser: ConfigCatUser?
+    private let storedDefaultUser: Locked<ConfigCatUser?>
     private let overrideDataSource: OverrideDataSource?
     private let log: InternalLogger
     
@@ -17,18 +18,17 @@ class SnapshotBuilder: SnapshotBuilderProtocol {
         log: InternalLogger
     ) {
         self.flagEvaluator = flagEvaluator
-        self.storedDefaultUser = defaultUser
+        self.storedDefaultUser = Locked(defaultUser)
         self.overrideDataSource = overrideDataSource
         self.log = log
     }
 
     var defaultUser: ConfigCatUser? {
-        get {
-            return mutex.withLock { storedDefaultUser }
-        }
-        set {
-            mutex.withLock { storedDefaultUser = newValue }
-        }
+        return storedDefaultUser.withLock { $0 }
+    }
+
+    func setDefaultUser(user: ConfigCatUser?) {
+        storedDefaultUser.withLock { $0 = user }
     }
   
     public func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {

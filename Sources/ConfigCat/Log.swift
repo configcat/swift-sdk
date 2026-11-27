@@ -2,7 +2,7 @@ import os.log
 import os
 import Foundation
 
-@objc public enum ConfigCatLogLevel: Int {
+@objc public enum ConfigCatLogLevel: Int, Sendable {
     case debug
     case info
     case warning
@@ -11,7 +11,7 @@ import Foundation
 }
 
 /// Custom logger methods may be called concurrently and must synchronize shared state.
-@objc public protocol ConfigCatLogger {
+@objc public protocol ConfigCatLogger: Sendable {
     func debug(message: String)
     func warning(message: String)
     func info(message: String)
@@ -19,7 +19,7 @@ import Foundation
 }
 
 // Custom loggers must support concurrent calls as required by ConfigCatLogger.
-final class InternalLogger: @unchecked Sendable {
+final class InternalLogger: Sendable {
     static var noLogger: InternalLogger { InternalLogger(log: NoLogger(), level: .nolog, hooks: Hooks()) }
     let log: ConfigCatLogger
     let level: ConfigCatLogLevel
@@ -61,7 +61,7 @@ final class InternalLogger: @unchecked Sendable {
     }
 }
 
-class OSLogger: ConfigCatLogger {
+final class OSLogger: ConfigCatLogger {
     private static let log: OSLog = OSLog(subsystem: "com.configcat", category: "main")
     
     func debug(message: String) {
@@ -81,7 +81,7 @@ class OSLogger: ConfigCatLogger {
     }
 }
 
-class NoLogger: ConfigCatLogger {
+final class NoLogger: ConfigCatLogger {
     func debug(message: String) {
         // do nothing
     }

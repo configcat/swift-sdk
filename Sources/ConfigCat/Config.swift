@@ -1,4 +1,5 @@
 import Foundation
+import CoreFoundation
 
 enum RedirectMode: Int, Sendable {
     case unknown = -1
@@ -795,6 +796,39 @@ public enum ScalarValue: Equatable, Sendable {
     public func asDouble() -> Double? {
         if case let .double(value) = self {
             return value
+        }
+        return nil
+    }
+
+    public static func fromAny(value: Any?) -> ScalarValue? {
+        guard let value = value else { return nil }
+
+        if type(of: value) is NSNumber.Type, let number = value as? NSNumber {
+            if CFGetTypeID(number) == CFBooleanGetTypeID() {
+                return .bool(number.boolValue)
+            }
+            switch String(cString: number.objCType) {
+            case "f", "d":
+                return .double(number.doubleValue)
+            case "c", "s", "i", "l", "q", "C", "S", "I", "L", "Q":
+                guard let integer = number as? Int else { return nil }
+                return .int(integer)
+            default:
+                return nil
+            }
+        }
+
+        if let boolValue = value as? Bool {
+            return .bool(boolValue)
+        }
+        if let stringValue = value as? String {
+            return .string(stringValue)
+        }
+        if let intValue = value as? Int {
+            return .int(intValue)
+        }
+        if let doubleValue = value as? Double {
+            return .double(doubleValue)
         }
         return nil
     }

@@ -15,7 +15,7 @@ extension ConfigService {
     }
 }
 
-class MockEngine: HttpEngine {
+final class MockEngine: HttpEngine, @unchecked Sendable {
     private let lock = NSLock()
     private let autoRespond: Bool
     private var responses = [Response]()
@@ -32,7 +32,7 @@ class MockEngine: HttpEngine {
         return capturedRequests
     }
 
-    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+    func get(request: URLRequest, completion: @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) {
         lock.lock()
         capturedRequests.append(request)
         guard autoRespond else {
@@ -95,7 +95,7 @@ enum TestError: Error {
     case test
 }
 
-class FailingCache: ConfigCache {
+final class FailingCache: ConfigCache {
     public func read(for key: String) throws -> String {
         throw TestError.test
     }
@@ -105,7 +105,7 @@ class FailingCache: ConfigCache {
     }
 }
 
-class InMemoryConfigCache: NSObject, ConfigCache {
+final class InMemoryConfigCache: NSObject, ConfigCache, @unchecked Sendable {
     private let lock = NSLock()
     private var values = [String: String]()
 
@@ -128,28 +128,23 @@ class InMemoryConfigCache: NSObject, ConfigCache {
     }
 }
 
-class SingleValueCache: NSObject, ConfigCache {
-    private let lock = NSLock()
-    var value: String
+final class SingleValueCache: NSObject, ConfigCache, Sendable {
+    private let value: Locked<String>
 
     init(initValue: String) {
-        value = initValue
+        value = Locked(initValue)
     }
 
     public func read(for key: String) throws -> String {
-        lock.lock()
-        defer { lock.unlock() }
-        return value
+        return value.withLock { $0 }
     }
 
     public func write(for key: String, value: String) throws {
-        lock.lock()
-        defer { lock.unlock() }
-        self.value = value
+        self.value.withLock { $0 = value }
     }
 }
 
-class ObservingCache: ConfigCache {
+final class ObservingCache: ConfigCache {
     let readStarted = DispatchSemaphore(value: 0)
 
     func read(for key: String) throws -> String {
@@ -160,7 +155,7 @@ class ObservingCache: ConfigCache {
     func write(for key: String, value: String) throws {}
 }
 
-class BlockingCache: ConfigCache {
+final class BlockingCache: ConfigCache, @unchecked Sendable {
     private let lock = NSLock()
     private var readCount = 0
     private var storedValue: String
@@ -210,10 +205,18 @@ class BlockingCache: ConfigCache {
     }
 }
 
-class EmptySnapshotBuilder: SnapshotBuilderProtocol {
+final class EmptySnapshotBuilder: SnapshotBuilderProtocol {
+    private let storedDefaultUser: Locked<ConfigCatUser?> = Locked(nil)
+    
     func buildSnapshot(inMemoryResult: InMemoryResult?) -> ConfigCatClientSnapshot {
         ConfigCatClientSnapshot(flagEvaluator: FlagEvaluator(log: InternalLogger.noLogger, evaluator: RolloutEvaluator(logger: InternalLogger.noLogger), hooks: Hooks()), settingsSnapshot: SettingsResult.empty, cacheState: inMemoryResult?.cacheState ?? .noFlagData, defaultUser: nil, log: InternalLogger.noLogger)
     }
     
-    var defaultUser: ConfigCatUser?
+    var defaultUser: ConfigCatUser? {
+        return storedDefaultUser.withLock { $0 }
+    }
+
+    func setDefaultUser(user: ConfigCatUser?) {
+        storedDefaultUser.withLock { $0 = user }
+    }
 }

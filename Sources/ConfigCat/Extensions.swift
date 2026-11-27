@@ -1,11 +1,14 @@
 import Foundation
 
 extension ConfigCatClient {
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getStringValue(
         for key: String,
         defaultValue: String,
         user: ConfigCatUser?,
-        completion: @escaping (String) -> Void
+        completion: @escaping @Sendable (String) -> Void
     ) {
         return getValue(
             for: key,
@@ -15,11 +18,14 @@ extension ConfigCatClient {
         )
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getIntValue(
         for key: String,
         defaultValue: Int,
         user: ConfigCatUser?,
-        completion: @escaping (Int) -> Void
+        completion: @escaping @Sendable (Int) -> Void
     ) {
         return getValue(
             for: key,
@@ -29,11 +35,14 @@ extension ConfigCatClient {
         )
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getDoubleValue(
         for key: String,
         defaultValue: Double,
         user: ConfigCatUser?,
-        completion: @escaping (Double) -> Void
+        completion: @escaping @Sendable (Double) -> Void
     ) {
         return getValue(
             for: key,
@@ -43,11 +52,14 @@ extension ConfigCatClient {
         )
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getBoolValue(
         for key: String,
         defaultValue: Bool,
         user: ConfigCatUser?,
-        completion: @escaping (Bool) -> Void
+        completion: @escaping @Sendable (Bool) -> Void
     ) {
         return getValue(
             for: key,
@@ -57,52 +69,14 @@ extension ConfigCatClient {
         )
     }
 
-    @objc public func getAnyValue(
-        for key: String,
-        defaultValue: Any,
-        user: ConfigCatUser?,
-        completion: @escaping (Any) -> Void
-    ) {
-        return getValue(
-            for: key,
-            // Prevent Swift 6.1 from opening the Any existential and crashing
-            // while compiling this generic call.
-            defaultValue: defaultValue as Any,
-            user: user,
-            completion: completion
-        )
-    }
-
-    @objc public func getAnyValueDetails(
-        for key: String,
-        defaultValue: Any,
-        user: ConfigCatUser?,
-        completion: @escaping (EvaluationDetails) -> Void
-    ) {
-        return getValueDetails(for: key, defaultValue: defaultValue, user: user)
-        { details in
-            completion(
-                EvaluationDetails(
-                    key: details.key,
-                    value: details.value,
-                    variationId: details.variationId,
-                    fetchTime: details.fetchTime,
-                    user: user,
-                    isDefaultValue: details.isDefaultValue,
-                    errorCode: details.errorCode,
-                    error: details.error,
-                    matchedTargetingRule: details.matchedTargetingRule,
-                    matchedPercentageOption: details.matchedPercentageOption
-                )
-            )
-        }
-    }
-
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getStringValueDetails(
         for key: String,
         defaultValue: String,
         user: ConfigCatUser?,
-        completion: @escaping (StringEvaluationDetails) -> Void
+        completion: @escaping @Sendable (StringEvaluationDetails) -> Void
     ) {
         return getValueDetails(for: key, defaultValue: defaultValue, user: user)
         { details in
@@ -110,11 +84,14 @@ extension ConfigCatClient {
         }
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getBoolValueDetails(
         for key: String,
         defaultValue: Bool,
         user: ConfigCatUser?,
-        completion: @escaping (BoolEvaluationDetails) -> Void
+        completion: @escaping @Sendable (BoolEvaluationDetails) -> Void
     ) {
         return getValueDetails(for: key, defaultValue: defaultValue, user: user)
         { details in
@@ -122,11 +99,14 @@ extension ConfigCatClient {
         }
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getIntValueDetails(
         for key: String,
         defaultValue: Int,
         user: ConfigCatUser?,
-        completion: @escaping (IntEvaluationDetails) -> Void
+        completion: @escaping @Sendable (IntEvaluationDetails) -> Void
     ) {
         return getValueDetails(for: key, defaultValue: defaultValue, user: user)
         { details in
@@ -134,11 +114,14 @@ extension ConfigCatClient {
         }
     }
 
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
     @objc public func getDoubleValueDetails(
         for key: String,
         defaultValue: Double,
         user: ConfigCatUser?,
-        completion: @escaping (DoubleEvaluationDetails) -> Void
+        completion: @escaping @Sendable (DoubleEvaluationDetails) -> Void
     ) {
         return getValueDetails(for: key, defaultValue: defaultValue, user: user)
         { details in
@@ -266,7 +249,8 @@ extension ConfigCatClientSnapshot {
         defaultValue: Any,
         user: ConfigCatUser?
     ) -> Any {
-        return getValue(for: key, defaultValue: defaultValue, user: user)
+        // Keep Swift 6 from opening the existential and inferring the fallback's concrete type.
+        return getValue(for: key, defaultValue: defaultValue as Any, user: user)
     }
 
     @objc public func getAnyValueDetails(

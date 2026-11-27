@@ -19,11 +19,11 @@ final class FlagEvaluator: Sendable {
     ) -> EvaluationDetails? {
         if of != String.self && of != String?.self && of != Int.self
             && of != Int?.self && of != Double.self && of != Double?.self
-            && of != Bool.self && of != Bool?.self && of != Any.self
-            && of != Any?.self
+            && of != Bool.self && of != Bool?.self && of != ScalarValue.self
+            && of != ScalarValue?.self && of != Any.self && of != Any?.self
         {
             let message =
-                "Only the following types are supported: String, Int, Double, Bool, and Any (both nullable and non-nullable)."
+                "Only the following types are supported: String, Int, Double, Bool, and ScalarValue (both nullable and non-nullable)."
             log.error(eventId: 2022, message: message)
             let details = EvaluationDetails.fromError(
                 key: key,
@@ -106,7 +106,9 @@ final class FlagEvaluator: Sendable {
         )
         switch evaluationResult {
         case .success(let value, let variationId, let rule, let option):
-            guard let typedValue = value.anyValue as? Value else {
+            let wantsScalar = Value.self == ScalarValue.self || Value.self == ScalarValue?.self
+            let candidate: Any = wantsScalar ? value : value.anyValue
+            guard let typedValue = candidate as? Value else {
                 let message =
                     "The type of a setting must match the type of the specified default value. Setting's type was \(setting.settingType.text) but the default value's type was \(Value.self). Please use a default value which corresponds to the setting type \(setting.settingType.text). Learn more: https://configcat.com/docs/sdk-reference/ios/#setting-type-mapping"
                 self.log.error(eventId: 2002, message: message)

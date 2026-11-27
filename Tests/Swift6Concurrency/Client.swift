@@ -31,3 +31,30 @@ func checkProtocolResults(client: any ConfigCatClientProtocol, user: ConfigCatUs
     let valueDetails = await Task.detached { await client.getValueDetails(for: "flag", defaultValue: Optional<String>.none, user: user) }.value
     _ = (values, details, value, valueDetails)
 }
+
+@MainActor
+final class CallbackOwner {
+    var count = 0
+
+    func subscribe(client: ConfigCatClient, protocolClient: any ConfigCatClientProtocol) {
+        client.hooks.addOnError { [weak self] _ in
+            Task { @MainActor in self?.count += 1 }
+        }
+        client.getValue(for: "flag", defaultValue: false) { [weak self] _ in
+            Task { @MainActor in self?.count += 1 }
+        }
+        protocolClient.getAllKeys { [weak self] _ in
+            Task { @MainActor in self?.count += 1 }
+        }
+
+        #if NEGATIVE_HOOK_CALLBACK
+        client.hooks.addOnError { _ in self.count += 1 }
+        #endif
+        #if NEGATIVE_COMPLETION_CALLBACK
+        client.getValue(for: "flag", defaultValue: false) { _ in self.count += 1 }
+        #endif
+        #if NEGATIVE_PROTOCOL_CALLBACK
+        protocolClient.getAllKeys { _ in self.count += 1 }
+        #endif
+    }
+}

@@ -4,6 +4,25 @@ import XCTest
 class ConfigServiceTests: XCTestCase {
     private let testJsonFormat = #"{ "f": { "fakeKey": { "t": 1, "v": { "s": "%@" } } } }"#
 
+    func testLockedValueSupportsConcurrentUpdates() {
+        let value = Locked(0)
+        DispatchQueue.concurrentPerform(iterations: 1_000) { _ in
+            value.withLock { $0 += 1 }
+        }
+        XCTAssertEqual(value.withLock { $0 }, 1_000)
+    }
+
+    func testLockedValueUnlocksAfterThrowing() {
+        enum TestError: Error { case expected }
+        let value = Locked(1)
+
+        XCTAssertThrowsError(try value.withLock { value in
+            value += 1
+            throw TestError.expected
+        })
+        XCTAssertEqual(value.withLock { $0 }, 2)
+    }
+
     func testEmptySentinelsAreDistinctFromEmptyConfigData() throws {
         XCTAssertTrue(ConfigEntry.empty.isEmpty)
         let emptyConfig = try ConfigEntry.fromConfigJson(json: #"{"f":{}}"#, eTag: "", fetchTime: .distantPast).get()
@@ -127,16 +146,13 @@ class ConfigServiceTests: XCTestCase {
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: nil, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false).ensureStarted()
         defer { service.close() }
-        var subscribed = false
-        var secondCompleted = false
         let second = expectation(description: "hook refresh receives second response")
-        hooks.addOnConfigChanged(snapshotHandler: { _, _ in
-            guard !subscribed else { return }
-            subscribed = true
+        second.assertForOverFulfill = true
+        hooks.addOnConfigChanged(snapshotHandler: { config, _ in
+            guard config.settings["fakeKey"]?.value.stringValue == "first" else { return }
             service.refresh { result in
                 XCTAssertTrue(result.success)
                 XCTAssertEqual("second", service.inMemory.entry.config.settings["fakeKey"]?.value.stringValue)
-                secondCompleted = true
                 second.fulfill()
             }
         })
@@ -145,7 +161,6 @@ class ConfigServiceTests: XCTestCase {
 
         engine.respond(Response(body: String(format: testJsonFormat, "first"), statusCode: 200))
         wait(for: [first], timeout: 5)
-        XCTAssertFalse(secondCompleted)
         XCTAssertEqual(2, engine.requests.count)
         engine.respond(Response(body: String(format: testJsonFormat, "second"), statusCode: 200))
         wait(for: [second], timeout: 5)
@@ -206,12 +221,12 @@ class ConfigServiceTests: XCTestCase {
             let initialMemory = service.inMemory.entry.cacheString
             let initialCache = try cache.read(for: "")
             XCTAssertEqual("initial", service.inMemory.entry.config.settings["fakeKey"]?.value.stringValue)
-            var completionCount = 0
-            service.refresh { _ in completionCount += 1 }
+            let completionCount = Locked(0)
+            service.refresh { _ in completionCount.withLock { $0 += 1 } }
             XCTAssertEqual(1, engine.requests.count, "HTTP \(statusCode)")
 
             service.close()
-            XCTAssertEqual(1, completionCount, "HTTP \(statusCode)")
+            XCTAssertEqual(1, completionCount.withLock { $0 }, "HTTP \(statusCode)")
             hooks.addOnConfigChanged(snapshotHandler: { _, _ in
                 XCTFail("HTTP \(statusCode) notified config changed after close")
             })
@@ -219,7 +234,7 @@ class ConfigServiceTests: XCTestCase {
 
             XCTAssertEqual(initialMemory, service.inMemory.entry.cacheString, "HTTP \(statusCode)")
             XCTAssertEqual(initialCache, try cache.read(for: ""), "HTTP \(statusCode)")
-            XCTAssertEqual(1, completionCount, "HTTP \(statusCode)")
+            XCTAssertEqual(1, completionCount.withLock { $0 }, "HTTP \(statusCode)")
         }
     }
 

@@ -43,12 +43,13 @@ class ManualPollingTests: XCTestCase {
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test2"), statusCode: 404))
 
-        var called = false
+        let errorReported = expectation(description: "error hook called")
+        errorReported.assertForOverFulfill = true
         let expectedError = "Your SDK Key seems to be wrong: ''. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Status code: 404"
         let hooks = Hooks()
         hooks.addOnError { error in
-            called = true
             XCTAssertEqual(expectedError, error)
+            errorReported.fulfill()
         }
         let logger = InternalLogger(log: OSLogger(), level: .warning, hooks: hooks)
 
@@ -78,11 +79,7 @@ class ManualPollingTests: XCTestCase {
                 expectation2.fulfill()
             }
         }
-        wait(for: [expectation2], timeout: 5)
-
-        waitFor {
-            called
-        }
+        wait(for: [expectation2, errorReported], timeout: 5)
     }
     
     func testFailedRequest() throws {

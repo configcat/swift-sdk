@@ -115,16 +115,11 @@ class EvaluationLogTests: XCTestCase {
                 return
             }
             let user = test.user == nil ? nil : ConfigCatUser(custom: test.user!)
-            let completed = expectation(description: "evaluation completed")
-            client.getAnyValue(for: test.key, defaultValue: test.defaultVal, user: user) { res in
-                let exp = (test.user?.count ?? 0) > 1 ? expLogContent.removeTrailingNewLine().trimUserSection() : expLogContent.removeTrailingNewLine()
-                let logs = (test.user?.count ?? 0) > 1 ? logger.entries.joined(separator: "\n").trimUserSection() : logger.entries.joined(separator: "\n")
-
-                XCTAssertTrue(anyEq(a: test.returnVal, b: res), "\(test.returnVal) is not equal to \(res)")
-                XCTAssertEqual(exp, logs)
-                completed.fulfill()
-            }
-            await fulfillment(of: [completed], timeout: 5)
+            let result = await client.getValue(for: test.key, defaultValue: test.defaultVal, user: user)
+            XCTAssertEqual(test.returnVal, result, "\(test.returnVal) is not equal to \(result)")
+            let exp = (test.user?.count ?? 0) > 1 ? expLogContent.removeTrailingNewLine().trimUserSection() : expLogContent.removeTrailingNewLine()
+            let logs = (test.user?.count ?? 0) > 1 ? logger.logs.joined(separator: "\n").trimUserSection() : logger.logs.joined(separator: "\n")
+            XCTAssertEqual(exp, logs)
         }
     }
     #endif
@@ -132,12 +127,12 @@ class EvaluationLogTests: XCTestCase {
 
 class TestCase {
     let key: String
-    let defaultVal: Any
-    let returnVal: Any
+    let defaultVal: ScalarValue
+    let returnVal: ScalarValue
     let expectedLog: String
     let user: [String: Any]?
     
-    init(key: String, defaultVal: Any, returnVal: Any, expectedLog: String, user: [String : Any]?) {
+    init(key: String, defaultVal: ScalarValue, returnVal: ScalarValue, expectedLog: String, user: [String : Any]?) {
         self.key = key
         self.defaultVal = defaultVal
         self.returnVal = returnVal
@@ -147,8 +142,8 @@ class TestCase {
     
     static func fromJson(json: [String: Any]) -> TestCase {
         TestCase(key: json["key"] as? String ?? "",
-                 defaultVal: json["defaultValue"] as Any,
-                 returnVal: json["returnValue"] as Any,
+                 defaultVal: ScalarValue.fromAny(value: json["defaultValue"])!,
+                 returnVal: ScalarValue.fromAny(value: json["returnValue"])!,
                  expectedLog: json["expectedLog"] as? String ?? "",
                  user: json["user"] as? [String : Any])
     }

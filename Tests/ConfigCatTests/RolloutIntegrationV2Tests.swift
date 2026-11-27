@@ -135,7 +135,6 @@ class RolloutIntegrationV2Tests: XCTestCase {
                 }
                 .skip(count: 4)
 
-        var errors: [String] = []
         for k in 1..<rows.count {
             let testObjects = rows[k].components(separatedBy: ";")
                     .map { key in
@@ -173,36 +172,37 @@ class RolloutIntegrationV2Tests: XCTestCase {
             var i: Int = 0
             for settingKey in settingKeys {
                 let expectation = expectation(description: "wait for response")
+                let expected = testObjects[i + 4]
                 if type == .value {
-                    client.getValue(for: settingKey, defaultValue: nil, user: user) { (anyValue: Any?) in
-                        if let boolValue = anyValue as? Bool,
-                           let expectedValue = Bool(testObjects[i + 4].lowercased()) {
+                    client.getValue(for: settingKey, defaultValue: Optional<ScalarValue>.none, user: user) { value in
+                        if let boolValue = value?.asBool(),
+                           let expectedValue = Bool(expected.lowercased()) {
                             if boolValue != expectedValue {
-                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(boolValue)")
+                                XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(boolValue)")
                             }
-                        } else if let intValue = anyValue as? Int,
-                           let expectedValue = Int(testObjects[i + 4]) {
+                        } else if let intValue = value?.asInt(),
+                           let expectedValue = Int(expected) {
                             if intValue != expectedValue {
-                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(intValue)")
+                                XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(intValue)")
                             }
-                        } else if let doubleValue = anyValue as? Double,
-                           let expectedValue = Double(testObjects[i + 4]) {
+                        } else if let doubleValue = value?.asDouble(),
+                           let expectedValue = Double(expected) {
                             if doubleValue != expectedValue {
-                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(doubleValue)")
+                                XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(doubleValue)")
                             }
-                        } else if let stringValue = anyValue as? String {
-                            let expectedValue = testObjects[i + 4]
+                        } else if let stringValue = value?.asString() {
+                            let expectedValue = expected
                             if stringValue != expectedValue {
-                                errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(stringValue)")
+                                XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(stringValue)")
                             }
                         }
                         expectation.fulfill()
                     }
                 } else {
-                    client.getValueDetails(for: settingKey, defaultValue: nil, user: user) { (details: TypedEvaluationDetails<Any?>) in
-                        let expectedValue = testObjects[i + 4]
+                    client.getValueDetails(for: settingKey, defaultValue: Optional<ScalarValue>.none, user: user) { (details: TypedEvaluationDetails<ScalarValue?>) in
+                        let expectedValue = expected
                         if details.variationId != expectedValue {
-                            errors.append("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(details.variationId ?? "")")
+                            XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(details.variationId ?? "")")
                         }
                         expectation.fulfill()
                     }
@@ -211,13 +211,5 @@ class RolloutIntegrationV2Tests: XCTestCase {
                 i += 1
             }
         }
-        
-        if !errors.isEmpty {
-            for err in errors {
-                print(err)
-            }
-        }
-        
-        XCTAssertEqual(0, errors.count)
     }
 }

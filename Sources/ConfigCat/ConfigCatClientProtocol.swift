@@ -1,26 +1,34 @@
 import Foundation
 
 /// Defines the public protocol of the `ConfigCatClient`.
+/// Completion handlers may run synchronously or on other threads. Swift callers must
+/// explicitly hop to the appropriate actor before accessing actor-isolated state.
 public protocol ConfigCatClientProtocol: Sendable {
     /**
-     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `ScalarValue` (both nullable and non-nullable).
      
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    func getValue<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (Value) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getValue<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping @Sendable (Value) -> ())
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `ScalarValue` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    func getValueDetails<Value>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping (TypedEvaluationDetails<Value>) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getValueDetails<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping @Sendable (TypedEvaluationDetails<Value>) -> ())
 
     /**
      Gets the values along with evaluation details of all feature flags and settings.
@@ -28,22 +36,40 @@ public protocol ConfigCatClientProtocol: Sendable {
      - Parameter user: The user object to identify the caller.
      - Parameter completion: The function which will be called when the feature flag or setting is evaluated.
      */
-    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping ([TypedEvaluationDetails<ScalarValue>]) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping @Sendable ([TypedEvaluationDetails<ScalarValue>]) -> ())
 
     /// Gets the values and evaluation details in the Objective-C representation.
-    func getAllValueDetailsObjC(user: ConfigCatUser?, completion: @escaping ([EvaluationDetails]) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getAllValueDetailsObjC(user: ConfigCatUser?, completion: @escaping @Sendable ([EvaluationDetails]) -> ())
 
     /// Gets all the setting keys asynchronously.
-    func getAllKeys(completion: @escaping ([String]) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getAllKeys(completion: @escaping @Sendable ([String]) -> ())
 
     /// Gets the key of a setting and it's value identified by the given Variation ID (analytics)
-    func getKeyAndValue(for variationId: String, completion: @escaping (KeyValue?) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getKeyAndValue(for variationId: String, completion: @escaping @Sendable (KeyValue?) -> ())
 
     /// Gets the values of all feature flags or settings asynchronously.
-    func getAllValues(user: ConfigCatUser?, completion: @escaping ([String: ScalarValue]) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getAllValues(user: ConfigCatUser?, completion: @escaping @Sendable ([String: ScalarValue]) -> ())
 
     /// Gets the values in the Objective-C representation.
-    func getAllValuesObjC(user: ConfigCatUser?, completion: @escaping ([String: Any]) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getAllValuesObjC(user: ConfigCatUser?, completion: @escaping @Sendable ([String: Any]) -> ())
 
     /// Sets the default user.
     func setDefaultUser(user: ConfigCatUser)
@@ -66,7 +92,10 @@ public protocol ConfigCatClientProtocol: Sendable {
 
      - Parameter completion: The function which will be called when refresh completed successfully.
      */
-    func forceRefresh(completion: @escaping (RefreshResult) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func forceRefresh(completion: @escaping @Sendable (RefreshResult) -> ())
     
     /**
      Captures the current state of the client.
@@ -152,15 +181,37 @@ public protocol ConfigCatClientProtocol: Sendable {
 
     /// Objective-C interface
     /// Generic parameters are not available in Objective-C (getValue<Value> cannot be marked @objc)
-    func getStringValue(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (String) -> ())
-    func getIntValue(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (Int) -> ())
-    func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (Double) -> ())
-    func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (Bool) -> ())
-    func getAnyValue(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (Any) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getStringValue(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping @Sendable (String) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getIntValue(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping @Sendable (Int) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getDoubleValue(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping @Sendable (Double) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getBoolValue(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping @Sendable (Bool) -> ())
 
-    func getAnyValueDetails(for key: String, defaultValue: Any, user: ConfigCatUser?, completion: @escaping (EvaluationDetails) -> ())
-    func getStringValueDetails(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping (StringEvaluationDetails) -> ())
-    func getBoolValueDetails(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping (BoolEvaluationDetails) -> ())
-    func getIntValueDetails(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping (IntEvaluationDetails) -> ())
-    func getDoubleValueDetails(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping (DoubleEvaluationDetails) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getStringValueDetails(for key: String, defaultValue: String, user: ConfigCatUser?, completion: @escaping @Sendable (StringEvaluationDetails) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getBoolValueDetails(for key: String, defaultValue: Bool, user: ConfigCatUser?, completion: @escaping @Sendable (BoolEvaluationDetails) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getIntValueDetails(for key: String, defaultValue: Int, user: ConfigCatUser?, completion: @escaping @Sendable (IntEvaluationDetails) -> ())
+    #if compiler(>=5.6)
+    @preconcurrency
+    #endif
+    func getDoubleValueDetails(for key: String, defaultValue: Double, user: ConfigCatUser?, completion: @escaping @Sendable (DoubleEvaluationDetails) -> ())
 }

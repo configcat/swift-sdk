@@ -66,26 +66,15 @@ enum FetchResult {
     case failure(String, RefreshErrorCode, ConfigEntry)
 }
 
-class ConfigService {
+final class ConfigService: Sendable {
     private let snapshotBuilder: SnapshotBuilderProtocol
     private let log: InternalLogger
     private let fetcher: ConfigFetcher
-    private let mutex: Mutex = Mutex(recursive: true)
     private let cache: ConfigCache?
     private let pollingMode: PollingMode
     private let hooks: Hooks
     private let cacheKey: String
-    private var started: Bool = false
-    private var initialized: Bool = false
-    private var offline: Bool = false
-    private var closed: Bool = false
-    private var cachedEntry: ConfigEntry = .empty
-    private var completions: MutableQueue<(FetchResult) -> Void>?
-    private var readyWaiters: [(ClientCacheState) -> ()] = []
-    private var readyState: ClientCacheState?
-    private var fetchInProgress = false
-    private var pollTimer: DispatchSourceTimer? = nil
-    private var initTimer: DispatchSourceTimer? = nil
+    private let serviceState: Locked<ServiceState>
 
     init(
         snapshotBuilder: SnapshotBuilderProtocol, log: InternalLogger, fetcher: ConfigFetcher,
@@ -97,35 +86,35 @@ class ConfigService {
         self.cache = cache
         self.pollingMode = pollingMode
         self.hooks = hooks
-        self.offline = offline
+        self.serviceState = Locked(ServiceState(offline: offline))
         cacheKey = Utils.generateCacheKey(sdkKey: sdkKey)
     }
 
     func start() {
         if let autoPoll = pollingMode as? AutoPollingMode {
-            mutex.withLock {
-                if closed || started { return }
+            serviceState.withLock { state in
+                if state.closed || state.started { return }
 
-                started = true
-                startPoll(mode: autoPoll)
+                state.started = true
+                startPoll(interval: autoPoll.autoPollIntervalInSeconds, state: state)
 
                 // Waiting for the client initialization.
                 // After the maxInitWaitTimeInSeconds timeout the client will be initialized and while the config is not ready
                 // the default value will be returned.
-                initTimer = DispatchSource.makeTimerSource()
-                initTimer?.schedule(deadline: .now() + .seconds(autoPoll.maxInitWaitTimeInSeconds))
-                initTimer?.setEventHandler(handler: { [weak self] in
+                state.initTimer = DispatchSource.makeTimerSource()
+                state.initTimer?.schedule(deadline: .now() + .seconds(autoPoll.maxInitWaitTimeInSeconds))
+                state.initTimer?.setEventHandler(handler: { [weak self] in
                     guard let this = self else {
                         return
                     }
                     // Max wait time expired without result, notify subscribers with the cached config.
-                    let ready = this.mutex.withLock { () -> (InMemoryResult, [(ConfigCatClientSnapshot) -> Void], MutableQueue<(FetchResult) -> Void>?, [(ClientCacheState) -> ()])? in
-                        guard !this.initialized && !this.closed else { return nil }
-                        this.initialized = true
-                        let result = this.produceInMemoryResult(entry: this.cachedEntry)
-                        this.readyState = result.cacheState
+                    let ready = this.serviceState.withLock { (state) -> (InMemoryResult, [@Sendable (ConfigCatClientSnapshot) -> Void], MutableQueue<@Sendable (FetchResult) -> Void>?, [@Sendable (ClientCacheState) -> ()])? in
+                        guard !state.initialized && !state.closed else { return nil }
+                        state.initialized = true
+                        let result = this.produceInMemoryResult(entry: state.cachedEntry)
+                        state.readyState = result.cacheState
                         let readyCallbacks = this.hooks.snapshotReadyCallbacks()
-                        return (result, readyCallbacks, this.takeAndClearCompletions(), this.takeAndClearReadyWaiters())
+                        return (result, readyCallbacks, state.takeAndClearCompletions(), state.takeAndClearReadyWaiters())
                     }
                     if let (result, readyCallbacks, pendingCompletions, readyWaiters) = ready {
                         this.unblockReadyWaiters(waiters: readyWaiters, cacheState: result.cacheState)
@@ -139,12 +128,12 @@ class ConfigService {
                         this.callCompletions(pendingCompletions, result: .success(result.entry))
                     }
                 })
-                initTimer?.resume()
+                state.initTimer?.resume()
             }
         } else {
-            let shouldSync = mutex.withLock {
-                if closed || started { return false }
-                started = true
+            let shouldSync = serviceState.withLock { state in
+                if state.closed || state.started { return false }
+                state.started = true
                 return true
             }
             if shouldSync {
@@ -154,18 +143,18 @@ class ConfigService {
     }
 
     func close() {
-        let entryAndCompletions = mutex.withLock { () -> (ConfigEntry, ClientCacheState, MutableQueue<(FetchResult) -> Void>?, [((ClientCacheState) -> ())])? in
-            guard !closed else {
+        let entryAndCompletions = serviceState.withLock { (state) -> (ConfigEntry, ClientCacheState, MutableQueue<@Sendable (FetchResult) -> Void>?, [@Sendable (ClientCacheState) -> ()])? in
+            guard !state.closed else {
                 return nil
             }
-            closed = true
-            let state = readyState ?? determineReadyState(entry: cachedEntry)
-            if readyState == nil {
-                readyState = state
+            state.closed = true
+            let readyState = state.readyState ?? ConfigService.determineReadyState(entry: state.cachedEntry, pollingMode: pollingMode)
+            if state.readyState == nil {
+                state.readyState = readyState
             }
-            pollTimer?.cancel()
-            initTimer?.cancel()
-            return (cachedEntry, state, takeAndClearCompletions(), takeAndClearReadyWaiters())
+            state.pollTimer?.cancel()
+            state.initTimer?.cancel()
+            return (state.cachedEntry, readyState, state.takeAndClearCompletions(), state.takeAndClearReadyWaiters())
         }
         if let (entry, readyState, pendingCompletions, readyWaiters) = entryAndCompletions {
             unblockReadyWaiters(waiters: readyWaiters, cacheState: readyState)
@@ -173,7 +162,7 @@ class ConfigService {
         }
     }
 
-    func settings(completion: @escaping (SettingsResult) -> Void) {
+    func settings(completion: @escaping @Sendable (SettingsResult) -> Void) {
         var threshold = Date.distantPast
         var preferCache = isInitialized
         if let lazyMode = pollingMode as? LazyLoadingMode {
@@ -203,7 +192,7 @@ class ConfigService {
         }
     }
 
-    func refresh(completion: @escaping (RefreshResult) -> Void) {
+    func refresh(completion: @escaping @Sendable (RefreshResult) -> Void) {
         if isOffline && cache == nil {
             let offlineWarning = "Client is in offline mode, it cannot initiate HTTP calls."
             log.warning(eventId: 3200, message: offlineWarning)
@@ -222,18 +211,18 @@ class ConfigService {
     }
 
     func setOnline() {
-        let stateChanged = mutex.withLock {
-            if closed || !offline {
+        let stateChanged = serviceState.withLock { state in
+            if state.closed || !state.offline {
                 return false
             }
-            offline = false
-            if !started {
+            state.offline = false
+            if !state.started {
                 return true
             }
-            pollTimer?.cancel()
-            pollTimer = nil
+            state.pollTimer?.cancel()
+            state.pollTimer = nil
             if let autoPoll = pollingMode as? AutoPollingMode {
-                startPoll(mode: autoPoll)
+                startPoll(interval: autoPoll.autoPollIntervalInSeconds, state: state)
             }
             return true
         }
@@ -243,11 +232,11 @@ class ConfigService {
     }
 
     func setOffline() {
-        let stateChanged = mutex.withLock {
-            if closed || offline {
+        let stateChanged = serviceState.withLock { state in
+            if state.closed || state.offline {
                 return false
             }
-            offline = true
+            state.offline = true
             return true
         }
         if stateChanged {
@@ -255,12 +244,12 @@ class ConfigService {
         }
     }
 
-    func waitForReady(handler: @escaping (ClientCacheState) -> ()) {
-        let state: ClientCacheState? = mutex.withLock {
-            if initialized || closed {
-                return readyState
+    func waitForReady(handler: @escaping @Sendable (ClientCacheState) -> ()) {
+        let state: ClientCacheState? = serviceState.withLock { state in
+            if state.initialized || state.closed {
+                return state.readyState
             }
-            readyWaiters.append(handler)
+            state.readyWaiters.append(handler)
             return nil
         }
         if let state = state {
@@ -269,42 +258,42 @@ class ConfigService {
     }
 
     var isOffline: Bool {
-        return mutex.withLock {
-            offline
+        return serviceState.withLock { state in
+            state.offline
         }
     }
 
     var inMemory: InMemoryResult {
-        return mutex.withLock {
-            return produceInMemoryResult(entry: cachedEntry)
+        return serviceState.withLock { state in
+            return produceInMemoryResult(entry: state.cachedEntry)
         }  
     }
 
     private var isInitialized: Bool {
-        return mutex.withLock {
-            initialized
+        return serviceState.withLock { state in
+            state.initialized
         }
     }
 
     private func fetchIfOlder(
-        threshold: Date, preferCache: Bool = false, completion: @escaping (FetchResult) -> Void
+        threshold: Date, preferCache: Bool = false, completion: @escaping @Sendable (FetchResult) -> Void
     ) {
         let entry = readCache()
         var configChanged = false
         var expired = false
         var clientOffline = false
-        let (currentEntry, isClosed) = mutex.withLock {
-            guard !closed else {
-                return (cachedEntry, true)
+        let (currentEntry, isClosed) = serviceState.withLock { state in
+            guard !state.closed else {
+                return (state.cachedEntry, true)
             }
 
-            if !entry.isEmpty, entry != cachedEntry, cachedEntry.isEmpty || entry.fetchTime > cachedEntry.fetchTime {
-                cachedEntry = entry
+            if !entry.isEmpty, entry != state.cachedEntry, state.cachedEntry.isEmpty || entry.fetchTime > state.cachedEntry.fetchTime {
+                state.cachedEntry = entry
                 configChanged = true
             }
-            expired = cachedEntry.fetchTime <= threshold
-            clientOffline = offline
-            return (cachedEntry, false)
+            expired = state.cachedEntry.fetchTime <= threshold
+            clientOffline = state.offline
+            return (state.cachedEntry, false)
         }
 
         if isClosed {
@@ -331,18 +320,18 @@ class ConfigService {
     }
 
     private func shouldInitiateFetchOrSubscribeCompletion(
-        completion: @escaping (FetchResult) -> Void
+        completion: @escaping @Sendable (FetchResult) -> Void
     ) -> Bool {
-        let (closedEntry, shouldInitiate): (ConfigEntry?, Bool) = mutex.withLock {
-            guard !closed else {
-                return (cachedEntry, false)
+        let (closedEntry, shouldInitiate): (ConfigEntry?, Bool) = serviceState.withLock { state in
+            guard !state.closed else {
+                return (state.cachedEntry, false)
             }
-            if completions == nil {
-                completions = MutableQueue()
+            if state.completions == nil {
+                state.completions = MutableQueue()
             }
-            completions?.enqueue(item: completion)
-            guard !fetchInProgress else { return (nil, false) }
-            fetchInProgress = true
+            state.completions?.enqueue(item: completion)
+            guard !state.fetchInProgress else { return (nil, false) }
+            state.fetchInProgress = true
             return (nil, true)
         }
         if let entry = closedEntry {
@@ -353,32 +342,32 @@ class ConfigService {
 
     private func processResponse(response: FetchResponse) {
         var completionResult: FetchResult?
-        var pendingCompletions: MutableQueue<(FetchResult) -> Void>?
+        var pendingCompletions: MutableQueue<@Sendable (FetchResult) -> Void>?
         var configChanged = false
         var writeEntryToCache = true
-        let currentEntry: ConfigEntry? = mutex.withLock {
-            guard !closed else { return nil }
+        let currentEntry: ConfigEntry? = serviceState.withLock { state in
+            guard !state.closed else { return nil }
 
             switch response {
             case .fetched(let entry):
-                cachedEntry = entry
+                state.cachedEntry = entry
                 configChanged = true
                 completionResult = .success(entry)
             case .notModified:
-                cachedEntry = cachedEntry.withFetchTime(time: Date())
-                completionResult = .success(cachedEntry)
+                state.cachedEntry = state.cachedEntry.withFetchTime(time: Date())
+                completionResult = .success(state.cachedEntry)
             case .failure(let error, let errorCode, let isTransient):
-                if !isTransient && !cachedEntry.isEmpty {
-                    cachedEntry = cachedEntry.withFetchTime(time: Date())
+                if !isTransient && !state.cachedEntry.isEmpty {
+                    state.cachedEntry = state.cachedEntry.withFetchTime(time: Date())
                 } else {
                     writeEntryToCache = false
                 }
-                completionResult = .failure(error, errorCode, cachedEntry)
+                completionResult = .failure(error, errorCode, state.cachedEntry)
                 
             }
-            fetchInProgress = false
-            pendingCompletions = takeAndClearCompletions()
-            return cachedEntry
+            state.fetchInProgress = false
+            pendingCompletions = state.takeAndClearCompletions()
+            return state.cachedEntry
         }
         if let entry = currentEntry {
             if writeEntryToCache {
@@ -395,13 +384,13 @@ class ConfigService {
     }
 
     private func setInitializedAndReportReady(entry: ConfigEntry) {
-        let ready = mutex.withLock { () -> (InMemoryResult, [(ConfigCatClientSnapshot) -> ()], [(ClientCacheState) -> ()])? in
-            guard !initialized && !closed else { return nil }
-            initialized = true
+        let ready = serviceState.withLock { (state) -> (InMemoryResult, [@Sendable (ConfigCatClientSnapshot) -> ()], [@Sendable (ClientCacheState) -> ()])? in
+            guard !state.initialized && !state.closed else { return nil }
+            state.initialized = true
             let result = produceInMemoryResult(entry: entry)
-            readyState = result.cacheState
+            state.readyState = result.cacheState
             let readyCallbacks = hooks.snapshotReadyCallbacks()
-            return (result, readyCallbacks, takeAndClearReadyWaiters())
+            return (result, readyCallbacks, state.takeAndClearReadyWaiters())
         }
         if let (result, readyCallbacks, readyWaiters) = ready {
             unblockReadyWaiters(waiters: readyWaiters, cacheState: result.cacheState)
@@ -413,19 +402,7 @@ class ConfigService {
         hooks.invokeOnConfigChanged(snapshotBuilder: snapshotBuilder, inMemoryResult: produceInMemoryResult(entry: entry))
     }
 
-    private func takeAndClearCompletions() -> MutableQueue<(FetchResult) -> Void>? {
-        let pending = completions
-        completions = nil
-        return pending
-    }
-
-    private func takeAndClearReadyWaiters() -> [(ClientCacheState) -> ()] {
-        let waiters = readyWaiters
-        readyWaiters = []
-        return waiters
-    }
-
-    private func callCompletions(_ pending: MutableQueue<(FetchResult) -> Void>?, result: FetchResult) {
+    private func callCompletions(_ pending: MutableQueue<@Sendable (FetchResult) -> Void>?, result: FetchResult) {
         if let completions = pending {
             while !completions.isEmpty {
                 guard let current = completions.dequeue() else {
@@ -436,17 +413,15 @@ class ConfigService {
         }
     }
 
-    private func unblockReadyWaiters(waiters: [(ClientCacheState) -> ()], cacheState: ClientCacheState) {
+    private func unblockReadyWaiters(waiters: [@Sendable (ClientCacheState) -> ()], cacheState: ClientCacheState) {
         for waiter in waiters {
             waiter(cacheState)
         }
     }
 
-    private func startPoll(mode: AutoPollingMode) {
-        pollTimer = DispatchSource.makeTimerSource()
-        pollTimer?.schedule(deadline: .now(), repeating: .seconds(mode.autoPollIntervalInSeconds))
-        let ageThreshold = Int(Double(mode.autoPollIntervalInSeconds) * 0.8)
-        pollTimer?.setEventHandler(handler: { [weak self] in
+    private func startPoll(interval: Int, state: ServiceState) {
+        let ageThreshold = Int(Double(interval) * 0.8)
+        state.startPoll(interval: interval, handler: { [weak self] in
             guard let this = self else {
                 return
             }
@@ -455,7 +430,6 @@ class ConfigService {
                 // we don't have to do anything with the result in the timer ticks.
             }
         })
-        pollTimer?.resume()
     }
 
     private func writeCache(entry: ConfigEntry) {
@@ -477,12 +451,10 @@ class ConfigService {
         guard let cache = cache else {
             return .empty
         }
-        let entryAtReadStart = mutex.withLock {
-            cachedEntry
-        }
+        let entryStringAtReadStart = serviceState.withLock { $0.cachedEntry.cacheString }
         do {
             let json = try cache.read(for: cacheKey)
-            if json.isEmpty || json == entryAtReadStart.cacheString {
+            if json.isEmpty || json == entryStringAtReadStart {
                 return .empty
             }
             let cached = ConfigEntry.fromCached(cached: json)
@@ -508,10 +480,10 @@ class ConfigService {
     }
 
     private func produceInMemoryResult(entry: ConfigEntry) -> InMemoryResult {
-        return InMemoryResult(entry: entry, cacheState: determineReadyState(entry: entry))
+        return InMemoryResult(entry: entry, cacheState: ConfigService.determineReadyState(entry: entry, pollingMode: pollingMode))
     }
 
-    private func determineReadyState(entry: ConfigEntry) -> ClientCacheState {
+    private static func determineReadyState(entry: ConfigEntry, pollingMode: PollingMode) -> ClientCacheState {
         if entry.isEmpty {
             return .noFlagData
         }
@@ -530,5 +502,43 @@ class ConfigService {
         }
 
         return .hasUpToDateFlagData
+    }
+
+    /// This class is only used inside Locked, so it can't be modified without holding a mutex.
+    private final class ServiceState: @unchecked Sendable {
+        var started: Bool = false
+        var initialized: Bool = false
+        var offline: Bool = false
+        var closed: Bool = false
+        var cachedEntry: ConfigEntry = .empty
+        var completions: MutableQueue<@Sendable (FetchResult) -> Void>?
+        var readyWaiters: [@Sendable (ClientCacheState) -> ()] = []
+        var readyState: ClientCacheState?
+        var fetchInProgress = false
+        var pollTimer: DispatchSourceTimer? = nil
+        var initTimer: DispatchSourceTimer? = nil
+
+        init(offline: Bool) {
+            self.offline = offline
+        }
+
+        func takeAndClearCompletions() -> MutableQueue<@Sendable (FetchResult) -> Void>? {
+            let pending = completions
+            completions = nil
+            return pending
+        }
+
+        func takeAndClearReadyWaiters() -> [@Sendable (ClientCacheState) -> ()] {
+            let waiters = readyWaiters
+            readyWaiters = []
+            return waiters
+        }
+
+        func startPoll(interval: Int, handler: @escaping () -> Void) {
+            pollTimer = DispatchSource.makeTimerSource()
+            pollTimer?.schedule(deadline: .now(), repeating: .seconds(interval))
+            pollTimer?.setEventHandler(handler: handler)
+            pollTimer?.resume()
+        }
     }
 }

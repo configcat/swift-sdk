@@ -6,8 +6,13 @@ class ConfigFetcherTests: XCTestCase {
         for baseUrl in ["https://[", "https://example.com:bad", "https://exa mple.com"] {
             let engine = MockEngine(autoRespond: false)
             let hooks = Hooks()
-            var loggedErrors = [String]()
-            hooks.addOnError { loggedErrors.append($0) }
+            let expectedMessage = "Unexpected error occurred while trying to fetch config JSON. The configuration URL is invalid."
+            let errorReported = expectation(description: "invalid URL reported")
+            errorReported.assertForOverFulfill = true
+            hooks.addOnError { error in
+                XCTAssertEqual(expectedMessage, error)
+                errorReported.fulfill()
+            }
             let logger = InternalLogger(log: NoLogger(), level: .nolog, hooks: hooks)
             let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: "", mode: "m", dataGovernance: .global, baseUrl: baseUrl)
             let expectation = self.expectation(description: "invalid URL completes")
@@ -21,11 +26,10 @@ class ConfigFetcherTests: XCTestCase {
                 }
                 XCTAssertEqual(errorCode, .httpRequestFailure)
                 XCTAssertTrue(isTransient)
-                XCTAssertTrue(message.contains("configuration URL is invalid"))
-                XCTAssertEqual(loggedErrors, [message])
+                XCTAssertEqual(expectedMessage, message)
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 5)
+            wait(for: [expectation, errorReported], timeout: 5)
             XCTAssertTrue(engine.requests.isEmpty)
         }
     }
@@ -41,8 +45,13 @@ class ConfigFetcherTests: XCTestCase {
             let engine = MockEngine()
             engine.enqueueResponse(response: Response(response: response))
             let hooks = Hooks()
-            var loggedErrors = [String]()
-            hooks.addOnError { loggedErrors.append($0) }
+            let expectedMessage = "Unexpected error occurred while trying to fetch config JSON. The network request did not return an HTTP response."
+            let errorReported = expectation(description: "invalid response reported")
+            errorReported.assertForOverFulfill = true
+            hooks.addOnError { error in
+                XCTAssertEqual(expectedMessage, error)
+                errorReported.fulfill()
+            }
             let logger = InternalLogger(log: NoLogger(), level: .nolog, hooks: hooks)
             let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: "", mode: "m", dataGovernance: .global)
             let expectation = self.expectation(description: "invalid response completes")
@@ -56,11 +65,10 @@ class ConfigFetcherTests: XCTestCase {
                 }
                 XCTAssertEqual(errorCode, .httpRequestFailure)
                 XCTAssertTrue(isTransient)
-                XCTAssertTrue(message.contains("did not return an HTTP response"))
-                XCTAssertEqual(loggedErrors, [message])
+                XCTAssertEqual(expectedMessage, message)
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 5)
+            wait(for: [expectation, errorReported], timeout: 5)
         }
     }
 
@@ -73,8 +81,8 @@ class ConfigFetcherTests: XCTestCase {
             let engine = MockEngine()
             engine.enqueueResponse(response: response)
             let hooks = Hooks()
-            var hookErrors = [String]()
-            hooks.addOnError { hookErrors.append($0) }
+            let hookErrors = Locked<[String]>([])
+            hooks.addOnError { error in hookErrors.withLock { $0.append(error) } }
             let recordingLogger = RecordingLogger()
             let logger = InternalLogger(log: recordingLogger, level: .warning, hooks: hooks)
             let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: "", mode: "m", dataGovernance: .global)
@@ -90,8 +98,8 @@ class ConfigFetcherTests: XCTestCase {
                 XCTAssertEqual(errorCode, .invalidHttpResponseContent)
                 XCTAssertTrue(isTransient)
                 XCTAssertTrue(message.contains("HTTP response content was invalid"))
-                XCTAssertEqual(hookErrors, [message])
-                XCTAssertEqual(recordingLogger.entries, ["ERROR [1105] \(message)"])
+                XCTAssertEqual(hookErrors.withLock { $0 }, [message])
+                XCTAssertEqual(recordingLogger.logs, ["ERROR [1105] \(message)"])
                 expectation.fulfill()
             }
             wait(for: [expectation], timeout: 5)
@@ -134,12 +142,16 @@ class ConfigFetcherTests: XCTestCase {
             let engine = MockEngine()
             engine.enqueueResponse(response: Response(body: "", statusCode: statusCode))
             let hooks = Hooks()
-            var hookErrors = [String]()
-            hooks.addOnError { hookErrors.append($0) }
+            let expectedMessage = "Your SDK Key seems to be wrong: '\(maskedKey)'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Status code: \(statusCode)"
+            let errorReported = expectation(description: "invalid SDK key reported")
+            errorReported.assertForOverFulfill = true
+            hooks.addOnError { error in
+                XCTAssertEqual(expectedMessage, error)
+                errorReported.fulfill()
+            }
             let recordingLogger = RecordingLogger()
             let logger = InternalLogger(log: recordingLogger, level: .warning, hooks: hooks)
             let fetcher = ConfigFetcher(httpEngine: engine, logger: logger, sdkKey: sdkKey, mode: "m", dataGovernance: .global)
-            let expectedMessage = "Your SDK Key seems to be wrong: '\(maskedKey)'. You can find the valid SDK Key at https://app.configcat.com/sdkkey. Status code: \(statusCode)"
             let expectation = self.expectation(description: "HTTP \(statusCode) completes")
 
             fetcher.fetch(eTag: "") { response in
@@ -151,11 +163,10 @@ class ConfigFetcherTests: XCTestCase {
                 XCTAssertEqual(message, expectedMessage)
                 XCTAssertEqual(errorCode, .invalidSdkKey)
                 XCTAssertFalse(isTransient)
-                XCTAssertEqual(hookErrors, [expectedMessage])
-                XCTAssertEqual(recordingLogger.entries, ["ERROR [1100] \(expectedMessage)"])
+                XCTAssertEqual(recordingLogger.logs, ["ERROR [1100] \(expectedMessage)"])
                 expectation.fulfill()
             }
-            wait(for: [expectation], timeout: 5)
+            wait(for: [expectation, errorReported], timeout: 5)
         }
     }
 

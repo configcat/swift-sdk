@@ -26,30 +26,30 @@ func ==(lhs: FetchResponse, rhs: FetchResponse) -> Bool {
     }
 }
 
-protocol HttpEngine {
-    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void)
+protocol HttpEngine: Sendable {
+    func get(request: URLRequest, completion: @escaping @Sendable (Data?, URLResponse?, Error?) -> Void)
 }
 
-class URLSessionEngine: HttpEngine {
+final class URLSessionEngine: HttpEngine {
     fileprivate let session: URLSession
 
     init(session: URLSession) {
         self.session = session
     }
 
-    func get(request: URLRequest, completion: @escaping (Data?, URLResponse?, Error?) -> Void) {
+    func get(request: URLRequest, completion: @escaping @Sendable (Data?, URLResponse?, Error?) -> Void) {
         session.dataTask(with: request, completionHandler: completion).resume()
     }
 }
 
-class ConfigFetcher: NSObject {
+/// Mutable fields are protected by a mutex to ensure thread safety.
+final class ConfigFetcher: NSObject, Sendable {
     private let log: InternalLogger
     private let httpEngine: HttpEngine
-    private var baseUrl: String
+    private let baseUrl: Locked<String>
     private let mode: String
     private let sdkKey: String
     private let urlIsCustom: Bool
-    private let mutex: Mutex = Mutex()
 
     init(httpEngine: HttpEngine, logger: InternalLogger, sdkKey: String, mode: String,
          dataGovernance: DataGovernance, baseUrl: String = "") {
@@ -57,22 +57,20 @@ class ConfigFetcher: NSObject {
         self.httpEngine = httpEngine
         self.sdkKey = sdkKey
         urlIsCustom = !baseUrl.isEmpty
-        self.baseUrl = baseUrl.isEmpty
+        self.baseUrl = Locked(baseUrl.isEmpty
                 ? dataGovernance == DataGovernance.euOnly
                 ? Constants.euOnlyBaseUrl
                 : Constants.globalBaseUrl
-                : baseUrl
+                : baseUrl)
         self.mode = mode
     }
 
-    func fetch(eTag: String, completion: @escaping (FetchResponse) -> Void) {
+    func fetch(eTag: String, completion: @escaping @Sendable (FetchResponse) -> Void) {
         executeFetch(eTag: eTag, executionCount: 2, completion: completion)
     }
 
-    private func executeFetch(eTag: String, executionCount: Int, completion: @escaping (FetchResponse) -> Void) {
-        let url = self.mutex.withLock {
-            self.baseUrl
-        }
+    private func executeFetch(eTag: String, executionCount: Int, completion: @escaping @Sendable (FetchResponse) -> Void) {
+        let url = self.baseUrl.withLock { $0 }
         sendFetchRequest(url: url, eTag: eTag, completion: { response in
             guard case .fetched(let entry) = response else {
                 completion(response)
@@ -88,9 +86,7 @@ class ConfigFetcher: NSObject {
                 completion(response)
                 return
             }
-            self.mutex.withLock {
-                self.baseUrl = newUrl
-            }
+            self.baseUrl.withLock { $0 = newUrl }
             if redirect == .noRedirect {
                 completion(response)
                 return
@@ -108,7 +104,7 @@ class ConfigFetcher: NSObject {
         })
     }
 
-    private func sendFetchRequest(url: String, eTag: String, completion: @escaping (FetchResponse) -> Void) {
+    private func sendFetchRequest(url: String, eTag: String, completion: @escaping @Sendable (FetchResponse) -> Void) {
         guard let request = getRequest(url: url, eTag: eTag) else {
             let message = "Unexpected error occurred while trying to fetch config JSON. The configuration URL is invalid."
             self.log.error(eventId: 1103, message: message)
