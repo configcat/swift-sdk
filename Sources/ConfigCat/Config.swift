@@ -206,7 +206,7 @@ protocol JsonSerializable {
     func toJsonMap() -> [String: Any]
 }
 
-class ConfigEntry: Equatable {
+final class ConfigEntry: Equatable, Sendable {
     static func ==(lhs: ConfigEntry, rhs: ConfigEntry) -> Bool {
         lhs.eTag == rhs.eTag
     }
@@ -269,7 +269,7 @@ class ConfigEntry: Equatable {
     static var empty: ConfigEntry { ConfigEntry(eTag: "empty", isEmpty: true) }
 }
 
-public class Config: NSObject, JsonSerializable {
+public final class Config: NSObject, JsonSerializable, Sendable {
     static let preferencesKey = "p"
     static let settingsKey = "f"
     static let segmentsKey = "s"

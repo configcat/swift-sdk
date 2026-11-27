@@ -31,6 +31,67 @@ class AsyncAwaitTests: XCTestCase {
         XCTAssertTrue(details.isDefaultValue)
         XCTAssertEqual(EvaluationErrorCode.settingKeyMissing, details.errorCode)
     }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testMissingAndEmptyConfigHaveDistinctErrors() async {
+        let behaviours: [OverrideBehaviour?] = [nil, .localOverRemote, .remoteOverLocal]
+        for behaviour in behaviours {
+            let engine = MockEngine()
+            engine.enqueueResponse(response: Response(body: #"{"f":{}}"#, statusCode: 200))
+            let source = behaviour.map { LocalDictionaryDataSource(source: [:], behaviour: $0) }
+            let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: engine, flagOverrides: source).ensureStarted()
+
+            let missing = await client.getValueDetails(for: "flag", defaultValue: false)
+            let missingSnapshot = client.snapshot().getValueDetails(for: "flag", defaultValue: false)
+            XCTAssertEqual(.configJsonNotAvailable, missing.errorCode)
+            XCTAssertEqual(.configJsonNotAvailable, missingSnapshot.errorCode)
+            XCTAssertFalse(missing.value)
+            XCTAssertFalse(missingSnapshot.value)
+
+            let refresh = await client.forceRefresh()
+            XCTAssertTrue(refresh.success)
+            let empty = await client.getValueDetails(for: "flag", defaultValue: false)
+            let emptySnapshot = client.snapshot().getValueDetails(for: "flag", defaultValue: false)
+            XCTAssertEqual(.settingKeyMissing, empty.errorCode)
+            XCTAssertEqual(.settingKeyMissing, emptySnapshot.errorCode)
+            XCTAssertFalse(empty.value)
+            XCTAssertFalse(emptySnapshot.value)
+            client.close()
+        }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testOverrideAvailabilityWithoutRemoteConfig() async {
+        for behaviour in [OverrideBehaviour.localOverRemote, .remoteOverLocal] {
+            for hasOverride in [false, true] {
+                let source = LocalDictionaryDataSource(source: hasOverride ? ["local": true] : [:], behaviour: behaviour)
+                let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine(), flagOverrides: source, offline: true).ensureStarted()
+                let expected: EvaluationErrorCode = hasOverride ? .settingKeyMissing : .configJsonNotAvailable
+
+                let details = await client.getValueDetails(for: "missing", defaultValue: false)
+                let snapshot = client.snapshot()
+                XCTAssertEqual(expected, details.errorCode)
+                XCTAssertEqual(expected, snapshot.getValueDetails(for: "missing", defaultValue: false).errorCode)
+                if hasOverride {
+                    let value = await client.getValue(for: "local", defaultValue: false)
+                    XCTAssertTrue(value)
+                    XCTAssertTrue(snapshot.getValue(for: "local", defaultValue: false))
+                }
+                client.close()
+            }
+        }
+    }
+
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+    func testEmptyLocalOnlyOverridesAreAvailable() async {
+        let source = LocalDictionaryDataSource(source: [:], behaviour: .localOnly)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: MockEngine(), flagOverrides: source).ensureStarted()
+        defer { client.close() }
+
+        let details = await client.getValueDetails(for: "missing", defaultValue: false)
+        XCTAssertEqual(.settingKeyMissing, details.errorCode)
+        XCTAssertEqual(.settingKeyMissing, client.snapshot().getValueDetails(for: "missing", defaultValue: false).errorCode)
+    }
     
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testGetValueTypeMismatch() async {

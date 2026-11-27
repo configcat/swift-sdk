@@ -1,6 +1,6 @@
 import Foundation
 
-enum FetchResponse: Equatable {
+enum FetchResponse: Equatable, Sendable {
     case fetched(ConfigEntry)
     case notModified
     case failure(message: String, errorCode: RefreshErrorCode, isTransient: Bool)

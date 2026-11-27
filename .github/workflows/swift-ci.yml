@@ -82,25 +82,41 @@ jobs:
             -typecheck -I "$bin_path" -I "$bin_path/Modules" Tests/Swift6Concurrency/Client.swift
           diagnostics="$(mktemp)"
           trap 'rm -f "$diagnostics"' EXIT
-          for flag in NEGATIVE_HOOK_CALLBACK NEGATIVE_COMPLETION_CALLBACK NEGATIVE_PROTOCOL_CALLBACK; do
+          check_negative() {
+            local label="$1"
+            shift
             if swiftc -swift-version 6 -strict-concurrency=complete \
-              -typecheck -I "$bin_path" -I "$bin_path/Modules" -D "$flag" \
+              -typecheck -I "$bin_path" -I "$bin_path/Modules" "$@" \
               Tests/Swift6Concurrency/Client.swift >"$diagnostics" 2>&1; then
               severity=warning
             else
               severity=error
             fi
             if ! grep -qi "$severity:.*actor-isolated property 'count'" "$diagnostics"; then
-              echo "Expected $flag to emit a Swift 6 actor-isolation $severity"
+              echo "Expected $label to emit a Swift 6 actor-isolation $severity"
               cat "$diagnostics"
               exit 1
             fi
             if grep -i "error:" "$diagnostics" | grep -vi "error:.*actor-isolated property 'count'"; then
-              echo "Unexpected errors while checking $flag"
+              echo "Unexpected errors while checking $label"
               cat "$diagnostics"
               exit 1
             fi
-            echo "$flag: verified actor-isolation $severity"
+            echo "$label: verified actor-isolation $severity"
+          }
+          for flag in NEGATIVE_READY NEGATIVE_FLAG_EVALUATED NEGATIVE_CONFIG_CHANGED NEGATIVE_ERROR; do
+            check_negative "$flag" -D "$flag"
+          done
+          for flag in \
+            NEGATIVE_GET_VALUE NEGATIVE_GET_VALUE_DETAILS \
+            NEGATIVE_GET_ALL_VALUES NEGATIVE_GET_ALL_VALUE_DETAILS \
+            NEGATIVE_GET_ALL_VALUES_OBJC NEGATIVE_GET_ALL_VALUE_DETAILS_OBJC \
+            NEGATIVE_GET_ALL_KEYS NEGATIVE_GET_KEY_AND_VALUE NEGATIVE_FORCE_REFRESH \
+            NEGATIVE_GET_STRING_VALUE NEGATIVE_GET_BOOL_VALUE NEGATIVE_GET_INT_VALUE NEGATIVE_GET_DOUBLE_VALUE \
+            NEGATIVE_GET_STRING_VALUE_DETAILS NEGATIVE_GET_BOOL_VALUE_DETAILS \
+            NEGATIVE_GET_INT_VALUE_DETAILS NEGATIVE_GET_DOUBLE_VALUE_DETAILS; do
+            check_negative "$flag (client)" -D NEGATIVE_CALLBACK -D "$flag"
+            check_negative "$flag (protocol)" -D NEGATIVE_CALLBACK -D "$flag" -D TARGET_PROTOCOL
           done
 
   test-thread-sanitizer:

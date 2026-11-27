@@ -140,12 +140,10 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if isNew {
             client.start()
         } else if options != nil {
-            if options != nil {
-                client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
+            client.log.warning(eventId: 3000, message: String(format: "There is an existing client instance for the specified SDK Key. "
                     + "No new client instance will be created and the specified configuration action is ignored. "
                     + "Returning the existing client instance. SDK Key: '%@'.",
                     Utils.mask(sdkKey)))
-            }
         }
 
         return client
@@ -166,6 +164,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     }
 
     /// Closes all ConfigCatClient instances.
+    /// Pending completion handlers may be invoked synchronously on the calling thread.
     @objc public static func closeAll() {
         let clientsToClose = registry.withLock { instances in
             let clients = instances
@@ -182,6 +181,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
     @objc public let hooks: Hooks
 
     /// Closes the underlying resources.
+    /// Pending completion handlers may be invoked synchronously on the calling thread.
     @objc public func close() {
         ConfigCatClient.registry.withLock { instances in
             if let weakClient = instances[sdkKey], weakClient.get() == self {
@@ -496,17 +496,13 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol {
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
                 configService.settings { result in
-                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
-                        new
-                    }, fetchTime: result.fetchTime))
+                    completion(result.withOverrides(overrideDataSource.getOverrides(), preferOverrides: true))
                 }
                 return
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
                 configService.settings { result in
-                    completion(SettingsResult(settings: result.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
-                        current
-                    }, fetchTime: result.fetchTime))
+                    completion(result.withOverrides(overrideDataSource.getOverrides(), preferOverrides: false))
                 }
                 return
             }

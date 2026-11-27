@@ -47,7 +47,7 @@ final class FlagEvaluator: Sendable {
         defaultValue: Value,
         user: ConfigCatUser?
     ) -> TypedEvaluationDetails<Value> {
-        if result.settings.isEmpty {
+        if result.isEmpty {
             let message = String(
                 format:
                     "Config JSON is not present when evaluating setting '%@'. Returning the `defaultValue` parameter that you specified in your application: '%@'.",

@@ -51,20 +51,17 @@ final class SnapshotBuilder: SnapshotBuilderProtocol, Sendable {
         }
         
         let entry = inMemoryResult.entry
+        let settings = entry.isEmpty ? .empty : SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime)
         
         if let overrideDataSource = overrideDataSource {
             if overrideDataSource.behaviour == .localOverRemote {
-                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (_, new) in
-                    new
-                }, fetchTime: entry.fetchTime), inMemoryResult.cacheState)
+                return (settings.withOverrides(overrideDataSource.getOverrides(), preferOverrides: true), inMemoryResult.cacheState)
             }
             if overrideDataSource.behaviour == .remoteOverLocal {
-                return (SettingsResult(settings: entry.config.settings.merging(overrideDataSource.getOverrides()) { (current, _) in
-                    current
-                }, fetchTime: entry.fetchTime), inMemoryResult.cacheState)
+                return (settings.withOverrides(overrideDataSource.getOverrides(), preferOverrides: false), inMemoryResult.cacheState)
             }
         }
         
-        return (SettingsResult(settings: entry.config.settings, fetchTime: entry.fetchTime), inMemoryResult.cacheState)
+        return (settings, inMemoryResult.cacheState)
     }
 }

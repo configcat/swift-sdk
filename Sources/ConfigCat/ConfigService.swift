@@ -11,10 +11,22 @@ final class SettingsResult: Sendable {
         self.isEmpty = isEmpty
     }
 
+    func withOverrides(_ overrides: [String: Setting], preferOverrides: Bool) -> SettingsResult {
+        if isEmpty && overrides.isEmpty {
+            return .empty
+        }
+        return SettingsResult(
+            settings: settings.merging(overrides) { current, overrideValue in
+                preferOverrides ? overrideValue : current
+            },
+            fetchTime: fetchTime
+        )
+    }
+
     static var empty: SettingsResult { SettingsResult(settings: [:], fetchTime: .distantPast, isEmpty: true) }
 }
 
-class InMemoryResult {
+final class InMemoryResult: Sendable {
     let entry: ConfigEntry
     let cacheState: ClientCacheState
 
@@ -61,7 +73,7 @@ public final class RefreshResult: NSObject, Sendable {
     }
 }
 
-enum FetchResult {
+enum FetchResult: Sendable {
     case success(ConfigEntry)
     case failure(String, RefreshErrorCode, ConfigEntry)
 }
