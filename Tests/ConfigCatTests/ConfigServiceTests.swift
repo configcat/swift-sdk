@@ -148,7 +148,7 @@ class ConfigServiceTests: XCTestCase {
         defer { service.close() }
         let second = expectation(description: "hook refresh receives second response")
         second.assertForOverFulfill = true
-        hooks.addOnConfigChanged(snapshotHandler: { config, _ in
+        hooks.addOnConfigChanged(handler: { config, _ in
             guard config.settings["fakeKey"]?.value.stringValue == "first" else { return }
             service.refresh { result in
                 XCTAssertTrue(result.success)
@@ -227,7 +227,7 @@ class ConfigServiceTests: XCTestCase {
 
             service.close()
             XCTAssertEqual(1, completionCount.withLock { $0 }, "HTTP \(statusCode)")
-            hooks.addOnConfigChanged(snapshotHandler: { _, _ in
+            hooks.addOnConfigChanged(handler: { _, _ in
                 XCTFail("HTTP \(statusCode) notified config changed after close")
             })
             engine.respond(Response(body: String(format: testJsonFormat, "new"), statusCode: statusCode))
@@ -253,7 +253,7 @@ class ConfigServiceTests: XCTestCase {
         let changed = expectation(description: "config changed is not reported after close")
         changed.isInverted = true
         hooks.addOnReady(handler: { _ in ready.fulfill() })
-        hooks.addOnConfigChanged(snapshotHandler: { _, _ in changed.fulfill() })
+        hooks.addOnConfigChanged(handler: { _, _ in changed.fulfill() })
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
         let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
         let finished = expectation(description: "startup finishes")

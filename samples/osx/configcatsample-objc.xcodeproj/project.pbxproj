@@ -3,13 +3,12 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 50;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		1ACFF3C82304AB5200E77575 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACFF3C72304AB5200E77575 /* main.m */; };
-		1ACFF3E22304C2F500E77575 /* Pods_configcatsample_objc.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1ACFF3E12304C2F500E77575 /* Pods_configcatsample_objc.framework */; };
-		1ACFF3E52304C3CB00E77575 /* ConfigCat.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1ACFF3E32304C38E00E77575 /* ConfigCat.framework */; };
+		C0A700000000000000000001 /* ConfigCat in Frameworks */ = {isa = PBXBuildFile; productRef = C0A700000000000000000003 /* ConfigCat */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,11 +27,7 @@
 		1ACFF3C42304AB5200E77575 /* configcatsample-objc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "configcatsample-objc"; sourceTree = BUILT_PRODUCTS_DIR; };
 		1ACFF3C72304AB5200E77575 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1ACFF3CE2304AE3300E77575 /* configcatsample-objc-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "configcatsample-objc-Bridging-Header.h"; sourceTree = "<group>"; };
-		1ACFF3E12304C2F500E77575 /* Pods_configcatsample_objc.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = Pods_configcatsample_objc.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		1ACFF3E32304C38E00E77575 /* ConfigCat.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ConfigCat.framework; path = "../../../../../Library/Developer/Xcode/DerivedData/configcatsample-objc-boluzqpyhstdargkqzqqtcgaikpq/Build/Products/Debug/ConfigCat/ConfigCat.framework"; sourceTree = "<group>"; };
 		1ACFF3E82304C59800E77575 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
-		C750E3636BD1BCD9FA352C54 /* Pods-configcatsample-objc.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-configcatsample-objc.release.xcconfig"; path = "Target Support Files/Pods-configcatsample-objc/Pods-configcatsample-objc.release.xcconfig"; sourceTree = "<group>"; };
-		D52953F823B2EA68C4355062 /* Pods-configcatsample-objc.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-configcatsample-objc.debug.xcconfig"; path = "Target Support Files/Pods-configcatsample-objc/Pods-configcatsample-objc.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -40,8 +35,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				1ACFF3E52304C3CB00E77575 /* ConfigCat.framework in Frameworks */,
-				1ACFF3E22304C2F500E77575 /* Pods_configcatsample_objc.framework in Frameworks */,
+				C0A700000000000000000001 /* ConfigCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +47,6 @@
 			children = (
 				1ACFF3C62304AB5200E77575 /* configcatsample-objc */,
 				1ACFF3C52304AB5200E77575 /* Products */,
-				E7E3CA0CB1CB0EE01D2CC090 /* Pods */,
 				F2A7811270C9B96726F24499 /* Frameworks */,
 			);
 			sourceTree = "<group>";
@@ -75,21 +68,10 @@
 			path = "configcatsample-objc";
 			sourceTree = "<group>";
 		};
-		E7E3CA0CB1CB0EE01D2CC090 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				D52953F823B2EA68C4355062 /* Pods-configcatsample-objc.debug.xcconfig */,
-				C750E3636BD1BCD9FA352C54 /* Pods-configcatsample-objc.release.xcconfig */,
-			);
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		F2A7811270C9B96726F24499 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				1ACFF3E82304C59800E77575 /* AppKit.framework */,
-				1ACFF3E32304C38E00E77575 /* ConfigCat.framework */,
-				1ACFF3E12304C2F500E77575 /* Pods_configcatsample_objc.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -101,7 +83,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 1ACFF3CB2304AB5200E77575 /* Build configuration list for PBXNativeTarget "configcatsample-objc" */;
 			buildPhases = (
-				6B032B52906A3929C408D2BC /* [CP] Check Pods Manifest.lock */,
 				1ACFF3C02304AB5200E77575 /* Sources */,
 				1ACFF3C12304AB5200E77575 /* Frameworks */,
 				1ACFF3C22304AB5200E77575 /* CopyFiles */,
@@ -111,6 +92,9 @@
 			dependencies = (
 			);
 			name = "configcatsample-objc";
+			packageProductDependencies = (
+				C0A700000000000000000003 /* ConfigCat */,
+			);
 			productName = "configcatsample-objc";
 			productReference = 1ACFF3C42304AB5200E77575 /* configcatsample-objc */;
 			productType = "com.apple.product-type.tool";
@@ -121,7 +105,8 @@
 		1ACFF3BC2304AB5200E77575 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1010;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2720;
 				ORGANIZATIONNAME = ConfigCat;
 				TargetAttributes = {
 					1ACFF3C32304AB5200E77575 = {
@@ -138,6 +123,9 @@
 				en,
 			);
 			mainGroup = 1ACFF3BB2304AB5200E77575;
+			packageReferences = (
+				C0A700000000000000000002 /* XCLocalSwiftPackageReference "../.." */,
+			);
 			productRefGroup = 1ACFF3C52304AB5200E77575 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -146,31 +134,6 @@
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		6B032B52906A3929C408D2BC /* [CP] Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-			);
-			inputPaths = (
-				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
-				"${PODS_ROOT}/Manifest.lock",
-			);
-			name = "[CP] Check Pods Manifest.lock";
-			outputFileListPaths = (
-			);
-			outputPaths = (
-				"$(DERIVED_FILE_DIR)/Pods-configcatsample-objc-checkManifestLockResult.txt",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		1ACFF3C02304AB5200E77575 /* Sources */ = {
@@ -210,6 +173,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -218,9 +182,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -240,6 +206,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Debug;
 		};
@@ -269,6 +236,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -277,9 +245,11 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -292,16 +262,18 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Release;
 		};
 		1ACFF3CC2304AB5200E77575 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D52953F823B2EA68C4355062 /* Pods-configcatsample-objc.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DYLIB_INSTALL_NAME_BASE = "configcatsample-obj";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_DYLIB_INSTALL_NAME = "configcatsample-obj";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -311,20 +283,25 @@
 					"@executable_path",
 					"${TOOLCHAIN_DIR}/usr/lib/swift/macosx/",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "configcatsample-objc/configcatsample-objc-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Debug;
 		};
 		1ACFF3CD2304AB5200E77575 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = C750E3636BD1BCD9FA352C54 /* Pods-configcatsample-objc.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
+				DEAD_CODE_STRIPPING = YES;
 				DYLIB_INSTALL_NAME_BASE = "configcatsample-obj";
+				IPHONEOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_DYLIB_INSTALL_NAME = "configcatsample-obj";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -334,9 +311,13 @@
 					"@executable_path",
 					"${TOOLCHAIN_DIR}/usr/lib/swift/macosx/",
 				);
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "configcatsample-objc/configcatsample-objc-Bridging-Header.h";
 				SWIFT_VERSION = 4.2;
+				TVOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_TVOS_DEPLOYMENT_TARGET)";
+				WATCHOS_DEPLOYMENT_TARGET = "$(RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET)";
+				XROS_DEPLOYMENT_TARGET = "$(RECOMMENDED_XROS_DEPLOYMENT_TARGET)";
 			};
 			name = Release;
 		};
@@ -362,6 +343,21 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C0A700000000000000000002 /* XCLocalSwiftPackageReference "../.." */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../..;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C0A700000000000000000003 /* ConfigCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C0A700000000000000000002 /* XCLocalSwiftPackageReference "../.." */;
+			productName = ConfigCat;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1ACFF3BC2304AB5200E77575 /* Project object */;
 }

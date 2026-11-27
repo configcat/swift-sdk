@@ -11,22 +11,22 @@ int main(int argc, const char * argv[]) {
             options.logLevel = ConfigCatLogLevelInfo;
             
             [options.hooks addOnReadyWithHandler:^(ConfigCatClientSnapshot *snapshot) {
-                // Creating a user object to identify your user (optional).
-                ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"<SOME USERID>"
-                                                                            email:@"configcat@example.com"
-                                                                            country:@"CountryID"
-                                                                            custom:@{@"version": @"1.0.0"}];
-
-                NSString *featureName = @"isPOCFeatureEnabled";
-
-                BOOL value = [snapshot getBoolValueFor:featureName defaultValue:false user:userObject];
-                NSLog(@"%@: %@", featureName, value ? @"Yes" : @"No");
-
                 dispatch_semaphore_signal(semaphore);
             }];
         }];
         
         dispatch_semaphore_wait(semaphore, dispatch_time(DISPATCH_TIME_NOW, (uint64_t)(5 * NSEC_PER_SEC)));
+
+        // Creating a user object to identify your user (optional).
+        ConfigCatUser* userObject = [[ConfigCatUser alloc]initWithIdentifier:@"<SOME USERID>"
+                                                          email:@"configcat@example.com"
+                                                          country:@"CountryID"
+                                                          custom:@{@"version": @"1.0.0"}];
+
+        NSString *featureName = @"isPOCFeatureEnabled";
+        ConfigCatClientSnapshot* snapshot = [client snapshot];
+        BOOL value = [snapshot getBoolValueFor:featureName defaultValue:false user:userObject];
+        NSLog(@"%@: %@", featureName, value ? @"Yes" : @"No");
     }
     return 0;
 }

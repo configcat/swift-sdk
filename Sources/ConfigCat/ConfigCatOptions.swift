@@ -110,9 +110,9 @@ public final class Hooks: NSObject, @unchecked Sendable {
     #if compiler(>=5.6)
     @preconcurrency
     #endif
-    @objc public func addOnConfigChanged(snapshotHandler: @escaping @Sendable (Config, ConfigCatClientSnapshot) -> ()) {
+    @objc public func addOnConfigChanged(handler: @escaping @Sendable (Config, ConfigCatClientSnapshot) -> ()) {
         mutex.withLock {
-            onConfigChangedWithSnapshot.append(snapshotHandler)
+            onConfigChangedWithSnapshot.append(handler)
         }
     }
 

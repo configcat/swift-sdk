@@ -1,4 +1,0 @@
-use_frameworks!
-target 'configcatsample' do
-    pod 'ConfigCat', :git => 'https://github.com/configcat/swift-sdk.git', :branch => 'master'
-end

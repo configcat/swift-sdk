@@ -1,9 +1,4 @@
 # ConfigCat macOS Objective-C Sample
 
-To run the sample project you need [CocoaPods](https://cocoapods.org/) installed.
-
-1. Install the ConfigCat SDK with `CocoaPods`
-```bash
-pod install
-```
-2. Open `configcatsample-objc.xcworkspace` and build
+Open `configcatsample-objc.xcodeproj` in Xcode and build the sample.
+The project uses Swift Package Manager to reference the SDK from the repository root.

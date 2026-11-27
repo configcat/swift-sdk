@@ -1,10 +1,10 @@
 import Foundation
 
 public final class KeyValue: NSObject, Sendable {
-    public let key: String?
+    @objc public let key: String?
     private let storedValue: FlagValue
 
-    public var value: Any? {
+    @objc public var value: Any? {
         storedValue.rawValue
     }
 
