@@ -10,18 +10,18 @@ class EvaluationTests: XCTestCase {
         #endif
     }()
 
-    func testScalarValueFromAnyPreservesNumericTypes() throws {
+    func testFlagValueFromAnyPreservesNumericTypes() throws {
         let json = #"[true, false, 0, 1, -1, 0.0, 1.0, 1.5, "text", null]"#
         let values = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(json.utf8)) as? [Any])
-        let expected: [ScalarValue?] = [
+        let expected: [FlagValue?] = [
             .bool(true), .bool(false), .int(0), .int(1), .int(-1),
             .double(0), .double(1), .double(1.5), .string("text"), nil
         ]
-        XCTAssertEqual(values.map { ScalarValue.fromAny(value: $0) }, expected)
-        XCTAssertEqual(ScalarValue.fromAny(value: true), .bool(true))
-        XCTAssertEqual(ScalarValue.fromAny(value: 1), .int(1))
-        XCTAssertEqual(ScalarValue.fromAny(value: 1.0), .double(1))
-        XCTAssertNil(ScalarValue.fromAny(value: NSNumber(value: UInt64.max)))
+        XCTAssertEqual(values.map { FlagValue.fromRaw(value: $0) }, expected)
+        XCTAssertEqual(FlagValue.fromRaw(value: true), .bool(true))
+        XCTAssertEqual(FlagValue.fromRaw(value: 1), .int(1))
+        XCTAssertEqual(FlagValue.fromRaw(value: 1.0), .double(1))
+        XCTAssertNil(FlagValue.fromRaw(value: NSNumber(value: UInt64.max)))
     }
     
     #if compiler(>=5.5) && canImport(_Concurrency)

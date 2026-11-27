@@ -174,7 +174,7 @@ class RolloutIntegrationV2Tests: XCTestCase {
                 let expectation = expectation(description: "wait for response")
                 let expected = testObjects[i + 4]
                 if type == .value {
-                    client.getValue(for: settingKey, defaultValue: Optional<ScalarValue>.none, user: user) { value in
+                    client.getValue(for: settingKey, defaultValue: Optional<FlagValue>.none, user: user) { value in
                         if let boolValue = value?.asBool(),
                            let expectedValue = Bool(expected.lowercased()) {
                             if boolValue != expectedValue {
@@ -199,7 +199,7 @@ class RolloutIntegrationV2Tests: XCTestCase {
                         expectation.fulfill()
                     }
                 } else {
-                    client.getValueDetails(for: settingKey, defaultValue: Optional<ScalarValue>.none, user: user) { (details: TypedEvaluationDetails<ScalarValue?>) in
+                    client.getValueDetails(for: settingKey, defaultValue: Optional<FlagValue>.none, user: user) { (details: TypedEvaluationDetails<FlagValue?>) in
                         let expectedValue = expected
                         if details.variationId != expectedValue {
                             XCTFail("Identifier: \(testObjects[0]), Key: \(settingKey). Expected: \(expectedValue), Result: \(details.variationId ?? "")")

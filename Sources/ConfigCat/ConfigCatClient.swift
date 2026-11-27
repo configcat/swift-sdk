@@ -211,7 +211,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
     // MARK: ConfigCatClientProtocol
 
     /**
-     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `FlagValue` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -237,7 +237,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
     }
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any` (both nullable and non-nullable).
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `FlagValue` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -279,7 +279,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
 
     private func getAllEvaluations(
         user: ConfigCatUser?,
-        completion: @escaping @Sendable ([(value: ScalarValue, details: EvaluationDetails)]) -> Void
+        completion: @escaping @Sendable ([(value: FlagValue, details: EvaluationDetails)]) -> Void
     ) {
         getSettings { result in
             if result.isEmpty {
@@ -287,7 +287,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
                 completion([])
                 return
             }
-            var evaluations = [(value: ScalarValue, details: EvaluationDetails)]()
+            var evaluations = [(value: FlagValue, details: EvaluationDetails)]()
             for key in result.settings.keys {
                 guard let setting = result.settings[key] else {
                     continue
@@ -395,9 +395,9 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
     #if compiler(>=5.6)
     @preconcurrency
     #endif
-    public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([String: ScalarValue]) -> Void) {
+    public func getAllValues(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([String: FlagValue]) -> Void) {
         getAllEvaluations(user: user) { evaluations in
-            var values = [String: ScalarValue]()
+            var values = [String: FlagValue]()
             for evaluation in evaluations {
                 values[evaluation.details.key] = evaluation.value
             }
@@ -409,7 +409,7 @@ public final class ConfigCatClient: NSObject, ConfigCatClientProtocol, Sendable 
     #if compiler(>=5.6)
     @preconcurrency
     #endif
-    public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([TypedEvaluationDetails<ScalarValue>]) -> Void) {
+    public func getAllValueDetails(user: ConfigCatUser? = nil, completion: @escaping @Sendable ([TypedEvaluationDetails<FlagValue>]) -> Void) {
         getAllEvaluations(user: user) { evaluations in
             completion(evaluations.map { TypedEvaluationDetails(value: $0.value, details: $0.details) })
         }

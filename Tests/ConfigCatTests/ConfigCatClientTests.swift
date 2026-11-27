@@ -663,6 +663,68 @@ class ConfigCatClientTests: XCTestCase {
         wait(for: [valueReturned, flagEvaluated], timeout: 5)
     }
 
+    func testFlagEvaluatedHookUnwrapsFlagValues() {
+        let hooks = Hooks()
+        let evaluated = expectation(description: "flag evaluated hooks")
+        evaluated.expectedFulfillmentCount = 9
+        hooks.addOnFlagEvaluated { details in
+            XCTAssertFalse(details.value is FlagValue)
+            switch details.key {
+            case "flag":
+                XCTAssertEqual(details.value as? Bool, true)
+                XCTAssertFalse(details.isDefaultValue)
+            case "missing":
+                XCTAssertEqual(details.value as? Int, 42)
+                XCTAssertTrue(details.isDefaultValue)
+            case "invalid":
+                XCTAssertEqual(details.value as? String, "fallback")
+                XCTAssertTrue(details.isDefaultValue)
+            case "empty":
+                XCTAssertEqual(details.value as? Double, 1.5)
+                XCTAssertTrue(details.isDefaultValue)
+            case "nil":
+                let mirror = Mirror(reflecting: details.value)
+                XCTAssertEqual(mirror.displayStyle, .optional)
+                XCTAssertTrue(mirror.children.isEmpty)
+                XCTAssertTrue(details.isDefaultValue)
+            default:
+                XCTFail("Unexpected key: \(details.key)")
+            }
+            evaluated.fulfill()
+        }
+
+        let source = TestDictionaryDataSource(source: ["flag": true, "invalid": NSObject()], behaviour: .localOnly)
+        let client = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: nil, hooks: hooks, flagOverrides: source).ensureStarted()
+        defer { client.close() }
+        let snapshot = client.snapshot()
+
+        XCTAssertEqual(snapshot.getValue(for: "flag", defaultValue: FlagValue.bool(false)), .bool(true))
+        XCTAssertEqual(snapshot.getValue(for: "flag", defaultValue: Optional<FlagValue>.none), .bool(true))
+        XCTAssertTrue(snapshot.getValue(for: "flag", defaultValue: false))
+        XCTAssertEqual(snapshot.getValueDetails(for: "missing", defaultValue: Optional<FlagValue>.some(.int(42))).value, .int(42))
+        XCTAssertEqual(snapshot.getValue(for: "invalid", defaultValue: FlagValue.string("fallback")), .string("fallback"))
+        XCTAssertNil(snapshot.getValue(for: "nil", defaultValue: Optional<FlagValue>.none))
+
+        let valueCompleted = expectation(description: "scalar value returned")
+        client.getValue(for: "flag", defaultValue: FlagValue.bool(false)) { value in
+            XCTAssertEqual(value, .bool(true))
+            valueCompleted.fulfill()
+        }
+
+        let bulkCompleted = expectation(description: "bulk values returned")
+        client.getAllValues { values in
+            XCTAssertEqual(values["flag"], .bool(true))
+            bulkCompleted.fulfill()
+        }
+
+        let emptySource = TestDictionaryDataSource(source: [:], behaviour: .localOnly)
+        let emptyClient = ConfigCatClient(sdkKey: randomSdkKey(), pollingMode: PollingModes.manualPoll(), logger: NoLogger(), httpEngine: nil, hooks: hooks, flagOverrides: emptySource).ensureStarted()
+        defer { emptyClient.close() }
+        XCTAssertEqual(emptyClient.snapshot().getValue(for: "empty", defaultValue: FlagValue.double(1.5)), .double(1.5))
+
+        wait(for: [evaluated, valueCompleted, bulkCompleted], timeout: 5)
+    }
+
     func testSingleton() {
         let sdkKey = randomSdkKey()
         var client1 = ConfigCatClient.get(sdkKey: sdkKey)

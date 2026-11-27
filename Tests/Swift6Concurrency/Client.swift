@@ -4,8 +4,8 @@ func checkSendable<T: Sendable>(_: T.Type) {}
 
 @MainActor
 func checkAsyncResults(client: ConfigCatClient, user: ConfigCatUser) async {
-    checkSendable(ScalarValue.self)
-    checkSendable(TypedEvaluationDetails<ScalarValue>.self)
+    checkSendable(FlagValue.self)
+    checkSendable(TypedEvaluationDetails<FlagValue>.self)
     checkSendable(RefreshResult.self)
     checkSendable(ClientCacheState.self)
     checkSendable(ConfigCatClientSnapshot.self)

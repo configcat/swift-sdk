@@ -5,7 +5,7 @@ import Foundation
 /// explicitly hop to the appropriate actor before accessing actor-isolated state.
 public protocol ConfigCatClientProtocol: Sendable {
     /**
-     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `ScalarValue` (both nullable and non-nullable).
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `FlagValue` (both nullable and non-nullable).
      
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -18,7 +18,7 @@ public protocol ConfigCatClientProtocol: Sendable {
     func getValue<Value: Sendable>(for key: String, defaultValue: Value, user: ConfigCatUser?, completion: @escaping @Sendable (Value) -> ())
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `ScalarValue` (both nullable and non-nullable).
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `FlagValue` (both nullable and non-nullable).
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -39,7 +39,7 @@ public protocol ConfigCatClientProtocol: Sendable {
     #if compiler(>=5.6)
     @preconcurrency
     #endif
-    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping @Sendable ([TypedEvaluationDetails<ScalarValue>]) -> ())
+    func getAllValueDetails(user: ConfigCatUser?, completion: @escaping @Sendable ([TypedEvaluationDetails<FlagValue>]) -> ())
 
     /// Gets the values and evaluation details in the Objective-C representation.
     #if compiler(>=5.6)
@@ -63,7 +63,7 @@ public protocol ConfigCatClientProtocol: Sendable {
     #if compiler(>=5.6)
     @preconcurrency
     #endif
-    func getAllValues(user: ConfigCatUser?, completion: @escaping @Sendable ([String: ScalarValue]) -> ())
+    func getAllValues(user: ConfigCatUser?, completion: @escaping @Sendable ([String: FlagValue]) -> ())
 
     /// Gets the values in the Objective-C representation.
     #if compiler(>=5.6)
@@ -116,7 +116,7 @@ public protocol ConfigCatClientProtocol: Sendable {
     #if compiler(>=5.5) && canImport(_Concurrency)
     /**
      Gets a value asynchronously as `Value` from the configuration identified by the given `key`.
-     `Value` must conform to `Sendable`. Use the completion API for arbitrary fallback objects.
+     `Value` must conform to `Sendable`.
 
      - Parameter key: The identifier of the configuration value.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -127,7 +127,7 @@ public protocol ConfigCatClientProtocol: Sendable {
 
     /**
      Gets the value and evaluation details of a feature flag or setting identified by the given `key`.
-     `Value` must conform to `Sendable`. Use the completion API for arbitrary fallback objects.
+     `Value` must conform to `Sendable`.
 
      - Parameter key: The identifier of the feature flag or setting.
      - Parameter defaultValue: In case of any failure, this value will be returned.
@@ -142,7 +142,7 @@ public protocol ConfigCatClientProtocol: Sendable {
      - Parameter user: The user object to identify the caller.
      */
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getAllValueDetails(user: ConfigCatUser?) async -> [TypedEvaluationDetails<ScalarValue>]
+    func getAllValueDetails(user: ConfigCatUser?) async -> [TypedEvaluationDetails<FlagValue>]
 
     /// Gets all the setting keys asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
@@ -154,7 +154,7 @@ public protocol ConfigCatClientProtocol: Sendable {
 
     /// Gets the values of all feature flags or settings asynchronously.
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
-    func getAllValues(user: ConfigCatUser?) async -> [String: ScalarValue]
+    func getAllValues(user: ConfigCatUser?) async -> [String: FlagValue]
 
     /**
      Updates the internally cached config by synchronizing with the external cache (if any),

@@ -127,12 +127,12 @@ class EvaluationLogTests: XCTestCase {
 
 class TestCase {
     let key: String
-    let defaultVal: ScalarValue
-    let returnVal: ScalarValue
+    let defaultVal: FlagValue
+    let returnVal: FlagValue
     let expectedLog: String
     let user: [String: Any]?
     
-    init(key: String, defaultVal: ScalarValue, returnVal: ScalarValue, expectedLog: String, user: [String : Any]?) {
+    init(key: String, defaultVal: FlagValue, returnVal: FlagValue, expectedLog: String, user: [String : Any]?) {
         self.key = key
         self.defaultVal = defaultVal
         self.returnVal = returnVal
@@ -142,8 +142,8 @@ class TestCase {
     
     static func fromJson(json: [String: Any]) -> TestCase {
         TestCase(key: json["key"] as? String ?? "",
-                 defaultVal: ScalarValue.fromAny(value: json["defaultValue"])!,
-                 returnVal: ScalarValue.fromAny(value: json["returnValue"])!,
+                 defaultVal: FlagValue.fromRaw(value: json["defaultValue"])!,
+                 returnVal: FlagValue.fromRaw(value: json["returnValue"])!,
                  expectedLog: json["expectedLog"] as? String ?? "",
                  user: json["user"] as? [String : Any])
     }

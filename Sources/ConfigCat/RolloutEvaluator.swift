@@ -60,7 +60,7 @@ enum EvalPercentageResult {
 }
 
 enum EvalResult {
-    case success(ScalarValue, String?, TargetingRule?, PercentageOption?)
+    case success(FlagValue, String?, TargetingRule?, PercentageOption?)
     case error(String)
 }
 
@@ -87,7 +87,7 @@ final class RolloutEvaluator: Sendable {
         let result = setting.settingType == .unknown ? .error("Setting type is invalid") : evalSetting(setting: setting, key: key, user: user, evalLogger: evalLogger, settings: settings, cycleTracker: &cycleTracker)
         
         if case .success(let val, _, _, _) = result {
-            evalLogger?.newLine(msg: "Returning '\(val.anyValue)'.")
+            evalLogger?.newLine(msg: "Returning '\(val.rawValue)'.")
         } else {
             evalLogger?.resetIndent().incIndent()
             evalLogger?.newLine(msg: "Returning '\(defaultValue ?? "nil")'.")
@@ -332,7 +332,7 @@ final class RolloutEvaluator: Sendable {
         }
         
         let compValChecked = cond.flagValue.toCheckedValue(settingType: prereq.settingType)
-        var compVal: ScalarValue? = nil
+        var compVal: FlagValue? = nil
         if case .error(_) = compValChecked, prereq.settingType != .unknown {
             return .fatal("Type mismatch between comparison value '\(cond.flagValue.anyValue ?? "")' and prerequisite flag '\(flagKey)'.")
         }
@@ -357,7 +357,7 @@ final class RolloutEvaluator: Sendable {
         switch evalResult {
         case .success(let val, _, _, _):
             let match = needsTrue == (compVal == val)
-            evalLogger?.newLine(msg: "Prerequisite flag evaluation result: '\(val.anyValue)'.")
+            evalLogger?.newLine(msg: "Prerequisite flag evaluation result: '\(val.rawValue)'.")
                 .newLine(msg: "Condition (").append(value: cond).append(value: ") evaluates to ").append(value: "\(match ? "true" : "false").")
                 .decIndent()
                 .newLine(msg: ")")

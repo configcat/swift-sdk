@@ -28,7 +28,7 @@ public final class ConfigCatClientSnapshot: NSObject, Sendable {
     }
 
     /**
-     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any`, `ScalarValue` (both nullable and non-nullable).
+     Gets the value of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any`, `FlagValue` (both nullable and non-nullable).
     
      - Parameter key: the identifier of the feature flag or setting.
      - Parameter defaultValue: in case of any failure, this value will be returned.
@@ -62,7 +62,7 @@ public final class ConfigCatClientSnapshot: NSObject, Sendable {
     }
 
     /**
-     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any`, `ScalarValue` (both nullable and non-nullable).
+     Gets the value and evaluation details of a feature flag or setting identified by the given `key`. The generic parameter `Value` represents the type of the desired feature flag or setting. Only the following types are allowed: `String`, `Bool`, `Int`, `Double`, `Any`, `FlagValue` (both nullable and non-nullable).
     
      - Parameter key: the identifier of the feature flag or setting.
      - Parameter defaultValue: in case of any failure, this value will be returned.

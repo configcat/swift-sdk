@@ -2,13 +2,13 @@ import Foundation
 
 public final class KeyValue: NSObject, Sendable {
     public let key: String?
-    private let storedValue: ScalarValue
+    private let storedValue: FlagValue
 
     public var value: Any? {
-        storedValue.anyValue
+        storedValue.rawValue
     }
 
-    init(key: String?, value: ScalarValue) {
+    init(key: String?, value: FlagValue) {
         self.key = key
         self.storedValue = value
     }

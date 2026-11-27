@@ -92,7 +92,7 @@ public extension HasEvaluationMetadata {
 public final class EvaluationDetails: NSObject, HasEvaluationMetadata {
     /// Metadata associated with the evaluation of the feature flag or setting.
     @objc public let metadata: EvaluationMetadata
-    /// Evaluated value of the feature flag or setting.
+    /// Evaluated value of the feature flag or setting. `FlagValue` values are exposed as their underlying primitive values.
     @objc public let value: Any
 
     init(
@@ -107,7 +107,7 @@ public final class EvaluationDetails: NSObject, HasEvaluationMetadata {
         matchedTargetingRule: TargetingRule? = nil,
         matchedPercentageOption: PercentageOption? = nil
     ) {
-        self.value = value
+        self.value = (value as? FlagValue)?.rawValue ?? value
         self.metadata = EvaluationMetadata(
             key: key,
             variationId: variationId,

@@ -757,13 +757,27 @@ public final class PrerequisiteFlagCondition: NSObject, JsonSerializable, Sendab
     }
 }
 
-public enum ScalarValue: Equatable, Sendable {
+/// A feature flag or setting value represented as one of the SDK's supported scalar types.
+///
+/// Use this type when the value's type is not known in advance, such as when
+/// retrieving all values. Each case wraps the corresponding Swift value.
+///
+/// ```swift
+/// let values = await client.getAllValues()
+/// let enabled = values["myFeature"]?.asBool()
+/// ```
+public enum FlagValue: Equatable, Sendable {
+    /// A Boolean value.
     case bool(Bool)
+    /// A string value.
     case string(String)
+    /// An integer value.
     case int(Int)
+    /// A floating-point value.
     case double(Double)
 
-    var anyValue: Any {
+    /// The underlying primitive value of the flag.
+    public var rawValue: Any {
         switch self {
         case .bool(let value): return value
         case .string(let value): return value
@@ -772,6 +786,7 @@ public enum ScalarValue: Equatable, Sendable {
         }
     }
 
+    /// Returns the Boolean value, or `nil` otherwise.
     public func asBool() -> Bool? {
         if case let .bool(value) = self {
             return value
@@ -779,6 +794,7 @@ public enum ScalarValue: Equatable, Sendable {
         return nil
     }
     
+    /// Returns the string value, or `nil` otherwise.
     public func asString() -> String? {
         if case let .string(value) = self {
             return value
@@ -786,6 +802,7 @@ public enum ScalarValue: Equatable, Sendable {
         return nil
     }
 
+    /// Returns the integer value, or `nil` otherwise.
     public func asInt() -> Int? {
         if case let .int(value) = self {
             return value
@@ -793,6 +810,7 @@ public enum ScalarValue: Equatable, Sendable {
         return nil
     }
 
+    /// Returns the floating-point value, or `nil` otherwise.
     public func asDouble() -> Double? {
         if case let .double(value) = self {
             return value
@@ -800,7 +818,9 @@ public enum ScalarValue: Equatable, Sendable {
         return nil
     }
 
-    public static func fromAny(value: Any?) -> ScalarValue? {
+    /// Converts a supported value, including compatible `NSNumber` values, to a flag value.
+    /// Returns `nil` for values that cannot be represented.
+    public static func fromRaw(value: Any?) -> FlagValue? {
         guard let value = value else { return nil }
 
         if type(of: value) is NSNumber.Type, let number = value as? NSNumber {
@@ -835,7 +855,7 @@ public enum ScalarValue: Equatable, Sendable {
 }
 
 enum ValueResult {
-    case success(ScalarValue)
+    case success(FlagValue)
     case error(String)
 }
 
@@ -853,7 +873,7 @@ public final class SettingValue: NSObject, JsonSerializable, Sendable {
     static let settingValueMissingMessage = "Setting value is missing"
     
     /// Holds the feature flag's value.
-    public let value: ScalarValue?
+    public let value: FlagValue?
     
     @objc public let boolValueObjC: NSNumber?
     
@@ -866,7 +886,7 @@ public final class SettingValue: NSObject, JsonSerializable, Sendable {
     
     private let invalidValue: InvalidSettingValue?
     
-    init(value: ScalarValue?, invalidValue: Any? = nil) {
+    init(value: FlagValue?, invalidValue: Any? = nil) {
         self.value = value
         self.invalidValue = invalidValue.map { InvalidSettingValue(description: "\($0)", type: "\(type(of: $0))") }
         
@@ -897,10 +917,10 @@ public final class SettingValue: NSObject, JsonSerializable, Sendable {
     }
     
     static func fromJson(json: [String: Any]) -> SettingValue {
-        SettingValue(value: (json[self.boolKey] as? Bool).map { ScalarValue.bool($0) } ??
-                           (json[self.stringKey] as? String).map { ScalarValue.string($0) } ??
-                           (json[self.doubleKey] as? Double).map { ScalarValue.double($0) } ??
-                           (json[self.intKey] as? Int).map { ScalarValue.int($0) })
+        SettingValue(value: (json[self.boolKey] as? Bool).map { FlagValue.bool($0) } ??
+                           (json[self.stringKey] as? String).map { FlagValue.string($0) } ??
+                           (json[self.doubleKey] as? Double).map { FlagValue.double($0) } ??
+                           (json[self.intKey] as? Int).map { FlagValue.int($0) })
     }
     
     func toJsonMap() -> [String: Any] {
@@ -938,7 +958,7 @@ public final class SettingValue: NSObject, JsonSerializable, Sendable {
     }
     
     var anyValue: Any? {
-        value?.anyValue ?? invalidValue?.description
+        value?.rawValue ?? invalidValue?.description
     }
     
     var isValid: Bool {
