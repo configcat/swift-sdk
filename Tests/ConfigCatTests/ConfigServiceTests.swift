@@ -113,6 +113,27 @@ class ConfigServiceTests: XCTestCase {
         XCTAssertEqual("fresh", service.inMemory.entry.config.settings["fakeKey"]?.value.stringValue)
     }
 
+    func testGoingOfflineDuringCacheChangedHookPreventsFetch() {
+        let cached = String(format: testJsonFormat, "cached").asEntryString(date: Date().addingTimeInterval(-3600))
+        let cache = SingleValueCache(initValue: cached)
+        let engine = MockEngine()
+        let mode = PollingModes.lazyLoad(cacheRefreshIntervalInSeconds: 60)
+        let hooks = Hooks()
+        let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        defer { service.close() }
+        hooks.addOnConfigChanged { [weak service] _, _ in service?.setOffline() }
+
+        let completed = expectation(description: "settings returns the cached entry")
+        service.settings { result in
+            XCTAssertEqual("cached", result.settings["fakeKey"]?.value.stringValue)
+            completed.fulfill()
+        }
+        wait(for: [completed], timeout: 5)
+        XCTAssertTrue(service.isOffline)
+        XCTAssertTrue(engine.requests.isEmpty)
+    }
+
     func testRefreshAfterInitializationTimeoutJoinsActiveFetch() {
         let engine = MockEngine(autoRespond: false)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 1)

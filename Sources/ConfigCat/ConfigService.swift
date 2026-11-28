@@ -79,6 +79,19 @@ enum FetchResult: Sendable {
 }
 
 final class ConfigService: Sendable {
+    private enum FetchDecision {
+        case closed(ConfigEntry)
+        case useCache(ConfigEntry)
+        case subscribed
+        case fetch(ConfigEntry)
+    }
+
+    private enum ConfigChangedState {
+        case unchanged
+        case changed(ConfigEntry)
+        case closed(ConfigEntry)
+    }
+
     private let snapshotBuilder: SnapshotBuilderProtocol
     private let log: InternalLogger
     private let fetcher: ConfigFetcher
@@ -291,65 +304,57 @@ final class ConfigService: Sendable {
         threshold: Date, preferCache: Bool = false, completion: @escaping @Sendable (FetchResult) -> Void
     ) {
         let entry = readCache()
-        var configChanged = false
-        var expired = false
-        var clientOffline = false
-        let (currentEntry, isClosed) = serviceState.withLock { state in
-            guard !state.closed else {
-                return (state.cachedEntry, true)
+        let changedState: ConfigChangedState = serviceState.withLock { state in
+            if state.closed {
+                return .closed(state.cachedEntry)
             }
-
             if !entry.isEmpty, entry != state.cachedEntry, state.cachedEntry.isEmpty || entry.fetchTime > state.cachedEntry.fetchTime {
                 state.cachedEntry = entry
-                configChanged = true
+                return .changed(state.cachedEntry)
             }
-            expired = state.cachedEntry.fetchTime <= threshold
-            clientOffline = state.offline
-            return (state.cachedEntry, false)
+            return .unchanged
         }
 
-        if isClosed {
-            completion(.success(currentEntry))
-            return
+        switch changedState {
+        case .closed(let entry):
+            completion(.success(entry))
+            return  
+        case .changed(let entry):
+            reportConfigChanged(entry: entry)
+        case .unchanged:
+            break
         }
 
-        if configChanged {
-            reportConfigChanged(entry: currentEntry)
-        }
-
-        if !expired || clientOffline || preferCache {
-            setInitializedAndReportReady(entry: currentEntry)
-            completion(.success(currentEntry))
-            return
-        }
-
-        if shouldInitiateFetchOrSubscribeCompletion(completion: completion) {
-            let etag = currentEntry.isEmpty ? "" : currentEntry.eTag
-            fetcher.fetch(eTag: etag) { response in
-                self.processResponse(response: response)
+        let decision: FetchDecision = serviceState.withLock { state in
+            if state.closed {
+                return .closed(state.cachedEntry)
             }
-        }
-    }
-
-    private func shouldInitiateFetchOrSubscribeCompletion(
-        completion: @escaping @Sendable (FetchResult) -> Void
-    ) -> Bool {
-        let (closedEntry, shouldInitiate): (ConfigEntry?, Bool) = serviceState.withLock { state in
-            guard !state.closed else {
-                return (state.cachedEntry, false)
+            if preferCache || state.offline || state.cachedEntry.fetchTime > threshold {
+                return .useCache(state.cachedEntry)
             }
             if state.completions == nil {
                 state.completions = MutableQueue()
             }
             state.completions?.enqueue(item: completion)
-            guard !state.fetchInProgress else { return (nil, false) }
+            guard !state.fetchInProgress else { return .subscribed }
             state.fetchInProgress = true
-            return (nil, true)
+            return .fetch(state.cachedEntry)
         }
-        if let entry = closedEntry {
+
+        switch decision {
+        case .closed(let entry):
             completion(.success(entry))
+        case .useCache(let entry):
+            setInitializedAndReportReady(entry: entry)
+            completion(.success(entry))
+        case .subscribed:
+            break
+        case .fetch(let entry):
+            let etag = entry.isEmpty ? "" : entry.eTag
+            fetcher.fetch(eTag: etag) { response in
+                self.processResponse(response: response)
+            }
         }
-        return shouldInitiate
     }
 
     private func processResponse(response: FetchResponse) {

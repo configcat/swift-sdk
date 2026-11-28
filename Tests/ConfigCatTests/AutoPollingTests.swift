@@ -223,25 +223,30 @@ class AutoPollingTests: XCTestCase {
 
     func testPollIntervalRespectsCacheExpiration() {
         let engine = MockEngine()
-        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test"), statusCode: 200))
+        engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "updated"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString()
+        let initValue = String(format: testJsonFormat, "cached").asEntryString(date: Date().addingTimeInterval(5))
         let cache = SingleValueCache(initValue: initValue)
         let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let hooks = Hooks()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        defer { service.close() }
 
-        let expectation1 = expectation(description: "wait for settings")
-        service.settings { settingsResult in
-            XCTAssertEqual("test", settingsResult.settings["fakeKey"]?.value.stringValue)
-            expectation1.fulfill()
+        let ready = expectation(description: "fresh cache is ready without a request")
+        let updated = expectation(description: "expired cache is refreshed")
+        hooks.addOnReady { [weak service] _ in
+            XCTAssertTrue(engine.requests.isEmpty)
+            XCTAssertEqual("cached", service?.inMemory.entry.config.settings["fakeKey"]?.value.stringValue)
+            ready.fulfill()
         }
-        wait(for: [expectation1], timeout: 5)
-
-        XCTAssertEqual(0, engine.requests.count)
-
-        sleep(3)
-
+        hooks.addOnConfigChanged { [weak service] config, _ in
+            guard config.settings["fakeKey"]?.value.stringValue == "updated" else { return }
+            service?.close()
+            updated.fulfill()
+        }
+        service.start()
+        wait(for: [ready, updated], timeout: 25, enforceOrder: true)
         XCTAssertEqual(1, engine.requests.count)
     }
     
@@ -249,19 +254,46 @@ class AutoPollingTests: XCTestCase {
         let engine = MockEngine()
         engine.enqueueResponse(response: Response(body: String(format: testJsonFormat, "test1"), statusCode: 200))
 
-        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().subtract(seconds: 5)!)
+        let initValue = String(format: testJsonFormat, "test").asEntryString(date: Date().addingTimeInterval(-3600))
         let cache = SingleValueCache(initValue: initValue)
-        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 2)
+        let mode = PollingModes.autoPoll(autoPollIntervalInSeconds: 60, maxInitWaitTimeInSeconds: 30)
+        let hooks = Hooks()
         let fetcher = ConfigFetcher(httpEngine: engine, logger: InternalLogger.noLogger, sdkKey: "", mode: mode.identifier, dataGovernance: .global)
-        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: Hooks(), sdkKey: "", offline: false).ensureStarted()
-
-        let expectation1 = expectation(description: "wait for settings")
-        service.settings { settingsResult in
-            XCTAssertEqual("test1", settingsResult.settings["fakeKey"]?.value.stringValue)
-            expectation1.fulfill()
+        let service = ConfigService(snapshotBuilder: EmptySnapshotBuilder(), log: InternalLogger.noLogger, fetcher: fetcher, cache: cache, pollingMode: mode, hooks: hooks, sdkKey: "", offline: false)
+        let cachedHookStarted = DispatchSemaphore(value: 0)
+        let releaseCachedHook = DispatchSemaphore(value: 0)
+        defer {
+            releaseCachedHook.signal()
+            service.close()
         }
-        wait(for: [expectation1], timeout: 5)
-
+        let fetched = expectation(description: "poll fetches expired cache")
+        fetched.assertForOverFulfill = false
+        hooks.addOnConfigChanged { config, _ in
+            switch config.settings["fakeKey"]?.value.stringValue {
+            case "test":
+                cachedHookStarted.signal()
+                XCTAssertEqual(.success, releaseCachedHook.wait(timeout: .now() + 30))
+            case "test1":
+                fetched.fulfill()
+            default:
+                XCTFail("Unexpected config")
+            }
+        }
+        let settings = expectation(description: "settings returns fetched config")
+        DispatchQueue.global().async {
+            service.settings { result in
+                XCTAssertEqual("test1", result.settings["fakeKey"]?.value.stringValue)
+                settings.fulfill()
+            }
+        }
+        guard cachedHookStarted.wait(timeout: .now() + 5) == .success else {
+            XCTFail("Cached config hook did not start")
+            return
+        }
+        service.start()
+        wait(for: [fetched], timeout: 10)
+        releaseCachedHook.signal()
+        wait(for: [settings], timeout: 10)
         XCTAssertEqual(1, engine.requests.count)
     }
 
